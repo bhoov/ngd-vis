@@ -1,0 +1,35 @@
+{
+  "name": "ngd-vis",
+  "version": "0.0.1",
+  "description": "Understand the learning behavior of natural gradient descent vs SGD and other optimization methods",
+  "main": "webpack.config.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "ps": "parcel ./src/index.html -d ./dist",
+    "pb": "parcel build ./src/index.html -d ./dist",
+    "pw": "parcel watch ./src/index.html -d ./dist",
+    "stats": "webpack --mode production --json --profile > stats.json",
+    "build": "webpack --mode production",
+    "build:dev": "webpack --mode development --devtool=inline-source-map",
+    "watch": "webpack --mode development --devtool=inline-source-map --watch",
+    "start": "webpack-dev-server --config ./webpack.config.js --mode development --devtool=inline-source-map"
+  },
+  "author": "Ben Hoover",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bhoov/ngd-vis.git"
+  },
+  "bugs": {
+    "url": "https://github.com/bhoov/ngd-vis/issues"
+  },
+  "homepage": "https://github.com/bhoov/ngd-vis#readme",
+  "dependencies": {
+    "d3": "^5.11.0"
+  },
+  "devDependencies": {
+    "webpack": "^4.39.2",
+    "webpack-cli": "^3.3.7",
+    "webpack-dev-server": "^3.8.0"
+  }
+}
