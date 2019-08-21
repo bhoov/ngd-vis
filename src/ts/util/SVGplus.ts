@@ -5,7 +5,9 @@ import 'd3-selection-multi'
  * Created by hen on 5/15/17.
  * Modified by hoo on 4/16/19.
  */
+
 export class SVG {
+    
     static translate({x, y}):string {
         return "translate(" + x + "," + y + ")"
     }
