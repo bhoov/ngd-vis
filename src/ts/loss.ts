@@ -1,28 +1,11 @@
 import * as d3 from 'd3'
+import 'd3-legend'
 import {D3Sel} from './util/xd3'
-
-type MarginInfo = {
-    top:number
-    right:number
-    bottom:number
-    left:number
-}
-
-function addSVG(div:string, width:number, height:number, margin:MarginInfo):D3Sel {
-
-	var svg = d3.select(div).append("svg")
-	    .attr("width", "100%")
-	    .attr("height", "100%")
-	    .attr("viewBox", "0 0 " + (width + margin.left + margin.right) + " " + (height + margin.top + margin.bottom))
-	    .attr("preserveAspectRatio", "xMidYMid meet")
-	  .append("g")
-	    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-	return svg;
-}
+import {MarginInfo} from './types'
+import {addSVG} from './plotting'
 
 
-class RegressionLoss {
+export class RegressionLoss {
     margin:MarginInfo
     pad:number
     width:number
@@ -38,6 +21,12 @@ class RegressionLoss {
 
     x: d3.ScaleLinear<number, number>
     y: d3.ScaleLinear<number, number>
+
+    legend: any
+    xaxis: D3Sel
+    yaxis: D3Sel
+    // hess: math.Matrix
+    hess: any
 
     // constructor
     constructor(div) {
@@ -74,6 +63,7 @@ class RegressionLoss {
   
    Hessian(b0, b1, X) {
        console.log("Running Hessian")
+       console.log(X)
       var H00 = 0,
           H01 = 0,
           H10 = 0,
@@ -86,12 +76,12 @@ class RegressionLoss {
       }
   
       var out = {'H00': H00 / X.length, 'H01': H01 / X.length, 'H10': H10 / X.length, 'H11': H11 / X.length};
-      this.Hess = out;
+      this.hess = out;
       return out
     }
   
    invHessian() {
-     var H = this.Hess;
+     var H = this.hess;
      var det = H.H00 * H.H11 - H.H01 * H.H10;
      return {'iH00': H.H11 / det, 'iH01': -H.H01 / det, 'iH10': -H.H10 / det, 'iH11': H.H00 / det};
    }

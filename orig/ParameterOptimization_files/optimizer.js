@@ -77,22 +77,19 @@ class regression_optimizer {
           b0 = this.current.b0,
           b1 = this.current.b1;
 
-		console.log("Here 1")
       var loss = this.loss.value(b0, b1, X),
           grad = this.loss.gradient(b0, b1, data),
           Hess = this.loss.Hessian(b0, b1, data),
           invHess = this.loss.invHessian()
 
-      console.log(`invHess: ${invHess}`)
       this.path.push({'b0' : b0, 'b1' : b1});
       this.cost[1].push(loss);
       this.cost[0].push(this.loss.value(this.actual.b0, this.actual.b1, X));
 
+      // b0 -= this.lrate * grad.db0;
+      // b1 -= this.lrate * grad.db1;
       b0 -= this.lrate * (invHess.iH00*grad.db0 + invHess.iH01*grad.db1);
       b1 -= this.lrate * (invHess.iH10*grad.db0 + invHess.iH11*grad.db1);
-
-      console.log(`b0: ${b0}`)
-      console.log(`b1: ${b1}`)
 
       this.epoch = this.epoch + Math.floor((this.iter + this.bsize) / X.length);
       this.iter = (this.iter + this.bsize) % X.length;
