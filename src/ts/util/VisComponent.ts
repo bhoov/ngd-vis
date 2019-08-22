@@ -5,6 +5,7 @@
 import {D3Sel} from "./xd3"
 import {SimpleEventHandler} from "./SimpleEventHandler";
 import {SVG} from "./SVGplus";
+import {MarginInfo} from '../types'
 
 /**
  * Should have VComponentHTML and VComponentSVG
@@ -114,15 +115,18 @@ export abstract class HTMLVisComponent<DataInterface> extends VisComponent<DataI
 export abstract class SVGVisComponent<DataInterface> extends VisComponent<DataInterface> {
     protected layers: { main?: D3Sel, fg?: D3Sel, bg?: D3Sel, [key: string]: D3Sel };
     protected svg: D3Sel // Alias for this.parent
-    protected _width:number
-    protected _height:number
+    protected options = {
+        margin: {top: 40, right: 40, bottom: 40, left: 40},
+        width:400,
+        height:400,
+    }
 
     protected constructor(d3parent: D3Sel, eventHandler?: SimpleEventHandler, options:{}={}) {
         super(d3parent, eventHandler)
         this.initSVG(options)
     }
 
-    protected initSVG(options: {} = {}, defaultLayers = ['bg', 'main', 'fg']) {
+    protected initSVG(options: {} = {}, defaultLayers=[]) {
         // Set default options if not specified in constructor call
         this.updateOptions(options)
 
@@ -144,14 +148,14 @@ export abstract class SVGVisComponent<DataInterface> extends VisComponent<DataIn
      * Simple transition to update width of SVG element
      */
     protected updateWidth() {
-        this.svg.attr('width', this._width)
+        this.svg.attr('width', this.options.width)
     }
 
     /**
      * Simple transition to update width of SVG element
      */
     protected updateHeight() {
-        this.svg.attr('height', this._height)
+        this.svg.attr('height', this.options.height)
     }
 
     /**
@@ -161,9 +165,9 @@ export abstract class SVGVisComponent<DataInterface> extends VisComponent<DataIn
     width(x:number):this
     width(x?) {
         if (x == null) 
-            return this._width;
+            return this.options.width;
 
-        this._width = x;
+        this.options.width = x;
         this.updateWidth();
         return this;
     }
@@ -175,9 +179,9 @@ export abstract class SVGVisComponent<DataInterface> extends VisComponent<DataIn
     height(x:number):this
     height(x?) {
         if (x == null) 
-            return this._height;
+            return this.options.height;
 
-        this._height = x;
+        this.options.height = x;
         this.updateHeight();
         return this;
     }

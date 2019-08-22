@@ -9,8 +9,8 @@ class regression_loss {
     this.height = 450 - this.margin.top - this.margin.bottom;
     this.svg = addSVG(div, this.width, this.height, this.margin);
     
-    this.n = 50; 
-    this.m = 50;
+    this.n = 100 
+    this.m = 100;
 
     this.thresholds = [];
     this.contours = d3.contours().size([this.n, this.m]);
