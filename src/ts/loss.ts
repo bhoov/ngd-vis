@@ -1,5 +1,5 @@
 import * as d3 from 'd3'
-import 'd3-legend'
+import {legendColor} from 'd3-svg-legend'
 import {D3Sel} from './util/xd3'
 import {MarginInfo} from './types'
 import {addSVG} from './plotting'
@@ -166,7 +166,7 @@ export class RegressionLoss {
       .attr("class", "legend")
       .attr("transform", "translate(" + (this.width + this.pad / 2) + ",0)"); 
   
-      this.legend = d3.legendColor()
+      this.legend = legendColor()
         .labelFormat(d3.format(".2g"))
         .title("Cost");
   
@@ -179,5 +179,4 @@ export class RegressionLoss {
           .attr("width", this.width);
   
     }
-  
   }
