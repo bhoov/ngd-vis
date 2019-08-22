@@ -3,12 +3,12 @@ module.exports = {
     entry: './src/index.ts',
     // 2
     output: {
-        path: __dirname + '/dist',
+        path: __dirname + '/public',
         publicPath: '/',
         filename: 'bundle.js'
     },
     // 3
     devServer: {
-        contentBase: './dist'
+        contentBase: './public'
     }
 };

@@ -5,9 +5,9 @@
   "main": "webpack.config.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "ps": "parcel ./src/index.html -d ./dist",
-    "pb": "parcel build ./src/index.html -d ./dist",
-    "pw": "parcel watch ./src/index.html -d ./dist",
+    "ps": "parcel ./src/index.html -d ./public",
+    "pb": "parcel build ./src/index.html -d ./public",
+    "pw": "parcel watch ./src/index.html -d ./public",
     "stats": "webpack --mode production --json --profile > stats.json",
     "build": "webpack --mode production",
     "build:dev": "webpack --mode development --devtool=inline-source-map",
