@@ -30,93 +30,111 @@ import {SVG} from "./SVGplus";
  * - destroy()
  */
 
-export abstract class VComponent<DataInterface> {
-
-    // STATIC FIELDS ============================================================
+export abstract class VisComponent<DataInterface> {
+    /**
+     * Given an ID, create a new instance of this class with the events and css_name modified by the id
+     */
+    newInstance(id:number) {}
 
     /**
      * The static property that contains all class related events.
      * Should be overwritten and event strings have to be unique!!
      */
+    protected get events() {
+        const event = (eventName) => `${this.baseName}_${eventName}`
+        return {
+            noEvent: event('NoEvent')
+        }
+    }
 
-    static events: {} = {noEvent: 'VComponent_noEvent'};
+    protected get baseName() {
+        return `${this.cssname}_ID${this.ID}`
+    }
 
-    /**
-     * Defines the layers in SVG  for bg,main,fg,...
-     */
-    // protected abstract readonly layout: { name: string, pos: number[] }[] = [{name: 'main', pos: [0, 0]}];
+    protected cssname: string;            // Make the same as the corresponding css file
+    protected ID: number;                 // ID associated to unique instance of visualization. Defaults to 0
 
-    protected id: string; // Mostly obsolete, nice to have simple ID to assign in CSS
-    protected parent: D3Sel;
-    protected abstract options: { [key: string]: any };
-    protected base: D3Sel; // Mostly obsolete, represents <g> in svg
-    protected layers: { main?: D3Sel, fg?: D3Sel, bg?: D3Sel, [key: string]: D3Sel }; // Still useful
+
+    protected abstract options: { [key: string]: unknown };
     protected eventHandler: SimpleEventHandler;
-    protected _visibility: { hidden: boolean, hideElement?: D3Sel | null; [key: string]: any }; // Enables transitions from visible to invisible. Mostly obsolete.
+    protected parent: D3Sel;                        // Parent d3 selection
+    protected abstract base: D3Sel;                 // d3 selection that is created by the init
     protected _data: DataInterface;
-    protected renderData: any; // Unnecessary
-    protected abstract css_name: string; // Make the same as the corresponding css file
-    protected abstract _current: {}; // Private state information contained in the object itself.
+    protected renderData: unknown;
 
-    // CONSTRUCTOR ============================================================
 
     /**
-     * Simple constructor. Subclasses should call @superInit(options) as well.
-     * see why here: https://stackoverflow.com/questions/43595943/why-are-derived-class-property-values-not-seen-in-the-base-class-constructor
-     *
-     * template:
-     constructor(d3Parent: D3Sel, eventHandler?: SimpleEventHandler, options: {} = {}) {
-        super(d3Parent, eventHandler);
-        // -- access to subclass params:
-        this.superInit(options);
-     }
-     *
      * @param {D3Sel} d3parent  D3 selection of parent SVG DOM Element
      * @param {SimpleEventHandler} eventHandler a global event handler object or 'null' for local event handler
      */
-    protected constructor(d3parent: D3Sel, eventHandler?: SimpleEventHandler) {
-        this.id = UId.simpleUId({});
-
+    protected constructor(d3parent: D3Sel, eventHandler?: SimpleEventHandler, ID=0) {
         this.parent = d3parent;
-
-        // If not further specified - create a local event handler bound to the bas element
-        this.eventHandler = eventHandler ||
-            new SimpleEventHandler(this.parent.node());
-
-        // Object for storing internal states and variables
-        this._visibility = {hidden: false};
-
-    }
-
-    protected superInitHTML(options: {} = {}) {
-        Object.keys(options).forEach(key => this.options[key] = options[key]);
-        this.base = this.parent.append('div')
-            .classed(this.css_name, true)
+        this.eventHandler = eventHandler || new SimpleEventHandler(this.parent.node());
+        this.ID = ID;
+        this.init()
     }
 
     /**
-     * Has to be called as last call in subclass constructor.
-     * 
-     * @param {{}} options
-     * @param defaultLayers -- create the default <g> layers: bg -> main -> fg
+     * Should be overwritten to create needed static DOM elements
      */
-    protected superInitSVG(options: {} = {}, defaultLayers = ['bg', 'main', 'fg']) {
+    protected abstract init();
+
+
+    /**
+     * Follow the D3 convention: retrieve the data inside the class if null. Otherwise, set the data and return 'this'
+     */
+    abstract data():DataInterface;
+    abstract data(x:DataInterface):this;
+
+    /**
+     * Set many options at once
+     * 
+     * @param options Reset options to passed values
+     */
+    updateOptions(options:{}) {
+        Object.keys(options).forEach(k => this.options[k] = options[k]);
+    }
+
+    destroy() {
+        this.base.remove();
+    }
+}
+
+export abstract class HTMLVisComponent<DataInterface> extends VisComponent<DataInterface> {
+
+    protected constructor(d3parent: D3Sel, eventHandler?: SimpleEventHandler, options:{}={}) {
+        super(d3parent, eventHandler)
+        this.initHTML(options)
+    }
+
+    initHTML(options:{}={}) {
+        this.updateOptions(options)
+        this.base = this.parent.append('div')
+            .classed(this.cssname, true)
+    }
+
+}
+
+export abstract class SVGVisComponent<DataInterface> extends VisComponent<DataInterface> {
+    protected layers: { main?: D3Sel, fg?: D3Sel, bg?: D3Sel, [key: string]: D3Sel };
+    protected _width:number
+    protected _height:number
+
+    protected constructor(d3parent: D3Sel, eventHandler?: SimpleEventHandler, options:{}={}) {
+        super(d3parent, eventHandler)
+        this.initSVG(options)
+    }
+
+    protected initSVG(options: {} = {}, defaultLayers = ['bg', 'main', 'fg']) {
         // Set default options if not specified in constructor call
-        // const defaults = this.defaultOptions;
-        // this.options = {};
-        // const keys = new Set([...Object.keys(defaults), ...Object.keys(options)]);
-        // keys.forEach(key => this.options[key] = (key in options) ? options[key] : defaults[key]);
-        Object.keys(options).forEach(key => this.options[key] = options[key]);
+        this.updateOptions(options)
 
         this.layers = {};
 
         // Create the base group element
         const svg = this.parent;
-        this.base = SVG.group(svg,
-            this.css_name + ' ID' + this.id,
-            this.options.pos);
+        this.base = SVG.group(svg, this.cssname);
 
-        // create default layers: background, main, foreground
         if (defaultLayers) {
             // construction order is important !
             defaultLayers.forEach(layer =>{
@@ -125,97 +143,45 @@ export abstract class VComponent<DataInterface> {
         }
     }
 
-
     /**
-     * Should be overwritten to create the static DOM elements
-     * @abstract
-     * @return {*} ---
+     * Simple transition to update width of SVG element
      */
-    protected abstract _init();
-
-    // DATA UPDATE & RENDER ============================================================
-
-    /**
-     * Every time data has changed, update is called and
-     * triggers wrangling and re-rendering
-     * @param {Object} data data object
-     * @return {*} ---
-     */
-    update(data: DataInterface) {
-        this._data = data;
-        if (this._visibility.hidden) return;
-        this.renderData = this._wrangle(data);
-        this._render(this.renderData);
+    protected updateWidth() {
+        this.parent.attr('width', this._width)
     }
 
     /**
-     * Data wrangling method -- implement in subclass. Returns this.renderData.
-     * Simplest implementation: `return data;`
-     * @param {Object} data data
-     * @returns {*} -- data in render format
-     * @abstract
+     * Simple transition to update width of SVG element
      */
-    protected abstract _wrangle(data);
-
+    protected updateHeight() {
+        this.parent.attr('height', this._height)
+    }
 
     /**
-     * Is responsible for mapping data to DOM elements
-     * @param {Object} renderData pre-processed (wrangled) data
-     * @abstract
-     * @returns {*} ---
+     * Set the width of the parent SVG
      */
-    protected abstract _render(renderData): void;
+    width():number
+    width(x:number):this
+    width(x?) {
+        if (x == null) 
+            return this._width;
 
+        this._width = x;
+        this.updateWidth();
+        return this;
+    }
 
-    // UPDATE OPTIONS ============================================================
     /**
-     * Updates instance options
-     * @param {Object} options only the options that should be updated
-     * @param {Boolean} reRender if option change requires a re-rendering (default:false)
-     * @returns {*} ---
+     * Set the width of the parent SVG
      */
-    updateOptions({options, reRender = false}) {
-        Object.keys(options).forEach(k => this.options[k] = options[k]);
-        if (reRender) this._render(this.renderData);
+    height():number
+    height(x:number):this
+    height(x?) {
+        if (x == null) 
+            return this._height;
+
+        this._height = x;
+        this.updateHeight();
+        return this;
     }
-
-
-    // === CONVENIENCE ====
-    redraw(){
-        this._render(this.renderData);
-    }
-
-    setHideElement(hE: D3Sel) {
-        this._visibility.hideElement = hE;
-    }
-
-    hideView() {
-        if (!this._visibility.hidden) {
-            const hE = this._visibility.hideElement || this.parent;
-            hE.transition().styles({
-                'opacity': 0,
-                'pointer-events': 'none'
-            }).style('display', 'none');
-            this._visibility.hidden = true;
-        }
-    }
-
-    unhideView() {
-        if (this._visibility.hidden) {
-            const hE = this._visibility.hideElement || this.parent;
-            hE.transition().styles({
-                'opacity': 1,
-                'pointer-events': null,
-                'display': null
-            });
-            this._visibility.hidden = false;
-            // this.update(this.data);
-
-        }
-    }
-
-    destroy() {
-        this.base.remove();
-    }
-
 }
