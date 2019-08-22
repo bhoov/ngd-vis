@@ -10,7 +10,7 @@ class RegressionOptimizer {
     bsize: number
     iter: number
     epoch: number
-    training: boolean
+    training: d3.Timer
     initial: NetCoef
     actual: NetCoef
     path: NetCoef[]
@@ -43,7 +43,7 @@ class RegressionOptimizer {
       this.epoch = 0;
   
       // location and cost data
-      this.training = false;
+      // this.training = false;
       this.initial = $.extend({}, this.line.net_coef);
       this.actual = this.line.obj_coef;
       this.path = [];
