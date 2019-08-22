@@ -2,8 +2,6 @@
  * Created by Hendrik Strobelt (hendrik.strobelt.com) on 12/3/16.
  * Modified by Ben Hoover on 4/16/2019
  */
-import * as d3 from 'd3'
-import {UId} from "./UId";
 import {D3Sel} from "./xd3"
 import {SimpleEventHandler} from "./SimpleEventHandler";
 import {SVG} from "./SVGplus";
@@ -58,7 +56,7 @@ export abstract class VisComponent<DataInterface> {
     protected abstract options: { [key: string]: unknown };
     protected eventHandler: SimpleEventHandler;
     protected parent: D3Sel;                        // Parent d3 selection
-    protected abstract base: D3Sel;                 // d3 selection that is created by the init
+    protected base: D3Sel;                 // d3 selection that is created by the init
     protected _data: DataInterface;
     protected renderData: unknown;
 
@@ -71,7 +69,6 @@ export abstract class VisComponent<DataInterface> {
         this.parent = d3parent;
         this.eventHandler = eventHandler || new SimpleEventHandler(this.parent.node());
         this.ID = ID;
-        this.init()
     }
 
     /**
@@ -110,13 +107,13 @@ export abstract class HTMLVisComponent<DataInterface> extends VisComponent<DataI
     initHTML(options:{}={}) {
         this.updateOptions(options)
         this.base = this.parent.append('div')
-            .classed(this.cssname, true)
     }
 
 }
 
 export abstract class SVGVisComponent<DataInterface> extends VisComponent<DataInterface> {
     protected layers: { main?: D3Sel, fg?: D3Sel, bg?: D3Sel, [key: string]: D3Sel };
+    protected svg: D3Sel // Alias for this.parent
     protected _width:number
     protected _height:number
 
@@ -132,8 +129,8 @@ export abstract class SVGVisComponent<DataInterface> extends VisComponent<DataIn
         this.layers = {};
 
         // Create the base group element
-        const svg = this.parent;
-        this.base = SVG.group(svg, this.cssname);
+        this.svg = this.parent.append('svg');
+        this.base = SVG.group(this.svg, '');
 
         if (defaultLayers) {
             // construction order is important !
@@ -147,14 +144,14 @@ export abstract class SVGVisComponent<DataInterface> extends VisComponent<DataIn
      * Simple transition to update width of SVG element
      */
     protected updateWidth() {
-        this.parent.attr('width', this._width)
+        this.svg.attr('width', this._width)
     }
 
     /**
      * Simple transition to update width of SVG element
      */
     protected updateHeight() {
-        this.parent.attr('height', this._height)
+        this.svg.attr('height', this._height)
     }
 
     /**

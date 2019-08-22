@@ -1,5 +1,4 @@
 import * as d3 from "d3"
-import 'd3-selection-multi'
 
 /**
  * Created by hen on 5/15/17.
@@ -13,12 +12,10 @@ export class SVG {
     }
 
     static group(parent, classes, pos = {x: 0, y: 0}) {
-        return parent.append('g').attrs({
-            class: classes,
-            "transform": SVG.translate(pos)
-        })
+        return parent.append('g')
+            .attr('class', classes)
+            .attr("transform", SVG.translate(pos))
     }
-
 }
 
 export class SVGMeasurements {
@@ -27,7 +24,9 @@ export class SVGMeasurements {
 
     constructor(baseElement, classes = '') {
         this.measureElement = baseElement.append('text')
-            .attrs({x: 0, y: -20, class: classes})
+            .attr('x', 0)
+            .attr('y', -20)
+            .attr('class', classes)
 
     }
 
