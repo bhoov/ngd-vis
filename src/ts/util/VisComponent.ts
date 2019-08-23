@@ -116,9 +116,11 @@ export abstract class SVGVisComponent<DataInterface> extends VisComponent<DataIn
     protected layers: { main?: D3Sel, fg?: D3Sel, bg?: D3Sel, [key: string]: D3Sel };
     protected svg: D3Sel // Alias for this.parent
     protected options = {
-        margin: {top: 40, right: 40, bottom: 40, left: 40},
-        width:400,
-        height:400,
+        margin: {top: 50, right: 75, bottom: 75, left: 50},
+        maxWidth: 450,
+        maxHeight: 450,
+        height: null,
+        width: null
     }
 
     protected constructor(d3parent: D3Sel, eventHandler?: SimpleEventHandler, options:{}={}) {
@@ -129,11 +131,16 @@ export abstract class SVGVisComponent<DataInterface> extends VisComponent<DataIn
     protected initSVG(options: {} = {}, defaultLayers=[]) {
         // Set default options if not specified in constructor call
         this.updateOptions(options)
+        const op = this.options;
+        op.width = op.maxWidth - (op.margin.left + op.margin.right)
+        op.height = op.maxHeight - (op.margin.top + op.margin.bottom)
 
         this.layers = {};
 
+        this.svg = SVG.addSVG(this.parent, op.width, op.height, op.margin)
+
         // Create the base group element
-        this.svg = this.parent.append('svg');
+        // this.svg = this.parent.append('svg');
         this.base = SVG.group(this.svg, '');
 
         if (defaultLayers) {
