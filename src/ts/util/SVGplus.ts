@@ -20,6 +20,10 @@ export class SVG {
         return `rotate(${deg},${orig.x},${orig.y})`
     }
 
+    static skew(degx:number, degy=0) {
+        return `skew(${degx}, ${degy})`
+    }
+
     static skewX(deg:number) {
         return `skewX(${deg})`
     }
