@@ -9,18 +9,35 @@ import {D3Sel} from '../util/xd3'
 
 export class SVG {
     
-    static translate({x, y}):string {
-        return "translate(" + x + "," + y + ")"
+    static translate(x:number, y:number):string {
+        return `translate(${x},${y})`
     }
 
-    static rotate(deg):string {
-        return `rotate(${deg})`
+    static rotate(deg:number, orig?:{x:number, y:number}):string {
+        if (orig == null) 
+            return `rotate(${deg})`
+
+        return `rotate(${deg},${orig.x},${orig.y})`
+    }
+
+    static skewX(deg:number) {
+        return `skewX(${deg})`
+    }
+
+    static skewY(deg:number) {
+        return `skewY(${deg})`
+    }
+
+    static scale(x:number, y?:number):string {
+        const yscale = y != null ? y : x;
+
+        return `scale(${x}, ${yscale})`
     }
 
     static group(parent, classes, pos = {x: 0, y: 0}) {
         return parent.append('g')
             .attr('class', classes)
-            .attr("transform", SVG.translate(pos))
+            .attr("transform", SVG.translate(pos.x, pos.y))
     }
 
     static addSVG(parent:D3Sel, width:number, height:number, margin:MarginInfo):D3Sel {
@@ -31,7 +48,7 @@ export class SVG {
             .attr("viewBox", "0 0 " + (width + margin.left + margin.right) + " " + (height + margin.top + margin.bottom))
             .attr("preserveAspectRatio", "xMidYMid meet")
         .append("g")
-            .attr("transform", SVG.translate({x: margin.left, y: margin.top}));
+            .attr("transform", SVG.translate(margin.left, margin.top));
 
         return svg;
 }
