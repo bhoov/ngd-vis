@@ -2,7 +2,7 @@ import * as d3 from 'd3'
 import {legendColor} from 'd3-svg-legend'
 import {D3Sel} from './util/xd3'
 import {MarginInfo} from './types'
-import {addSVG} from './plotting'
+import {addSVG, getContourValues} from './plotting'
 
 
 export class RegressionLoss {
@@ -100,17 +100,10 @@ export class RegressionLoss {
       var x_range = this.x.domain(),
           y_range = this.y.domain();
   
-      // sample loss landscape
-      var values = new Array(this.n * this.m);
-      for (var j = 0.5, k = 0; j < this.m; ++j) {
-        for (var i = 0.5; i < this.n; ++i, ++k) {
-  
-          var b0 = i / this.n * (x_range[1] - x_range[0]) + x_range[0],
-              b1 = (1 - j / this.m) * (y_range[1] - y_range[0]) + y_range[0];
-  
-          values[k] = this.value(b0, b1, train);
-        }
-      }
+
+      var lossFunc = (b0, b1) => this.value(b0, b1, train)
+
+      var values = getContourValues(this.n, this.m, x_range, y_range, lossFunc)
   
       this.thresholds = d3.range(-10, Math.log2(d3.max(values)), 0.5)
         .map(function(p) { return Math.pow(2, p); });
@@ -177,6 +170,5 @@ export class RegressionLoss {
           .attr("y", 0)
           .attr("height", this.height)
           .attr("width", this.width);
-  
     }
   }
