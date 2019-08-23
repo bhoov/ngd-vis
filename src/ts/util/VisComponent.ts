@@ -5,7 +5,7 @@
 import {D3Sel} from "./xd3"
 import {SimpleEventHandler} from "./SimpleEventHandler";
 import {SVG} from "./SVGplus";
-import {MarginInfo} from '../types'
+import {SVGOptions} from '../types'
 
 /**
  * Should have VComponentHTML and VComponentSVG
@@ -54,7 +54,7 @@ export abstract class VisComponent<DataInterface> {
     protected ID: number;                 // ID associated to unique instance of visualization. Defaults to 0
 
 
-    protected abstract options: { [key: string]: unknown };
+    protected abstract options: {};
     protected eventHandler: SimpleEventHandler;
     protected parent: D3Sel;                        // Parent d3 selection
     protected base: D3Sel;                 // d3 selection that is created by the init
@@ -115,12 +115,11 @@ export abstract class HTMLVisComponent<DataInterface> extends VisComponent<DataI
 export abstract class SVGVisComponent<DataInterface> extends VisComponent<DataInterface> {
     protected layers: { main?: D3Sel, fg?: D3Sel, bg?: D3Sel, [key: string]: D3Sel };
     protected svg: D3Sel // Alias for this.parent
-    protected options = {
-        margin: {top: 50, right: 75, bottom: 75, left: 50},
+    protected options: SVGOptions = {
+        margin: {top: 0, right: 0, bottom: 0, left: 0},
+        pad: 0,
         maxWidth: 450,
         maxHeight: 450,
-        height: null,
-        width: null
     }
 
     protected constructor(d3parent: D3Sel, eventHandler?: SimpleEventHandler, options:{}={}) {
@@ -149,47 +148,5 @@ export abstract class SVGVisComponent<DataInterface> extends VisComponent<DataIn
                 this.layers[layer] = SVG.group(this.base, layer);
             });
         }
-    }
-
-    /**
-     * Simple transition to update width of SVG element
-     */
-    protected updateWidth() {
-        this.svg.attr('width', this.options.width)
-    }
-
-    /**
-     * Simple transition to update width of SVG element
-     */
-    protected updateHeight() {
-        this.svg.attr('height', this.options.height)
-    }
-
-    /**
-     * Set the width of the parent SVG
-     */
-    width():number
-    width(x:number):this
-    width(x?) {
-        if (x == null) 
-            return this.options.width;
-
-        this.options.width = x;
-        this.updateWidth();
-        return this;
-    }
-
-    /**
-     * Set the width of the parent SVG
-     */
-    height():number
-    height(x:number):this
-    height(x?) {
-        if (x == null) 
-            return this.options.height;
-
-        this.options.height = x;
-        this.updateHeight();
-        return this;
     }
 }

@@ -24,7 +24,7 @@ export function getContourValues(n: number, m: number, xrange: DomainRange, yran
     for (var j = 0.5, k = 0; j < m; ++j) {
         for (var i = 0.5; i < n; ++i, ++k) {
             const xval = ((i / n) * (xrange[1] - xrange[0])) + xrange[0];
-            const yval = 1 - ((j / m) * (yrange[1] - yrange[0]) + yrange[0]);
+            const yval = (1 - (j / m)) * (yrange[1] - yrange[0]) + yrange[0];
             values[k] = func(xval, yval);
         }
     }

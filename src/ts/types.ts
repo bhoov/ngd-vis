@@ -1,4 +1,13 @@
 
+
+export interface SVGOptions {
+    margin: MarginInfo
+    maxWidth: number
+    maxHeight: number
+    pad: number
+    width?:number
+    height?:number
+}
 export interface Point {
     x: number
     y: number

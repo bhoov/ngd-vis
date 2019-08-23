@@ -35,9 +35,10 @@
     "ramda": "^0.26.1"
   },
   "devDependencies": {
+    "@types/jquery": "^3.3.31",
     "@types/mathjs": "^6.0.1",
     "@types/ramda": "^0.26.19",
-    "@types/jquery": "^3.3.31",
+    "sass": "^1.22.10",
     "typescript": "^3.5.3",
     "webpack": "^4.39.2",
     "webpack-cli": "^3.3.7",

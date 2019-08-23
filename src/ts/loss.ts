@@ -3,6 +3,7 @@ import {legendColor} from 'd3-svg-legend'
 import {D3Sel} from './util/xd3'
 import {MarginInfo} from './types'
 import {addSVG, getContourValues} from './plotting'
+import {SVG} from './util/SVGplus'
 
 
 export class RegressionLoss {
@@ -135,12 +136,12 @@ export class RegressionLoss {
     setup() {
       this.xaxis = this.svg.append("g")
         .attr("class", "axis axis--x")
-        .attr("transform", "translate(0," + this.height + ")")
+        .attr("transform", SVG.translate(0, this.height))
         .call(d3.axisBottom(this.x).ticks(3, "s"));
   
       this.yaxis = this.svg.append("g")
         .attr("class", "axis axis--y")
-        .attr("transform", "translate(" + 0 + ",0)")
+        .attr("transform", SVG.translate(0,0))
         .call(d3.axisLeft(this.y).ticks(3, "s"));
   
       this.svg.append("text")
