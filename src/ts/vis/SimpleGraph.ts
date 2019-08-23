@@ -64,27 +64,27 @@ export class SimpleGraph extends SVGVisComponent<T> {
 
         this.xaxis = this.base.append("g")
             .attr("class", "axis axis--x")
-            .attr("transform", SVG.translate({x: 0, y: op.height}))
+            .attr("transform", SVG.translate(0, op.height))
             .call(d3.axisBottom(this.x).ticks(3, "s"));
         
         this.yaxis = this.base.append("g")
             .attr("class", "axis axis--y")
-            .attr("transform", SVG.translate({x: 0, y: 0}))
+            .attr("transform", SVG.translate(0, 0))
             .call(d3.axisLeft(this.y).ticks(3, "s"));
 
         this.xlabel = this.base.append("text")
             .text("b (intercept)")
             .attr("class", "titles")
-            .attr("transform", SVG.translate({x: op.width/2, y: op.height + op.pad}))
+            .attr("transform", SVG.translate(op.width/2, op.height + op.pad))
 
         this.ylabel = this.base.append("text")
             .text("W (slope)")
             .attr("class", "titles")
-            .attr("transform", SVG.translate({x: -op.pad, y: op.height/2}) + SVG.rotate(-90))
+            .attr("transform", SVG.translate(-op.pad, op.height/2) + SVG.rotate(-90))
 
         this.legend = this.svg.append("g")
             .attr("class", "legend")
-            .attr("transform", SVG.translate({x: op.width + op.pad / 2, y: 0})); 
+            .attr("transform", SVG.translate(op.width + op.pad / 2, 0)); 
     }
 
     data():number[]
