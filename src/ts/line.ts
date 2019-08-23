@@ -1,10 +1,12 @@
 import * as d3 from 'd3'
-import 'd3-legend'
+import {legendColor, LegendColor} from 'd3-svg-legend'
 import {D3Sel} from './util/xd3'
 import {MarginInfo, NetCoef, LabeledPoint} from './types'
 import {addSVG} from './plotting'
+import {uniform, normal} from './plotting'
 
 export class Line {
+  cssName = "basic-line-graph"
     obj_coef: NetCoef
     net_coef: NetCoef
     points: LabeledPoint[]
@@ -20,13 +22,13 @@ export class Line {
     color: string[]
     xaxis: D3Sel
     yaxis: D3Sel
-    legend: D3Sel
+    legend: LegendColor
 
     // constructor
     constructor(div) {
   
-        this.obj_coef = {'b0': uniform(-4, 4), 'b1': uniform(-4, 4)};
-        this.net_coef = {'b0': uniform(-1, 1), 'b1': uniform(-1, 1)};
+      this.obj_coef = {'b0': uniform(-4, 4), 'b1': uniform(-4, 4)};
+      this.net_coef = {'b0': uniform(-1, 1), 'b1': uniform(-1, 1)};
       this.points = [];
   
       this.pad = 30;
@@ -34,6 +36,7 @@ export class Line {
       this.width = 350 - this.margin.left - this.margin.right;
       this.height = 350 - this.margin.top - this.margin.bottom;
       this.svg = addSVG(div, this.width, this.height, this.margin);
+      this.svg.classed(this.cssName, true)
   
       this.n = 250; 
       this.m = 250;
@@ -48,16 +51,17 @@ export class Line {
     objective(b0, b1) {
       this.obj_coef.b0 = b0;
       this.obj_coef.b1 = b1;
-      this.plot(0);
+      this.plot();
     }
   
     network(b0, b1) {
       this.net_coef.b0 = b0;
       this.net_coef.b1 = b1;
-      this.plot(0);
+      this.plot();
     }
   
     sample(n) {
+
       this.points = [];
       for (var i = 0; i < n; i++) {
           var point_x = normal(0, 5),
@@ -67,30 +71,23 @@ export class Line {
       return this.points;
     }
   
-    plot(time) {
+    plot() {
   
       var x1 = this.x.domain()[0],
           x2 = this.x.domain()[1];
   
       // add function lines
       var line = this.svg.selectAll("line.function")
-        .data([this.obj_coef, this.net_coef]);
-  
-      line.attr("x1", this.x(x1))
-          .attr("y1", (d) => { return this.y(d.b0 + d.b1 * x1); })
-          .attr("x2", this.x(x2))
-          .attr("y2", (d) => { return this.y(d.b0 + d.b1 * x2); })
-          .raise();
-  
-      line.enter().append("line")
-          .attr("x1", this.x(x1))
-          .attr("y1", (d) => { return this.y(d.b0 + d.b1 * x1); })
-          .attr("x2", this.x(x2))
-          .attr("y2", (d) => { return this.y(d.b0 + d.b1 * x2); })
-          .attr("class", "function")
-          .attr("id", (d, i) => { return i ? 'estimate' : 'true'; });
-  
-      line.exit().remove();
+        .data([this.obj_coef, this.net_coef])
+        .raise();
+
+      line.join("line")
+        .attr("x1", this.x(x1))
+        .attr("y1", (d) => { return this.y(d.b0 + d.b1 * x1); })
+        .attr("x2", this.x(x2))
+        .attr("y2", (d) => { return this.y(d.b0 + d.b1 * x2); })
+        .attr("class", "function")
+        .attr("id", (d, i) => { return i ? 'estimate' : 'true'; });
   
       // add data points
   
@@ -138,28 +135,10 @@ export class Line {
       .attr("class", "legend")
       .attr("transform", "translate(" + this.width / 2 + "," + this.height + ")"); 
   
-      this.legend = d3.legendColor()
+      this.legend = legendColor()
         .labelFormat(d3.format(".2g"))
         .title("Loss");
   
     }
   
-  }
-  
-  
-  // random sample from [a,b]
-  function uniform(a, b) {
-    return Math.random() * (b - a) + a;
-  }
-  
-  // random sample from normal(mean, variance)
-  function normal(mean, variance) {
-    var s = 0;
-    while (s == 0 || s > 1) {
-      var u = uniform(-1,1),
-        v = uniform(-1,1);
-      s = u * u + v * v;
-    }
-    var standard = Math.sqrt(-2 * Math.log(s) / s) * u;
-    return mean + Math.sqrt(variance) * standard;
   }

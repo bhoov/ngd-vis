@@ -55,7 +55,24 @@ export class SVG {
             .attr("transform", SVG.translate(margin.left, margin.top));
 
         return svg;
-}
+    }
+
+    static addArrows(parent:D3Sel) {
+        parent.append('defs')
+            .append('marker')
+            .attr("id", "arrow")
+            .attr("markerUnits", "strokeWidth")
+            .attr("markerWidth", 12)
+            .attr("markerHeight", 12)
+            .attr("viewBox", "0 0 12 12")
+            .attr("refX", 6)
+            .attr("refY", 6)
+            .attr("orient", 'auto')
+            .append('path')
+            .attr('d', "M2,2 L10,6 L2,10 L6,6 L2,2")
+            .style("fill: #f00")
+    }
+
 }
 
 export class SVGMeasurements {
