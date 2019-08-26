@@ -5,12 +5,15 @@
     }
 
     .main-fit {
-        stroke-width: 5px;
-        stroke: red;
+        stroke-width: 2px;
+        stroke: rgb(12, 230, 211);
     }
 
     .not-fit {
-        stroke-width: 2px;
-        stroke: blue;
+        stroke-width: 1px;
+        stroke: black;
+    }
+
+    .descending-point {
     }
 }

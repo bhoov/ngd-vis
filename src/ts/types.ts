@@ -28,3 +28,8 @@ export type MarginInfo = {
     bottom:number
     left:number
 }
+
+export interface Vector2D {
+    x: number
+    y: number
+}

@@ -1,4 +1,5 @@
 import * as d3 from "d3"
+import * as R from 'ramda'
 import {MarginInfo} from '../types'
 import {D3Sel} from '../util/xd3'
 
@@ -62,8 +63,8 @@ export class SVG {
             .append('marker')
             .attr("id", "arrow")
             .attr("markerUnits", "strokeWidth")
-            .attr("markerWidth", 12)
-            .attr("markerHeight", 12)
+            .attr("markerWidth", 9)
+            .attr("markerHeight", 9)
             .attr("viewBox", "0 0 12 12")
             .attr("refX", 6)
             .attr("refY", 6)
@@ -71,6 +72,35 @@ export class SVG {
             .append('path')
             .attr('d', "M2,2 L10,6 L2,10 L6,6 L2,2")
             .style("fill: #f00")
+    }
+
+    static insertArrow(parent:D3Sel, x1:number, y1:number, x2:number, y2:number, color:string, width:number) {
+        return parent.append("line")
+             .attr("x1",x1)  
+             .attr("y1",y1)  
+             .attr("x2",x2)  
+             .attr("y2",y2)  
+             .attr("stroke",color)  
+             .attr("stroke-width",width)  
+             .attr("marker-end","url(#arrow)");  
+    }
+
+    static meshgrid(nx: number, ny: number, xrange: number[], yrange: number[]) {
+        const scale = (vals:number[], range) => vals.map(v => (v * (range[1] - range[0])) + range[0]);
+
+        const pointify = (xvals:number[], yvals:number[]) => {
+            const out = []
+            xvals.forEach(x => {
+                yvals.forEach(y => {
+                    out.push({x: x, y: y})
+                })
+            })
+            return out
+        }
+
+        const xvals = scale(R.range(0, nx).map(x => (x + 0.5) / nx), xrange)
+        const yvals = scale(R.range(0, ny).map(y => (y + 0.5) / ny), yrange)
+        return pointify(xvals, yvals)
     }
 
 }

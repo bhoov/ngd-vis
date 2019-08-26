@@ -4,17 +4,11 @@ import {range} from 'ramda'
 import {RegressionLoss} from './ts/loss'
 import {Line} from './ts/line'
 import {genUniform} from './ts/plotting'
-import {SimpleGraph} from './ts/vis/SimpleGraph'
+import {ContourPlot} from './ts/vis/ContourPlot'
 import {SimpleContour} from './ts/contour'
 
 function main() {
-    // const line = new Line(d3.select('#vis1').node())
-    // line.sample(200)
-    // line.plot()
-
-    // const c = new SimpleContour(d3.select('#vis1'))
-
-    const graph = new SimpleGraph(d3.select('#vis1'))
+    const graph = new ContourPlot(d3.select('#vis1'))
 
     // const X = genUniform(-4, 4, 100)
 

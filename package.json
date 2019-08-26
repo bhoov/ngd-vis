@@ -32,7 +32,8 @@
     "d3-svg-legend": "^2.25.6",
     "jquery": "^3.4.1",
     "mathjs": "^6.1.0",
-    "ramda": "^0.26.1"
+    "ramda": "^0.26.1",
+    "rxjs": "^6.5.2"
   },
   "devDependencies": {
     "@types/jquery": "^3.3.31",
