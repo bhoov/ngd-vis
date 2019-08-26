@@ -5,6 +5,12 @@
     }
 
     .main-fit {
-        stroke-width: 4px;
+        stroke-width: 5px;
+        stroke: red;
+    }
+
+    .not-fit {
+        stroke-width: 2px;
+        stroke: blue;
     }
 }
