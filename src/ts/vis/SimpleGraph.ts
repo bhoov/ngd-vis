@@ -1,5 +1,6 @@
 import * as d3 from 'd3'
 import {D3Sel} from '../util/xd3'
+import * as R from 'ramda'
 import {legendColor} from 'd3-svg-legend'
 import {SVGOptions} from '../types'
 import {SVGVisComponent, HTMLVisComponent} from '../util/VisComponent'
@@ -7,7 +8,10 @@ import { SimpleEventHandler } from '../util/SimpleEventHandler';
 import {SVG} from '../util/SVGplus'
 import {getContourValues} from '../plotting'
 
+
 type T = number[]
+
+
 
 export class SimpleGraph extends SVGVisComponent<T> {
     cssname = "simple-graph"
@@ -41,6 +45,9 @@ export class SimpleGraph extends SVGVisComponent<T> {
     // Specify the grid for the contours
     n: number = 50
     m: number = 50
+    ideal: number = 1
+    func: (x:number, y:number) => number
+    dfunc: (x:number, y:number) => [number, number]
 
 
     constructor(d3parent: D3Sel, eventHandler?: SimpleEventHandler, options={}) {
@@ -50,30 +57,41 @@ export class SimpleGraph extends SVGVisComponent<T> {
     }
 
     plotContours() {
-
-        const func = (x, y) =>  x * y;
-
-        const vals = getContourValues(this.n, this.m, this.xrange, this.yrange, func)
-        this.thresholds = d3.range(0, d3.max(vals), 0.1);
-        this.contours.thresholds(this.thresholds);
-            // .map(function(p) { return Math.pow(2, p); });
-
-        this.color = d3.scaleLog().interpolate(() => d3.interpolateYlGnBu);
         const op = this.options;
 
+        const vals = getContourValues(this.n, this.m, this.xrange, this.yrange, this.func)
+        this.thresholds = d3.range(d3.min(vals), d3.max(vals), 0.1);
+
+        console.log(this.contours(vals));
+
+        this.color = d3.scaleLog().interpolate(() => d3.interpolateYlGnBu);
+
+        const contourVals = this.contours(vals)
+        const minVal = d3.min(contourVals.map(d => d.value))
+        console.log(`Min Val: ${minVal}`);
         const contours = this.base.selectAll("path.contour")
-            .data(this.contours(vals))
+            .data(contourVals)
 
         contours.join("path")
             .attr("class", "contour")
             .attr("d", d3.geoPath(d3.geoIdentity().scale(op.width / this.n)))
+            // .attr("d", d3.geoPath())
             .attr("fill", d => {
                 // console.log(d);
                 return this.color(d.value)
             })
-            .classed('main-fit', d => (d.value == 1))
-            // .attr("stroke-width", 0.5)
-            // .attr("stroke", "black")
+            .classed('main-fit', d => {
+                return d.value == 0;
+            })
+            .classed('not-fit', d => {
+                return d.value != 0;
+            })
+            .on('mouseover', d => {
+                console.log(`IN: ${d.value}`);
+            })
+            .on('mouseout', d => {
+                console.log(`OUT: ${d.value}`);
+            })
     }
 
     plotArrow() {
@@ -88,6 +106,16 @@ export class SimpleGraph extends SVGVisComponent<T> {
     }
 
     init() { 
+        const self = this;
+
+        this.func = (x, y) =>  Math.pow(x * y - this.ideal, 2);
+        this.dfunc = (x, y) => {
+            const dx = 2*(x * y - this.ideal) * y;  
+            const dy = 2*(x * y - this.ideal) * x;  
+
+            return [dx, dy]
+        }
+
         const op = this.options
 
         op.width = op.maxWidth - (op.margin.left + op.margin.right)
@@ -132,6 +160,13 @@ export class SimpleGraph extends SVGVisComponent<T> {
         this.plotContours()
         this.plotArrow()
         // this.plotArrows()
+
+        // this.base.on('mousemove', function() {
+        //     const coords = d3.mouse(this)
+        //     const x = self.x.invert(coords[0]), y = self.y.invert(coords[1])
+        //     console.log(self.func(x, y))
+        //     // console.log(coords);
+        // })
     }
 
     data():number[]
