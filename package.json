@@ -40,6 +40,7 @@
     "@types/jquery": "^3.3.31",
     "@types/mathjs": "^6.0.1",
     "@types/ramda": "^0.26.19",
+    "cssnano": "^4.1.10",
     "sass": "^1.22.10",
     "typescript": "^3.5.3",
     "webpack": "^4.39.2",
