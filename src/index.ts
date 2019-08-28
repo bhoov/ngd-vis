@@ -31,7 +31,7 @@ function main() {
 
     qId.text(+qSlider.attr('value') / qFac)
     etaId.text(+etaSlider.attr('value') / etaFac)
-    lrScaleId.text(+lrScaleSlider.attr('value') / lrScaleFac)
+    lrScaleId.text(+lrScaleSlider.attr('value') / lrScaleFac) 
 
     fromEvent(qSlider.node(), 'input').pipe(
         map((v:Event) => v.srcElement.valueAsNumber),
@@ -67,6 +67,18 @@ function main() {
         next: (v) => {
           graph.lrScale(v);
           lrScaleId.text(`${v}`)
+        },
+        err: (err) => console.log(err),
+        complete: () => console.log("COMPLETE")
+    })
+
+    const hessType = d3.select('#hess-type')
+
+    fromEvent(hessType.node(), 'input').pipe(
+        map(v => v.srcElement.value),
+    ).subscribe({
+        next: (v) => {
+          graph.setUpdater(v);
         },
         err: (err) => console.log(err),
         complete: () => console.log("COMPLETE")
