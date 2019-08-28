@@ -9,83 +9,97 @@ import {SVG} from '../util/SVGplus'
 import {getContourValues} from '../plotting'
 import {Updater} from '../Updater'
 import {interval, fromEvent} from 'rxjs'
-import {map, tap, take, startWith} from 'rxjs/operators'
+import {map, tap, take, startWith, scan, switchMap} from 'rxjs/operators'
 
 type T = number[]
 
+interface GraphOptions extends SVGOptions {
+    xrange: [number, number]
+    yrange: [number, number]
+    n: number                   // Number of meshgrid points along the x axis
+    m: number                   // Number of meshgrid points along the y axis
+}
+
+interface GraphScales {
+    x?: d3.ScaleLinear<number, number>,
+    y?: d3.ScaleLinear<number, number>,
+    color?: d3.ScaleLogarithmic<number, string>,
+    contours?: d3.Contours,
+    thresholds?: number[]
+}
+
+interface GraphSels {
+    xaxis?:D3Sel
+    yaxis?:D3Sel
+    legend?:D3Sel
+    tip?:D3Sel
+    xlabel?:D3Sel
+    ylabel?:D3Sel
+    circle?:D3Sel
+}
 
 export class ContourPlot extends SVGVisComponent<T> {
     cssname = "simple-graph"
 
     _data: T
 
-    options:SVGOptions = {
+    options:GraphOptions = {
         maxWidth: 450,
         maxHeight: 450,
         margin: {top: 50, right: 75, bottom: 75, left: 50},
         pad: 30,
-    }
+        xrange: [0, 1.6],
+        yrange: [0, 1.6],
+        n: 500,
+        m: 500,
+    } // #state
 
-    // Scales
-    xrange = [0, 1.6]
-    yrange = [0, 1.6]
-    updater = new Updater()
-    x
-    y
-    color
-    contours
-    thresholds
+    scales: GraphScales = {}
+    sels: GraphSels = {}
 
-    // Selections
-    xaxis
-    yaxis
-    legend
-    tip
-    xlabel
-    ylabel
-    circle
 
     // Other
-    _curr: Vector2D = {x: 0.1, y: 0.2}
+    _curr: Vector2D = {x: 0.1, y: 0.2} // #state
+    ticker
+    updater
 
     // Specify the grid for the contours
-    n: number = 500
-    m: number = 500
-    ideal: number = 1
-    func: (x:number, y:number) => number
-    dfunc: (x:number, y:number) => [number, number]
+    ideal: number = 1 // #state
+    contourFunc: (x:number, y:number) => number // #state
 
     constructor(d3parent: D3Sel, eventHandler?: SimpleEventHandler, options={}) {
         super(d3parent, eventHandler, options)
         this.base.classed(this.cssname, true)
+        this.updater = new Updater()
         this.init()
     }
 
     plotContours() {
-        const op = this.options;
         const self = this;
+        const op = this.options;
+        const scales = this.scales;
 
-        const vals = getContourValues(this.n, this.m, this.xrange, this.yrange, this.func)
-        this.thresholds = d3.range(d3.min(vals), d3.max(vals), 0.1);
+        const vals = getContourValues(op.n, op.m, op.xrange, op.yrange, this.contourFunc)
+        let thresholds = d3.range(d3.min(vals), d3.max(vals), 0.1);
 
         // Because the minimum value is not a contour but a value, we need to do what we can to approach the min.
         const weighted = 0.9;
-        const newMin = (weighted*this.thresholds[0] + (1-weighted)*this.thresholds[1])/2
-        this.thresholds = R.insert(1, newMin, this.thresholds)
+        const newMin = (weighted * thresholds[0] + (1-weighted) * thresholds[1])/2
+        thresholds = R.insert(1, newMin, thresholds)
 
-        this.color = d3.scaleLog().interpolate(() => d3.interpolateYlGnBu);
+        scales.color = d3.scaleLog().interpolate(() => d3.interpolateYlGnBu);
 
-        this.contours.thresholds(this.thresholds)
+        scales.contours.thresholds(thresholds)
 
-        const contourVals = this.contours(vals)
+        const contourVals = scales.contours(vals)
         const contours = this.base.selectAll("path.contour")
             .data(contourVals)
 
         contours.join("path")
             .attr("class", "contour")
-            .attr("d", d3.geoPath(d3.geoIdentity().scale(op.width / this.n)))
+            .attr("d", d3.geoPath(d3.geoIdentity().scale(op.width / op.n)))
             .attr("fill", d => {
-                return this.color(d.value)
+                return scales.color(d.value)
             })
             .classed('main-fit', d => {
                 return d.value == newMin;
@@ -95,70 +109,84 @@ export class ContourPlot extends SVGVisComponent<T> {
             })
     }
 
-    intoVis(v:Vector2D) {
-        return {x: this.x(v.x), y: this.y(v.y)}
+    addCircle(v:Vector2D) {
+        const self = this;
+        const scales = this.scales;
+        const sels = this.sels;
+
+        sels.circle = this.base.append('circle')
+            .attr('cx', scales.x(v.x))
+            .attr('cy', scales.y(v.y))
+            .attr('r', 2)
+            .classed('descending-point', true)
+
+        return v;
     }
 
-    intoMath(v:Vector2D) {
-        return {x: this.x.invert(v.x), y: this.y.invert(v.y)}
+    clearCircles() {
+        d3.selectAll('.descending-point').remove()
     }
 
     plotDescent() {
         const self = this;
-        const plotter = curryPlotCircles(this.base)
 
-        interval(1000).pipe(
-            tap(v => console.log(v)),
-            startWith(self.curr),
-            tap(v => console.log(v)),
-            map(self.updater.next),
-            map(self.intoVis),
-            map(plotter),
-            take(5)
-        )
+        const subObj = {
+            next: (val) => {
+                this.addCircle(val)
+            },
+            err: (err) => console.log(err),
+            complete: () => console.log("COMPLETE")
+        }
 
-        // this.circle = this.base.append('circle')
-        //     .attr('cx', this.x(this._curr.x))
-        //     .attr('cy', this.y(this._curr.y))
-        //     .attr('r', 3)
-        //     .classed('descending-point', true)
+        this.ticker = interval(100).pipe(
+            startWith(this.addCircle(this.curr())),
+            scan(v => self.updater.next(v), self.curr()),
+            take(1000)
+        ).subscribe(subObj)
+    }
+
+    intoVis(v:Vector2D) {
+        return {x: this.scales.x(v.x), y: this.scales.y(v.y)}
+    }
+
+    intoMath(v:Vector2D) {
+        return {x: this.scales.x.invert(v.x), y: this.scales.y.invert(v.y)}
     }
 
     plotQuivers() {
         const self = this;
+        const op = this.options;
+        const scales = this.scales;
+        const sels = this.sels;
+
         const nx = 8, ny = 8;
-        const points = SVG.meshgrid(nx, ny, this.xrange, this.yrange)
+        const points = SVG.meshgrid(nx, ny, op.xrange, op.yrange)
         const color = "red";
         const width = 2;
         const gscale = 0.1;
 
         points.forEach(pt => {
-            const g = self.dfunc(pt.x, pt.y).map(grad => -gscale * grad)
-            const x2 = pt.x + g[0];
-            const y2 = pt.y + g[1];
-            const arrow = SVG.insertArrow(this.base, this.x(pt.x), this.y(pt.y), this.x(x2), this.y(y2), color, width)
+            const g = self.updater.lr(pt);
+            const x2 = pt.x + g.x;
+            const y2 = pt.y + g.y;
+            const arrow = SVG.insertArrow(this.base, scales.x(pt.x), scales.y(pt.y), scales.x(x2), scales.y(y2), color, width)
             arrow.classed('quiver', true)
         })
     }
 
     init() { 
         const self = this;
+        const op = this.options;
+        const scales = this.scales;
+        const sels = this.sels;
 
         // this.func = (x, y) =>  Math.pow(x * y - this.ideal, 2);
-        this.func = (x, y) =>  Math.abs(x * y - this.ideal);
-        this.dfunc = (x, y) => {
-            const dx = 2*(x * y - this.ideal) * y;  
-            const dy = 2*(x * y - this.ideal) * x;  
-
-            return [dx, dy]
-        }
-
-        const op = this.options
+        this.contourFunc = (x, y) =>  Math.abs(x * y - this.ideal);
 
         op.width = op.maxWidth - (op.margin.left + op.margin.right)
         op.height = op.maxHeight - (op.margin.top + op.margin.bottom)
 
-        this.contours = d3.contours().size([this.n, this.m])
+        scales.contours = d3.contours().size([op.n, op.m])
         SVG.addArrows(this.svg)
 
         this.svg
@@ -167,45 +195,47 @@ export class ContourPlot extends SVGVisComponent<T> {
 
         this.base = SVG.group(this.base, '', {x: op.margin.left, y: op.margin.top})
 
-        this.x = d3.scaleLinear().domain(this.xrange).range([0, op.width])
-        this.y = d3.scaleLinear().domain(this.yrange).range([op.height, 0])
+        scales.x = d3.scaleLinear().domain(op.xrange).range([0, op.width])
+        scales.y = d3.scaleLinear().domain(op.yrange).range([op.height, 0])
 
-        this.xaxis = this.base.append("g")
+        sels.xaxis = this.base.append("g")
             .attr("class", "axis axis--x")
             .attr("transform", SVG.translate(0, op.height))
-            .call(d3.axisBottom(this.x).ticks(3, "s"));
+            .call(d3.axisBottom(scales.x).ticks(3, "s"));
         
-        this.yaxis = this.base.append("g")
+        sels.yaxis = this.base.append("g")
             .attr("class", "axis axis--y")
             .attr("transform", SVG.translate(0, 0))
-            .call(d3.axisLeft(this.y).ticks(3, "s"));
+            .call(d3.axisLeft(scales.y).ticks(3, "s"));
 
-        this.xlabel = this.base.append("text")
+        sels.xlabel = this.base.append("text")
             .text("w0")
             .attr("class", "titles")
             .attr("transform", SVG.translate(op.width/2, op.height + op.pad))
 
-        this.ylabel = this.base.append("text")
+        sels.ylabel = this.base.append("text")
             .text("w1")
             .attr("class", "titles")
             .attr("transform", SVG.translate(-op.pad, op.height/2) + SVG.rotate(-90))
 
-        this.legend = this.svg.append("g")
+        sels.legend = this.svg.append("g")
             .attr("class", "legend")
             .attr("transform", SVG.translate(op.width + op.pad / 2, 0)); 
 
         this.base.on('click', function() {
+            if (self.ticker != undefined) {
+                self.ticker.unsubscribe()  
+            }
             const coords = d3.mouse(this);
             console.log(coords);
-            self.curr({x: self.x.invert(coords[0]), y: self.y.invert(coords[1])})
-            self.plotDescent()
+            self.curr({x: scales.x.invert(coords[0]), y: scales.y.invert(coords[1])})
+            self.addCircle(self.curr())
+            self.clearCircles();
+            self.plotDescent();
         })
-
-        fromEvent(this.base.node(), 'dblclick').subscribe(this.plotDescent)
 
         this.plotContours()
         this.plotQuivers()
-        // this.plotDescent()
     }
 
     curr(): Vector2D
@@ -216,8 +246,6 @@ export class ContourPlot extends SVGVisComponent<T> {
         }
 
         this._curr = val;
-        this.plotDescent()
-
         return this;
     }
 
@@ -231,7 +259,7 @@ export class ContourPlot extends SVGVisComponent<T> {
 }
 
 function plotCircles(parent: D3Sel, v:Vector2D): D3Sel {
-    const circle = this.base.append('circle')
+    const circle = parent.append('circle')
         .attr('cx', v.x)
         .attr('cy', v.y)
         .attr('r', 3)
@@ -239,5 +267,3 @@ function plotCircles(parent: D3Sel, v:Vector2D): D3Sel {
 
     return circle
 }
-
-const curryPlotCircles = R.curry(plotCircles);
