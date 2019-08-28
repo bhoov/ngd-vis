@@ -7,7 +7,7 @@ import {SVGVisComponent, HTMLVisComponent} from '../util/VisComponent'
 import { SimpleEventHandler } from '../util/SimpleEventHandler';
 import {SVG} from '../util/SVGplus'
 import {getContourValues} from '../plotting'
-import {Updater} from '../Updater'
+import {Updater, BlockUpdater} from '../Updater'
 import {interval, fromEvent} from 'rxjs'
 import {map, tap, take, startWith, scan, switchMap} from 'rxjs/operators'
 
@@ -49,8 +49,8 @@ export class ContourPlot extends SVGVisComponent<T> {
         maxHeight: 450,
         margin: {top: 50, right: 75, bottom: 75, left: 50},
         pad: 30,
-        xrange: [0, 1.6],
-        yrange: [0, 1.6],
+        xrange: [0, 2.5],
+        yrange: [0, 2.5],
         n: 500,
         m: 500,
     } // #state
@@ -74,6 +74,20 @@ export class ContourPlot extends SVGVisComponent<T> {
         this.init()
     }
 
+    setUpdater(name:'block'|'full'){
+        if (name == 'block') {
+            this.updater = new BlockUpdater(this.q(), this.eta(), this.lrScale())
+        }
+        else if (name == 'full') {
+            this.updater = new Updater(this.q(), this.eta(), this.lrScale())
+        } 
+
+        else {
+            console.log("Please enter a valid input as updater");
+        }
+        this.updateQuivers()
+    }
+
     plotContours() {
         const self = this;
         const op = this.options;
@@ -81,10 +95,10 @@ export class ContourPlot extends SVGVisComponent<T> {
 
         const contourFunc = (x, y) => this.updater.absErr({x: x, y: y})
         const vals = getContourValues(op.n, op.m, op.xrange, op.yrange, contourFunc)
-        let thresholds = d3.range(d3.min(vals), d3.max(vals), 0.1);
+        let thresholds = d3.range(d3.min(vals), d3.max(vals), 0.25);
 
         // Because the minimum value is not a contour but a value, we need to do what we can to approach the min.
-        const weighted = 0.9;
+        const weighted = 0.91;
         const newMin = (weighted * thresholds[0] + (1-weighted) * thresholds[1])/2
         thresholds = R.insert(1, newMin, thresholds)
 
@@ -110,10 +124,19 @@ export class ContourPlot extends SVGVisComponent<T> {
             })
     }
 
-    addCircle(v:Vector2D) {
+    addCircle(v:Vector2D, prev:Vector2D=null) {
         const self = this;
         const scales = this.scales;
         const sels = this.sels;
+
+        if (prev != null) {
+            this.base.append('line')
+            .attr('x1', scales.x(prev.x))
+            .attr('y1', scales.y(prev.y))
+            .attr('x2', scales.x(v.x))
+            .attr('y2', scales.y(v.y))
+            .classed('descending-line', true)
+        }
 
         sels.circle = this.base.append('circle')
             .attr('cx', scales.x(v.x))
@@ -126,6 +149,7 @@ export class ContourPlot extends SVGVisComponent<T> {
 
     clearCircles() {
         d3.selectAll('.descending-point').remove()
+        d3.selectAll('.descending-line').remove()
     }
 
     clearQuivers() {
@@ -135,17 +159,24 @@ export class ContourPlot extends SVGVisComponent<T> {
 
     plotDescent() {
         const self = this;
+        let prevVal = null;
 
         const subObj = {
             next: (val) => {
-                this.addCircle(val)
+                this.addCircle(val, prevVal)
+                prevVal = val
             },
             err: (err) => console.log(err),
             complete: () => console.log("COMPLETE")
         }
 
-        this.ticker = interval(100).pipe(
-            startWith(this.addCircle(this.curr())),
+        const prep = () => {
+            this.addCircle(this.curr())
+            prevVal = this.curr()
+        }
+
+        this.ticker = interval(20).pipe(
+            startWith(prep()),
             scan(v => self.updater.next(v), self.curr()),
             take(1000)
         ).subscribe(subObj)
@@ -248,7 +279,6 @@ export class ContourPlot extends SVGVisComponent<T> {
                 self.ticker.unsubscribe()  
             }
             const coords = d3.mouse(this);
-            console.log(coords);
             self.curr({x: scales.x.invert(coords[0]), y: scales.y.invert(coords[1])})
             self.addCircle(self.curr())
             self.clearCircles();
@@ -286,7 +316,6 @@ export class ContourPlot extends SVGVisComponent<T> {
         }
 
         this.updater.q = val
-        // this.createQuivers()
         this.updateQuivers()
         return this;
     }
@@ -313,14 +342,4 @@ export class ContourPlot extends SVGVisComponent<T> {
         this.updateQuivers()
         return this;
     }
-}
-
-function plotCircles(parent: D3Sel, v:Vector2D): D3Sel {
-    const circle = parent.append('circle')
-        .attr('cx', v.x)
-        .attr('cy', v.y)
-        .attr('r', 3)
-        .classed('descending-point', true)
-
-    return circle
 }

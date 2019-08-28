@@ -2,11 +2,10 @@ import {Vector2D} from './types'
 const simpleError = (v:Vector2D) => v.x * v.y - 1
 
 export class Updater {
-    err: (v:Vector2D) => number
-    loss: number
-    q: number // 0 -> 1, where 0 is SGD and 1 is NGD. 0.5 is sqrt NGD
-    eta: number // aka 'learning rate'
-    lrScale: number
+    err: (v:Vector2D) => number     // The error function. Loss is the error squared
+    q: number                       // 0 -> 1, where 0 is SGD and 1 is NGD. 0.5 is sqrt NGD
+    eta: number                     // aka 'learning rate'
+    lrScale: number                 // Amount to scale size of learning rate
 
     constructor(q=0, eta=0.1, lrScale=0.05, err=simpleError) {
         this.err = err;
@@ -17,6 +16,10 @@ export class Updater {
 
     absErr(v:Vector2D):number {
         return Math.abs(this.err(v))
+    }
+
+    loss(v:Vector2D):number{
+        return Math.pow(this.err(v), 2)
     }
 
     gradients(v:Vector2D):Vector2D {
@@ -44,7 +47,6 @@ export class Updater {
     lr(v:Vector2D): Vector2D {
         const dv = this.dv(v)
         const absErr = this.absErr(v)
-        console.log(absErr);
         const lrx = this.lrScale * dv.x / absErr
         const lry = this.lrScale * dv.y / absErr
         return {x: lrx, y: lry}
@@ -65,7 +67,7 @@ export class Updater {
     }
 }
 
-class BlockUpdater extends Updater {
+export class BlockUpdater extends Updater {
     eigenvalues(v:Vector2D):Vector2D {
         const ex = 2 * Math.pow(v.y, 2)
         const ey = 2 * Math.pow(v.x, 2)
