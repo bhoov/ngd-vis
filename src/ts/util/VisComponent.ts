@@ -56,8 +56,8 @@ export abstract class VisComponent<DataInterface> {
 
     protected abstract options: {};
     protected eventHandler: SimpleEventHandler;
-    protected parent: D3Sel;                        // Parent d3 selection
-    protected base: D3Sel;                 // d3 selection that is created by the init
+    parent: D3Sel;                        // Parent d3 selection
+    base: D3Sel;                 // d3 selection that is created by the init
     protected _data: DataInterface;
     protected renderData: unknown;
 

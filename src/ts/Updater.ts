@@ -6,9 +6,13 @@ export class Updater {
     loss: number
     q: number // 0 -> 1, where 0 is SGD and 1 is NGD. 0.5 is sqrt NGD
     eta: number // aka 'learning rate'
+    lrScale: number
 
-    constructor(q=0, err=simpleError) {
+    constructor(q=0, eta=0.1, lrScale=0.05, err=simpleError) {
         this.err = err;
+        this.q = q;
+        this.eta = eta;
+        this.lrScale = lrScale;
     }
 
     absErr(v:Vector2D):number {
@@ -40,8 +44,9 @@ export class Updater {
     lr(v:Vector2D): Vector2D {
         const dv = this.dv(v)
         const absErr = this.absErr(v)
-        const lrx = dv.x / absErr
-        const lry = dv.y / absErr
+        console.log(absErr);
+        const lrx = this.lrScale * dv.x / absErr
+        const lry = this.lrScale * dv.y / absErr
         return {x: lrx, y: lry}
     }
 

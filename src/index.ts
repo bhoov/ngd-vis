@@ -6,16 +6,14 @@ import {Line} from './ts/line'
 import {genUniform} from './ts/plotting'
 import {ContourPlot} from './ts/vis/ContourPlot'
 import {SimpleContour} from './ts/contour'
+import {fromEvent} from 'rxjs'
+import {map, switchMap, tap} from 'rxjs/operators'
+import {Vector2D} from './ts/types'
+import {D3Sel} from './ts/util/xd3'
 
 function main() {
-    const graph = new ContourPlot(d3.select('#vis1'))
-
-    // const X = genUniform(-4, 4, 100)
-
-    // console.log(X);
-
-    // const lossGraph = new RegressionLoss(d3.select('#vis2').node())
-    // lossGraph.plot(X, 0)
+    const vis1:D3Sel = d3.select('#vis1')
+    const graph = new ContourPlot(vis1)
 }
 
 main()
