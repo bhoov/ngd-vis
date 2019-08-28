@@ -7,6 +7,23 @@
     <body>
         <div>
             <h1>Hello Typescript my old friend.</h1>
+            <div class="slide-container">
+                <p>
+                    q: <span id=q-val></span>
+                </p>
+                <input type="range" min="0" max="100" value="0" class="slider" id="q-slider">
+
+                <p>
+                    lrScale: <span id=lrScale-val></span>
+                </p>
+                <input type="range" min="0" max="100" value="12.5" class="slider" id="lrScale-slider">
+
+                <p>
+                    eta: <span id=eta-val></span>
+                </p>
+                <input type="range" min="0" max="1000" value="0" class="slider" id="eta-slider">
+
+            </div>
             <div id="vis1"></div>
             <div id="vis2"></div>
         </div>

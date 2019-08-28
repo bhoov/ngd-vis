@@ -36,6 +36,7 @@ interface GraphSels {
     xlabel?:D3Sel
     ylabel?:D3Sel
     circle?:D3Sel
+    arrows?:D3Sel[]
 }
 
 export class ContourPlot extends SVGVisComponent<T> {
@@ -61,11 +62,10 @@ export class ContourPlot extends SVGVisComponent<T> {
     // Other
     _curr: Vector2D = {x: 0.1, y: 0.2} // #state
     ticker
-    updater
+    updater: Updater
 
     // Specify the grid for the contours
     ideal: number = 1 // #state
-    contourFunc: (x:number, y:number) => number // #state
 
     constructor(d3parent: D3Sel, eventHandler?: SimpleEventHandler, options={}) {
         super(d3parent, eventHandler, options)
@@ -79,7 +79,8 @@ export class ContourPlot extends SVGVisComponent<T> {
         const op = this.options;
         const scales = this.scales;
 
-        const vals = getContourValues(op.n, op.m, op.xrange, op.yrange, this.contourFunc)
+        const contourFunc = (x, y) => this.updater.absErr({x: x, y: y})
+        const vals = getContourValues(op.n, op.m, op.xrange, op.yrange, contourFunc)
         let thresholds = d3.range(d3.min(vals), d3.max(vals), 0.1);
 
         // Because the minimum value is not a contour but a value, we need to do what we can to approach the min.
@@ -127,6 +128,11 @@ export class ContourPlot extends SVGVisComponent<T> {
         d3.selectAll('.descending-point').remove()
     }
 
+    clearQuivers() {
+        d3.selectAll('.quiver').remove()
+        this.sels.arrows = []
+    }
+
     plotDescent() {
         const self = this;
 
@@ -153,7 +159,25 @@ export class ContourPlot extends SVGVisComponent<T> {
         return {x: this.scales.x.invert(v.x), y: this.scales.y.invert(v.y)}
     }
 
-    plotQuivers() {
+    updateQuivers() {
+        const self = this;
+        const sels = this.sels;
+        const scales = this.scales;
+
+        // Modify arrows inplace
+        sels.arrows.forEach(arrow => {
+            const pt:Vector2D = this.intoMath({
+                x: +arrow.attr('x1'),
+                y: +arrow.attr('y1')
+            })
+
+            const pt2 = self.updater.nextLr(pt)
+            arrow.attr('x2', scales.x(pt2.x))
+                .attr('y2', scales.y(pt2.y))
+        })
+    }
+
+    createQuivers() {
         const self = this;
         const op = this.options;
         const scales = this.scales;
@@ -163,14 +187,14 @@ export class ContourPlot extends SVGVisComponent<T> {
         const points = SVG.meshgrid(nx, ny, op.xrange, op.yrange)
         const color = "red";
         const width = 2;
-        const gscale = 0.1;
 
-        points.forEach(pt => {
-            const g = self.updater.lr(pt);
-            const x2 = pt.x + g.x;
-            const y2 = pt.y + g.y;
-            const arrow = SVG.insertArrow(this.base, scales.x(pt.x), scales.y(pt.y), scales.x(x2), scales.y(y2), color, width)
+        this.clearQuivers()
+
+        sels.arrows = points.map(pt => {
+            const pt2 = self.updater.nextLr(pt)
+            const arrow = SVG.insertArrow(this.base, scales.x(pt.x), scales.y(pt.y), scales.x(pt2.x), scales.y(pt2.y), color, width)
             arrow.classed('quiver', true)
+            return arrow
         })
     }
 
@@ -179,9 +203,6 @@ export class ContourPlot extends SVGVisComponent<T> {
         const op = this.options;
         const scales = this.scales;
         const sels = this.sels;
-
-        // this.func = (x, y) =>  Math.pow(x * y - this.ideal, 2);
-        this.contourFunc = (x, y) =>  Math.abs(x * y - this.ideal);
 
         op.width = op.maxWidth - (op.margin.left + op.margin.right)
         op.height = op.maxHeight - (op.margin.top + op.margin.bottom)
@@ -235,7 +256,7 @@ export class ContourPlot extends SVGVisComponent<T> {
         })
 
         this.plotContours()
-        this.plotQuivers()
+        this.createQuivers()
     }
 
     curr(): Vector2D
@@ -255,6 +276,42 @@ export class ContourPlot extends SVGVisComponent<T> {
         if (val == null) return this._data
         this._data = val
         return this
+    }
+
+    q(): number
+    q(val: number): this
+    q(val?) {
+        if (val == null) {
+            return this.updater.q;
+        }
+
+        this.updater.q = val
+        // this.createQuivers()
+        this.updateQuivers()
+        return this;
+    }
+
+    eta(): number
+    eta(val: number): this
+    eta(val?) {
+        if (val == null) {
+            return this.updater.eta;
+        }
+
+        this.updater.eta = val
+        return this;
+    }
+
+    lrScale(): number
+    lrScale(val: number): this
+    lrScale(val?) {
+        if (val == null) {
+            return this.updater.lrScale;
+        }
+
+        this.updater.lrScale = val
+        this.updateQuivers()
+        return this;
     }
 }
 

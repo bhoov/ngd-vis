@@ -36,8 +36,8 @@ export class Updater {
     dv(v:Vector2D): Vector2D {
         const g = this.gradients(v)
         const ev = this.eigenvalues(v)
-        const dvx = -g.x * Math.abs(Math.pow(ev.x, this.q))
-        const dvy = -g.y * Math.abs(Math.pow(ev.y, this.q))
+        const dvx = -g.x / Math.abs(Math.pow(ev.x, this.q))
+        const dvy = -g.y / Math.abs(Math.pow(ev.y, this.q))
         return {x: dvx, y: dvy}
     }
 
@@ -55,6 +55,13 @@ export class Updater {
         const newx = v.x + dv.x * this.eta;
         const newy = v.y + dv.y * this.eta;
         return {x: newx, y: newy}
+    }
+
+    nextLr(v:Vector2D): Vector2D {
+        const g = this.lr(v);
+        const x = v.x + g.x;
+        const y = v.y + g.y;
+        return {x: x, y: y}
     }
 }
 
