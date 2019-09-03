@@ -17,7 +17,7 @@ function main() {
     const vis1:D3Sel = d3.select('#vis1')
     const graph = new ContourPlot(vis1)
 
-    const qFac = 100;
+    const qFac = 2;//100; // Uncomment 100 if scale is made continuous
     const etaFac = 1000;
     const lrScaleFac = (100 / 0.4) 
 

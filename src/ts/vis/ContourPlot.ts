@@ -24,6 +24,7 @@ interface GraphScales {
     x?: d3.ScaleLinear<number, number>,
     y?: d3.ScaleLinear<number, number>,
     color?: d3.ScaleLogarithmic<number, string>,
+    curve?: d3.CurveCatmullRomFactory,
     contours?: d3.Contours,
     thresholds?: number[]
 }
@@ -75,6 +76,8 @@ export class ContourPlot extends SVGVisComponent<T> {
     }
 
     setUpdater(name:'block'|'full'){
+        const args = [this.q(), this.eta(), this.lrScale()]
+
         if (name == 'block') {
             this.updater = new BlockUpdater(this.q(), this.eta(), this.lrScale())
         }
@@ -88,6 +91,32 @@ export class ContourPlot extends SVGVisComponent<T> {
         this.updateQuivers()
     }
 
+    plotMinimum() {
+        const self = this;
+        const op = this.options;
+        const scales = this.scales;
+
+        const makeX = (nx:number) => R.range(0, nx).map(d3.scaleLinear().domain([0, nx]).range([0.00001, op.xrange[1]]))
+        const yFunc = x => 1/x;
+        const xvals = makeX(100)
+        const yvals = xvals.map(yFunc)//.map(y => scales.y(y))
+
+        const data = R.zip(xvals.map(scales.x), yvals.map(scales.y))
+        const lineGen = d3.line()
+        const pathData = lineGen(data)
+
+        const minimumGroup = this.base.append('g').attr('id', 'minimum-group')
+
+        console.log("Path data: ", pathData);
+
+        minimumGroup.append('path')
+            .attr('d', lineGen(data))
+            .classed('minimum', true)
+            .style('stroke-width', 2.5)
+            .style('stroke', 'blue')
+            .style('fill', null)
+    }
+
     plotContours() {
         const self = this;
         const op = this.options;
@@ -98,16 +127,18 @@ export class ContourPlot extends SVGVisComponent<T> {
         let thresholds = d3.range(d3.min(vals), d3.max(vals), 0.25);
 
         // Because the minimum value is not a contour but a value, we need to do what we can to approach the min.
-        const weighted = 0.91;
-        const newMin = (weighted * thresholds[0] + (1-weighted) * thresholds[1])/2
-        thresholds = R.insert(1, newMin, thresholds)
+        // const weighted = 0.91;
+        // const newMin = (weighted * thresholds[0] + (1-weighted) * thresholds[1])/2
+        // thresholds = R.insert(1, newMin, thresholds)
+        const newMin = 0;
 
         scales.color = d3.scaleLog().interpolate(() => d3.interpolateYlGnBu);
 
         scales.contours.thresholds(thresholds)
 
         const contourVals = scales.contours(vals)
-        const contours = this.base.selectAll("path.contour")
+        const contourGroup = this.base.append('g').attr('id', 'contour-group')
+        const contours = contourGroup.selectAll("path.contour")
             .data(contourVals)
 
         contours.join("path")
@@ -219,11 +250,12 @@ export class ContourPlot extends SVGVisComponent<T> {
         const color = "red";
         const width = 2;
 
+        const quiverGroup = this.base.append('g').attr('id','quiver-group') // init should have these groups already selected
         this.clearQuivers()
 
         sels.arrows = points.map(pt => {
             const pt2 = self.updater.nextLr(pt)
-            const arrow = SVG.insertArrow(this.base, scales.x(pt.x), scales.y(pt.y), scales.x(pt2.x), scales.y(pt2.y), color, width)
+            const arrow = SVG.insertArrow(quiverGroup, scales.x(pt.x), scales.y(pt.y), scales.x(pt2.x), scales.y(pt2.y), color, width)
             arrow.classed('quiver', true)
             return arrow
         })
@@ -239,6 +271,7 @@ export class ContourPlot extends SVGVisComponent<T> {
         op.height = op.maxHeight - (op.margin.top + op.margin.bottom)
 
         scales.contours = d3.contours().size([op.n, op.m])
+        scales.curve = d3.curveCatmullRom.alpha(0.5)
         SVG.addArrows(this.svg)
 
         this.svg
@@ -286,6 +319,7 @@ export class ContourPlot extends SVGVisComponent<T> {
         })
 
         this.plotContours()
+        // this.plotMinimum()
         this.createQuivers()
     }
 
