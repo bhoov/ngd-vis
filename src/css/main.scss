@@ -1,7 +1,12 @@
 @import "line";
-@import "SimpleGraph";
+@import "ContourPlot";
+@import "MultiParabola";
 
 #vis1{
+    width: 600px;
+}
+
+#vis2{
     width: 600px;
 }
 

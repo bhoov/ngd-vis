@@ -1,37 +1,27 @@
 import * as d3 from 'd3'
-import {sliderBottom} from  'd3-simple-slider'
-// import 'd3-simple-slider'
-import * as $ from 'jquery'
-import {range} from 'ramda'
-import {RegressionLoss} from './ts/loss'
-import {Line} from './ts/line'
-import {genUniform} from './ts/plotting'
 import {ContourPlot} from './ts/vis/ContourPlot'
-import {SimpleContour} from './ts/contour'
 import {fromEvent} from 'rxjs'
-import {map, switchMap, tap} from 'rxjs/operators'
-import {Vector2D} from './ts/types'
+import {map, tap} from 'rxjs/operators'
 import {D3Sel} from './ts/util/xd3'
+import {MultiParabola} from './ts/vis/MultiParabola'
 
-function main() {
+
+function plotQuiverGraph() {
     const vis1:D3Sel = d3.select('#vis1')
     const graph = new ContourPlot(vis1)
 
-    const qFac = 2;//100; // Uncomment 100 if scale is made continuous
+    const qFac = 100; // Uncomment 100 if scale is made continuous
+    // const qFac = 2;//100; // Uncomment 100 if scale is made continuous
     const etaFac = 1000;
-    const lrScaleFac = (100 / 0.4) 
 
     const qId = d3.select('#q-val')
     const etaId = d3.select('#eta-val')
-    const lrScaleId = d3.select('#lrScale-val')
 
     const qSlider = d3.select('#q-slider')
     const etaSlider = d3.select('#eta-slider')
-    const lrScaleSlider = d3.select('#lrScale-slider')
 
     qId.text(+qSlider.attr('value') / qFac)
     etaId.text(+etaSlider.attr('value') / etaFac)
-    lrScaleId.text(+lrScaleSlider.attr('value') / lrScaleFac) 
 
     fromEvent(qSlider.node(), 'input').pipe(
         map((v:Event) => v.srcElement.valueAsNumber),
@@ -59,19 +49,6 @@ function main() {
         complete: () => console.log("COMPLETE")
     })
 
-    fromEvent(lrScaleSlider.node(), 'input').pipe(
-        map((v:Event) => v.srcElement.valueAsNumber),
-        map((v:number) => v / lrScaleFac),
-        tap(v => v)
-    ).subscribe({
-        next: (v) => {
-          graph.lrScale(v);
-          lrScaleId.text(`${v}`)
-        },
-        err: (err) => console.log(err),
-        complete: () => console.log("COMPLETE")
-    })
-
     const hessType = d3.select('#hess-type')
 
     fromEvent(hessType.node(), 'input').pipe(
@@ -83,6 +60,17 @@ function main() {
         err: (err) => console.log(err),
         complete: () => console.log("COMPLETE")
     })
+}
+
+function plotParabolaGraph() {
+    const parab = new MultiParabola(d3.select('#vis2'))
+    const dataset = d3.range(10).map(function(d) { return d3.randomUniform(1)() })
+    // parab.data(dataset)
+}
+
+function main() {
+    plotQuiverGraph();
+    // plotParabolaGraph();
 }
 
 main()
