@@ -5,7 +5,22 @@
 import {D3Sel} from "./xd3"
 import {SimpleEventHandler} from "./SimpleEventHandler";
 import {SVG} from "./SVGplus";
-import {SVGOptions} from '../types'
+
+import {MarginInfo} from "../types"
+
+export interface SVGOptions {
+    margin: MarginInfo
+    maxWidth: number
+    maxHeight: number
+    pad: number
+    width?:number
+    height?:number
+}
+
+export interface ChartOptions extends SVGOptions {
+
+}
+
 
 /**
  * Should have VComponentHTML and VComponentSVG

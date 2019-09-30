@@ -2,8 +2,8 @@ import * as d3 from 'd3'
 import {D3Sel} from '../util/xd3'
 import * as R from 'ramda'
 import {legendColor} from 'd3-svg-legend'
-import {SVGOptions, Vector2D} from '../types'
-import {SVGVisComponent, HTMLVisComponent} from '../util/VisComponent'
+import {Vector2D} from '../types'
+import {SVGOptions, SVGVisComponent, HTMLVisComponent} from '../util/VisComponent'
 import { SimpleEventHandler } from '../util/SimpleEventHandler';
 import {SVG} from '../util/SVGplus'
 import {getContourValues} from '../plotting'
@@ -76,13 +76,13 @@ export class ContourPlot extends SVGVisComponent<T> {
     }
 
     setUpdater(name:'block'|'full'){
-        const args = [this.q(), this.eta(), this.lrScale()]
+        const args = [this.q(), this.eta()]
 
         if (name == 'block') {
-            this.updater = new BlockUpdater(this.q(), this.eta(), this.lrScale())
+            this.updater = new BlockUpdater(this.q(), this.eta())
         }
         else if (name == 'full') {
-            this.updater = new Updater(this.q(), this.eta(), this.lrScale())
+            this.updater = new Updater(this.q(), this.eta())
         } 
 
         else {
@@ -127,10 +127,10 @@ export class ContourPlot extends SVGVisComponent<T> {
         let thresholds = d3.range(d3.min(vals), d3.max(vals), 0.25);
 
         // Because the minimum value is not a contour but a value, we need to do what we can to approach the min.
-        // const weighted = 0.91;
-        // const newMin = (weighted * thresholds[0] + (1-weighted) * thresholds[1])/2
-        // thresholds = R.insert(1, newMin, thresholds)
-        const newMin = 0;
+        const weighted = 0.91;
+        const newMin = (weighted * thresholds[0] + (1-weighted) * thresholds[1])/2
+        thresholds = R.insert(1, newMin, thresholds)
+        // const newMin = 0;
 
         scales.color = d3.scaleLog().interpolate(() => d3.interpolateYlGnBu);
 
@@ -275,8 +275,8 @@ export class ContourPlot extends SVGVisComponent<T> {
         SVG.addArrows(this.svg)
 
         this.svg
-            .attr("width", op.width)
-            .attr("height", op.height)
+            .attr("width", op.maxWidth)
+            .attr("height", op.maxHeight)
 
         this.base = SVG.group(this.base, '', {x: op.margin.left, y: op.margin.top})
 
@@ -362,17 +362,6 @@ export class ContourPlot extends SVGVisComponent<T> {
         }
 
         this.updater.eta = val
-        return this;
-    }
-
-    lrScale(): number
-    lrScale(val: number): this
-    lrScale(val?) {
-        if (val == null) {
-            return this.updater.lrScale;
-        }
-
-        this.updater.lrScale = val
         this.updateQuivers()
         return this;
     }

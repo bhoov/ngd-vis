@@ -1,17 +1,23 @@
 import {Vector2D} from './types'
+import * as d3 from 'd3'
 const simpleError = (v:Vector2D) => v.x * v.y - 1
 
 export class Updater {
     err: (v:Vector2D) => number     // The error function. Loss is the error squared
     q: number                       // 0 -> 1, where 0 is SGD and 1 is NGD. 0.5 is sqrt NGD
     eta: number                     // aka 'learning rate'
-    lrScale: number                 // Amount to scale size of learning rate
+    step2lr: d3.ScaleLinear<number, number>
 
-    constructor(q=0, eta=0.1, lrScale=0.05, err=simpleError) {
+    constructor(q=0, eta=0.1, err=simpleError) {
         this.err = err;
         this.q = q;
         this.eta = eta;
-        this.lrScale = lrScale;
+        this.step2lr = d3.scaleLinear().domain([0, 0.8]).range([0.001, 0.25])
+    }
+
+    // Amount to scale size of learning rate
+    get lrScale() {
+        return this.step2lr(this.eta)
     }
 
     absErr(v:Vector2D):number {
@@ -47,8 +53,9 @@ export class Updater {
     lr(v:Vector2D): Vector2D {
         const dv = this.dv(v)
         const absErr = this.absErr(v)
-        const lrx = this.lrScale * dv.x / absErr
-        const lry = this.lrScale * dv.y / absErr
+        const lrScale = this.step2lr(this.eta)
+        const lrx = lrScale * dv.x / absErr
+        const lry = lrScale * dv.y / absErr
         return {x: lrx, y: lry}
     }
 
@@ -64,6 +71,7 @@ export class Updater {
         const x = v.x + g.x;
         const y = v.y + g.y;
         return {x: x, y: y}
+        // return {x: x, y: y}
     }
 }
 
