@@ -5,6 +5,7 @@ import * as d3 from 'd3'
 import {RegressionLoss} from './loss'
 import {Line} from './line'
 
+type LossInfo = [number[], number[]]
 class RegressionOptimizer {
     lrate: number
     bsize: number
@@ -14,7 +15,7 @@ class RegressionOptimizer {
     initial: NetCoef
     actual: NetCoef
     path: NetCoef[]
-    cost: [number[], number[]]  // First value is 'current loss', second is 'maximum loss'. Needed for d3 plotting
+    cost: LossInfo  // First value is 'current loss', second is 'maximum loss'. Needed for d3 plotting
     pad: number                 // Padding around SVG main group
     margin: MarginInfo
     width: number               // Total width, in pixels
@@ -86,7 +87,7 @@ class RegressionOptimizer {
       this.plotCost();
   
       this.line.network(this.initial.b0, this.initial.b1);
-      this.line.plot(0);
+      this.line.plot();
     }
   
   
@@ -130,7 +131,7 @@ class RegressionOptimizer {
   
         this.plot(0);
         this.line.network(b0, b1);
-        this.line.plot(0);
+        this.line.plot();
   
       }, 50);
     }
@@ -141,12 +142,13 @@ class RegressionOptimizer {
     }
   
     plotCost() {
+      const self = this;
   
       // line function
-        var line = d3.line()
-          .x((d, i) => { return this.x(i); })
-          .y((d, i) => { return this.y(d); })
-          .curve(d3.curveBasis);
+      const line:d3.Line<[number,number]> = d3.line()
+        .x((d, i) => { return self.x(i); })
+        .y((d) => { return self.y(d[0]); })
+        .curve(d3.curveBasis);
   
       var maxLoss = this.cost[1].length != 0 ? this.cost[1][0] : 0;
         this.y.domain([0,maxLoss])
@@ -163,8 +165,8 @@ class RegressionOptimizer {
       path.enter().append("path")
         .attr("class", "loss")
         .attr("id", (d, i) => { return i ? 'estimate' : 'true'; });
-  
-      path.attr("d", line)
+    
+      path.attr("d", (d) => line(d))
         .attr("stroke", "black")
         .attr("stroke-width", "2px")
         .attr("fill", "none");
@@ -196,7 +198,9 @@ class RegressionOptimizer {
   
         // line function
         var line = d3.line()
+          // @ts-ignore
           .x((d) => { return this.loss.x(d.b0); })
+          // @ts-ignore
           .y((d) => { return this.loss.y(d.b1); })
           .curve(d3.curveBasis);
   
@@ -211,8 +215,10 @@ class RegressionOptimizer {
         .attr("class", "trajectory")
         .attr("id", "estimate")
         .attr("fill", "none")
+        // @ts-ignore
         .attr("d", line);
       
+      // @ts-ignore
       path.attr("d", line)
         .raise();
       
@@ -222,6 +228,7 @@ class RegressionOptimizer {
       // bind
       var x_scale = this.loss.x,
           y_scale = this.loss.y,
+          // @ts-ignore
           line = this.line,
           initial = this.initial,
           tip = this.tip;
@@ -235,7 +242,9 @@ class RegressionOptimizer {
         .attr("cy", (d) => { return this.loss.y(d.b1); })
         .attr("class", "point")
         .attr("id", (d, i) => { return i ? 'estimate' : 'true'; })
+        // @ts-ignore
         .on('mouseover', function(d, i) { tip.show(d, i, this); })
+        // @ts-ignore
         .on('mouseout', this.tip.hide)
         .call(d3.drag()
           .on("start", () => { $("#regression_reset").click(); })
@@ -255,7 +264,9 @@ class RegressionOptimizer {
               initial.b0 = x_scale.invert(x);
               initial.b1 = y_scale.invert(y);
               d3.select(this).attr("cx", x).attr("cy", y);
+              // @ts-ignore
               line.network(x_scale.invert(x), y_scale.invert(y));
+              // @ts-ignore
               tip.show(d, i, this);
           }
         }
@@ -291,10 +302,12 @@ class RegressionOptimizer {
         .attr("class", "legend")
         .attr("transform", "translate(" + (this.width + this.pad / 2) + ",0)"); 
       
+      // @ts-ignore
       this.legend = d3.legendColor()
         .labelFormat(d3.format(".2g"))
         .title("Optimizer");
   
+      // @ts-ignore
       this.tip = d3.tip()
         .attr('class', 'd3-tip')
         .offset([-10, 0])
@@ -306,6 +319,7 @@ class RegressionOptimizer {
             }
         });
   
+      // @ts-ignore
       this.loss.svg.call(this.tip);
     }
   
