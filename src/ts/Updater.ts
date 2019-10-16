@@ -1,34 +1,41 @@
 import {Vector2D} from './types'
 import * as d3 from 'd3'
-const simpleError = (v:Vector2D) => v.x * v.y - 1
+
+type ErrorFunc = (v: Vector2D) => number
+
+
+const defaultError: ErrorFunc = v => v.x * v.y - 1
+const defaultStep2Lr: d3.ScaleLinear<number, number> = d3.scaleLinear().domain([0, 0.8]).range([0.001, 0.25])
 
 export class Updater {
-    err: (v:Vector2D) => number     // The error function. Loss is the error squared
-    q: number                       // 0 -> 1, where 0 is SGD and 1 is NGD. 0.5 is sqrt NGD
-    eta: number                     // aka 'learning rate'
-    step2lr: d3.ScaleLinear<number, number>
+    err: ErrorFunc                          // The error function. Loss is the error squared
+    q: number                               // 0 -> 1, where 0 is SGD and 1 is NGD. 0.5 is sqrt NGD. [step = - eta * H ^ (-1/q) * g] (H = 0 when q=0)
+    eta: number                             // aka 'learning rate'
+    step2lr: d3.ScaleLinear<number, number> // Format the learning rate for display
 
-    constructor(q=0, eta=0.1, err=simpleError) {
+    constructor(q=0, eta=0.1, err=defaultError, step2lr=defaultStep2Lr) {
         this.err = err;
         this.q = q;
         this.eta = eta;
-        this.step2lr = d3.scaleLinear().domain([0, 0.8]).range([0.001, 0.25])
+        this.step2lr = step2lr;
     }
 
-    // Amount to scale size of learning rate
+    // Amount to scale size of learning rate arrows
     get lrScale() {
         return this.step2lr(this.eta)
     }
 
+    // Take abs value of error
     absErr(v:Vector2D):number {
         return Math.abs(this.err(v))
     }
 
+    // Calculate error squared
     loss(v:Vector2D):number{
         return Math.pow(this.err(v), 2)
     }
 
-    gradients(v:Vector2D):Vector2D {
+    gradient(v:Vector2D):Vector2D {
         const err = this.err(v);
         const gx = v.y * err;
         const gy = v.x * err;
@@ -43,7 +50,7 @@ export class Updater {
     }
 
     dv(v:Vector2D): Vector2D {
-        const g = this.gradients(v)
+        const g = this.gradient(v)
         const ev = this.eigenvalues(v)
         const dvx = -g.x / Math.abs(Math.pow(ev.x, this.q))
         const dvy = -g.y / Math.abs(Math.pow(ev.y, this.q))
@@ -59,6 +66,7 @@ export class Updater {
         return {x: lrx, y: lry}
     }
 
+    // Get next v value
     next(v:Vector2D): Vector2D {
         const dv = this.dv(v)
         const newx = v.x + dv.x * this.eta;
@@ -71,7 +79,6 @@ export class Updater {
         const x = v.x + g.x;
         const y = v.y + g.y;
         return {x: x, y: y}
-        // return {x: x, y: y}
     }
 }
 

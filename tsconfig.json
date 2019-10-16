@@ -2,7 +2,7 @@
   "allowSyntheticDefaultImports": true,
   "compilerOptions": {
     "outDir": "./public/",
-    "rootDir": "./",
+    "rootDir": "./src",
     "module": "esnext",
     "target": "es2015",
     "moduleResolution": "node",
@@ -15,6 +15,7 @@
   },
   "exclude": ["node_modules", "types"],
   "include": [
+    "src/*.ts",
     "src/ts/*.ts",
     "src/ts/**/*.ts",
   ]

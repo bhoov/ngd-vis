@@ -91,8 +91,8 @@ export class MultiParabola extends SVGVisComponent<T> {
             .attr("class", "titles")
             .attr("transform", SVG.translate(op.width/2, op.height + op.pad))
 
-        const baseLine = d3.line()
-            .x((d:number, i:number) => scales.x(d))
+        const baseLine = d3.line<number>()
+            .x((d:number) => scales.x(d))
             .curve(d3.curveLinear)
 
         scales.lines = as.map(a => {

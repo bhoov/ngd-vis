@@ -64,5 +64,4 @@ export class BaseAPI {
 
         return d3.json(url)
     }
-}
 };
