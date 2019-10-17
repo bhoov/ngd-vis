@@ -25,6 +25,17 @@ function plotQuiverGraph() {
         graph: new ContourPlot(sels.quiverPlot)
     }
 
+    const defaults = {
+        q: 0,
+        eta: 0.01
+    }
+
+    // Initialize graph parameters to match the defaults
+    vizs.graph.q(defaults.q)
+    vizs.graph.eta(defaults.eta)
+
+    sels.qSlider.attr('value', defaults.q)
+    sels.etaSlider.attr('value', defaults.eta * op.etaFac)
     sels.qId.text(+sels.qSlider.attr('value') / op.qFac)
     sels.etaId.text(+sels.etaSlider.attr('value') / op.etaFac)
 
@@ -62,15 +73,28 @@ function plotGolfHole() {
     const op = {
         qFac: 100,
         // qFac: 2 // Uncomment if we only care about q=0, 0.5, 1
-        etaFac: 100
+        etaFac: 5000
     }
 
     const vizs = {
         graph: new GolfHole1D(sels.chart)
     }
 
+    const defaults = {
+        q: 0,
+        eta: 0.001
+    }
+
+    // Initialize graph parameters to match the defaults
+    vizs.graph.q(defaults.q)
+    vizs.graph.eta(defaults.eta)
+
+    sels.qSlider.attr('value', defaults.q)
+    sels.etaSlider.attr('value', defaults.eta * op.etaFac)
+
     sels.qId.text(+sels.qSlider.attr('value') / op.qFac)
     sels.etaId.text(+sels.etaSlider.attr('value') / op.etaFac)
+    vizs.graph.q()
 
     sels.qSlider.on('input', function () {
         const me = d3.select(this)
