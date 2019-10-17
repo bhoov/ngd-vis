@@ -62,7 +62,7 @@ function plotGolfHole() {
     const op = {
         qFac: 100,
         // qFac: 2 // Uncomment if we only care about q=0, 0.5, 1
-        etaFac: 1000
+        etaFac: 100
     }
 
     const vizs = {
