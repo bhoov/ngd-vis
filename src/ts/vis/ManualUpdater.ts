@@ -47,6 +47,5 @@ export class ManualUpdater {
 
     next(x: number): number {
         return x + this.step(x)
-
     }
 }

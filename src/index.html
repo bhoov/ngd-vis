@@ -22,7 +22,7 @@
                 = 1
             </p>
 
-            <div class="row">
+            <div id="vis1" class="row">
                 <div class="col-md-4">
                     <div class="slide-container">
                         <p>
@@ -45,7 +45,7 @@
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <div id="vis1" class="img-fluid"></div>
+                    <div id="chart" class="img-fluid"></div>
                 </div>
             </div>
 
@@ -55,13 +55,22 @@
                 clear minimum but whose gradient is extremely close to 0 for most of the surface.
             </p>
 
-            <div class="container">
+            <div id="vis2" class="container">
                 <div class="row">
                     <div class="col-md-3">
-                        <!-- controls -->
+                        <p>
+                            q: <span id=q-val></span>
+                        </p>
+                        <!-- <input type="range" min="0" max="2" value="0" class="slider" id="q-slider"> -->
+                        <input type="range" min="0" max="100" value="0" class="slider" id="q-slider">
+
+                        <p>
+                            learning rate: <span id=eta-val></span>
+                        </p>
+                        <input type="range" min="0" max="1000" value="0" class="slider" id="eta-slider">
                     </div>
                     <div class="col-md-9">
-                        <div id="vis2"></div>
+                        <div id="chart" class="img-fluid"></div>
                     </div>
                 </div>
             </div>
