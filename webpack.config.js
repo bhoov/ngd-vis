@@ -15,9 +15,7 @@ module.exports = {
                 exclude: [
                     /node_modules/,
                     /ImageContentBox\.ts/,
-                    /test\.ts/
                     /codeRef/
-                    // path.resolve(__dirname,'ts/vis/ImageContentBox.ts')
                 ],
                 use: [{
                     loader: 'cache-loader'
