@@ -220,12 +220,6 @@ export class GolfHole1D extends SVGVisComponent<T> {
             unsubscribe: () => console.log("Empty Ticker!")
         }
 
-        // fromEvent(this.sels.backdrop.node(), 'click').pipe(
-        //     tap(x => console.log(x)),
-        //     startWith((e:MouseEvent) => descendSetup(e)),
-        //     switchMap(ticker)
-        // ).subscribe({next: x => x})
-
         this.sels.backdrop.on('click', function () {
             runningTicker.unsubscribe()
             const click = toVec(d3.mouse(this))
@@ -241,15 +235,6 @@ export class GolfHole1D extends SVGVisComponent<T> {
                 .attr("r", "5px")
 
             runningTicker = ticker()
-            // const descendFunc = () => interval(20).pipe(
-            //     map(x => 1),
-            //     scan((acc: number) => {
-            //         const newx = self.data().updater.next(acc)
-            //         self.data(R.assoc('x', newx, self.data()))
-            //         return self.data().x
-            //     }, self.data().x),
-            //     take(100)
-            // ).subscribe(subObj)
         })
     }
 
@@ -262,6 +247,21 @@ export class GolfHole1D extends SVGVisComponent<T> {
         return this
     }
 
+    q(): number
+    q(val: number): this
+    q(val?) {
+        if (val == null) return this.updater.q
+        this.updater.q = val
+        return this
+    }
+
+    eta(): number
+    eta(val: number): this
+    eta(val?) {
+        if (val == null) return this.updater.eta
+        this.updater.eta = val
+        return this
+    }
 }
 
 function toVec([x, y]: [number, number]): Vector2D {

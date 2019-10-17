@@ -5,13 +5,14 @@ import { MultiParabola } from './vis/MultiParabola'
 import { GolfHole1D } from './vis/GolfHole1D'
 
 function plotQuiverGraph() {
+    const vis1 = d3.select('#vis1')
     const sels = {
-        quiverPlot: d3.select('#vis1'),
-        qId: d3.select('#q-val'),
-        etaId: d3.select('#eta-val'),
-        qSlider: d3.select('#q-slider'),
-        etaSlider: d3.select('#eta-slider'),
-        hessType: d3.select('#hess-type')
+        quiverPlot: vis1.select('#chart'),
+        qId: vis1.select('#q-val'),
+        etaId: vis1.select('#eta-val'),
+        qSlider: vis1.select('#q-slider'),
+        etaSlider: vis1.select('#eta-slider'),
+        hessType: vis1.select('#hess-type')
     }
 
     const op = {
@@ -49,23 +50,46 @@ function plotQuiverGraph() {
 }
 
 function plotGolfHole() {
+    const vis2 = d3.select("#vis2");
     const sels = {
-        vis2: d3.select("#vis2")
+        chart: vis2.select('#chart'),
+        qId: vis2.select('#q-val'),
+        etaId: vis2.select('#eta-val'),
+        qSlider: vis2.select('#q-slider'),
+        etaSlider: vis2.select('#eta-slider'),
     }
 
     const op = {
-
+        qFac: 100,
+        // qFac: 2 // Uncomment if we only care about q=0, 0.5, 1
+        etaFac: 1000
     }
 
     const vizs = {
-        graph: new GolfHole1D(sels.vis2)
+        graph: new GolfHole1D(sels.chart)
     }
+
+    sels.qId.text(+sels.qSlider.attr('value') / op.qFac)
+    sels.etaId.text(+sels.etaSlider.attr('value') / op.etaFac)
+
+    sels.qSlider.on('input', function () {
+        const me = d3.select(this)
+        const v = me.property('value') / op.qFac;
+        vizs.graph.q(v);
+        sels.qId.text(`${v}`)
+    })
+
+    sels.etaSlider.on('input', function () {
+        const me = d3.select(this)
+        const v = me.property('value') / op.etaFac;
+        vizs.graph.eta(v)
+        sels.etaId.text(`${v}`)
+    })
 }
 
 export function main() {
     console.log("RUNNING");
     plotQuiverGraph();
     plotGolfHole();
-    // plotParabolaGraph();
 }
 
