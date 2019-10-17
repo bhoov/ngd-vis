@@ -38,8 +38,10 @@ interface GraphSels {
     ball?: D3Sel
 }
 
-const func = x => Math.pow(Math.tanh(x), 2)
-const dFunc = x => Math.tanh(x) * Math.pow(Math.cosh(x), -2)
+// Note that plotFunc is the loss function we plot and func is the component of the loss function needed for the updater
+const plotFunc = x => Math.pow(Math.tanh(x), 2)
+const func = x => Math.tanh(x)
+const dFunc = x => Math.pow(Math.cosh(x), -2)
 const ddFunc = x => -2 * Math.tanh(x) / Math.pow(Math.cosh(x), 2)
 
 export class GolfHole1D extends SVGVisComponent<T> {
@@ -63,13 +65,11 @@ export class GolfHole1D extends SVGVisComponent<T> {
 
     updater: ManualUpdater
 
-    descender // RXJS interval observable that plots the descent of a golf ball
-
     constructor(d3parent: D3Sel, eventHandler?: SimpleEventHandler, options = {}) {
         super(d3parent, eventHandler, options)
         this.base.classed(this.cssname, true)
         this.init()
-        this.updater = new ManualUpdater(func, dFunc, ddFunc, 1, 1)
+        this.updater = new ManualUpdater(func, dFunc, ddFunc)
         this.data({ x: 5, updater: this.updater })
         this.initBalls()
     }
@@ -96,7 +96,7 @@ export class GolfHole1D extends SVGVisComponent<T> {
 
     // Turn a number into a vector
     num2vec(x: number): Vector2D {
-        return { x: x, y: func(x) }
+        return { x: x, y: plotFunc(x) }
     }
 
     // Turn a ball into a vector
@@ -106,7 +106,7 @@ export class GolfHole1D extends SVGVisComponent<T> {
 
     // Turn a ball into a vector in the visualization coordinate system
     ball2vis(b: Ball) {
-        return this.intoVis(this.ball2vec(this.nextBall(b)))
+        return this.intoVis(this.ball2vec(b))
     }
 
     // Plot a ball on the chart
@@ -118,9 +118,9 @@ export class GolfHole1D extends SVGVisComponent<T> {
 
         const ball = this.ball2vis(b)
         self.sels.ball = self.base.selectAll(clsSel)
-            .datum(ball)
+            .data([ball])
             .join('circle')
-            .classed("cls", true)
+            .classed(cls, true)
             .attr("cx", d => d.x)
             .attr("cy", d => d.y)
             .attr("r", "5px")
@@ -174,7 +174,7 @@ export class GolfHole1D extends SVGVisComponent<T> {
 
         const baseLine = d3.line<number>()
             .x((d: number, i: number) => scales.x(d))
-            .y((d: number, i: number) => scales.y(func(d)))
+            .y((d: number, i: number) => scales.y(plotFunc(d)))
             .curve(d3.curveLinear)
 
         scales.paths = [baseLine]
@@ -199,40 +199,63 @@ export class GolfHole1D extends SVGVisComponent<T> {
             .attr("height", op.height)
             .attr("width", op.width)
 
+        const outOfBounds = (b: Ball) => {
+            const tooSmall = (x) => x < (1 * op.xrange[0])
+            const tooBig = (x) => x > (1 * op.xrange[1])
+            return (isNaN(b.x) || tooSmall(b.x) || tooBig(b.x))
+        }
+
         const subObj = {
-            next: x => console.log(x),
-            error: x => console.log("ERROR: ", x),
+            next: b => {
+                console.log("BEFORE PLOT");
+                self.plotBall(b)  
+            },
+            error: b => console.log("ERROR: ", b),
             complete: () => console.log("COMPLETE"),
         }
 
-        const ticker = () => interval(10).pipe(
-            map(x => 1),
-            scan((acc: Ball) => {
-                const newBall = self.nextBall(acc)
-                self.data(newBall)
-                return newBall
-            }, self.data()),
-            take(1000)
-        ).subscribe(subObj)
 
         // Running ticker starts as an empty subscription object, is later replaced by the running ticker
         let runningTicker = {
             unsubscribe: () => console.log("Empty Ticker!")
         }
 
+        const ticker = () => interval(10).pipe(
+            scan((acc: Ball) => {
+                const newBall = self.nextBall(self.data())
+                const currBallSel = d3.select('.golf-ball')
+                if (currBallSel.classed('dead-ball')) {
+                    console.log("STAY DEAD");
+                    runningTicker.unsubscribe()
+                }
+                else if (outOfBounds(newBall)) {
+                    console.log("KILLING");
+                    currBallSel.classed('dead-ball', true)
+                    runningTicker.unsubscribe()
+                }
+                else {
+                    console.log("Everything looks ok: ", newBall);
+                    self.data(newBall)
+                }
+                return self.data()
+
+            }, self.data()),
+            take(5000)
+        ).subscribe(subObj)
+
         this.sels.backdrop.on('click', function () {
             runningTicker.unsubscribe()
             const click = toVec(d3.mouse(this))
             self.data(R.assoc('x', self.intoMath(click).x, self.data()))
-            const plotFVal = self.ball2vis(self.data())
+            console.log(self.data());
+            self.plotBall(self.data())
 
-            self.sels.ball = self.base.selectAll('.golf-ball')
-                .data([plotFVal])
-                .join('circle')
-                .classed("golf-ball", true)
-                .attr("cx", d => d.x)
-                .attr("cy", d => d.y)
-                .attr("r", "5px")
+            if (outOfBounds(self.data())) {
+                self.sels.ball.classed('dead-ball', true)
+            }
+            else {
+                self.sels.ball.classed('dead-ball', false)
+            }
 
             runningTicker = ticker()
         })
@@ -243,7 +266,6 @@ export class GolfHole1D extends SVGVisComponent<T> {
     data(val?) {
         if (val == null) return this._data
         this._data = val;
-        this.plotBall(val);
         return this
     }
 
