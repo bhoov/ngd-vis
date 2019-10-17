@@ -6,3 +6,11 @@
 .golf-ball {
     fill: white;
 }
+
+.golf-hole-chart {
+    .line{
+        stroke-width: 3px;
+        stroke:orange;
+        fill: none;
+    }
+}
