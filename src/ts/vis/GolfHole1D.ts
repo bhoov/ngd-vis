@@ -207,7 +207,6 @@ export class GolfHole1D extends SVGVisComponent<T> {
 
         const subObj = {
             next: b => {
-                console.log("BEFORE PLOT");
                 self.plotBall(b)  
             },
             error: b => console.log("ERROR: ", b),
@@ -234,7 +233,6 @@ export class GolfHole1D extends SVGVisComponent<T> {
                     runningTicker.unsubscribe()
                 }
                 else {
-                    console.log("Everything looks ok: ", newBall);
                     self.data(newBall)
                 }
                 return self.data()
