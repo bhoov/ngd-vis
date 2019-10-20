@@ -8,14 +8,15 @@ import { SVG } from '../util/SVGplus'
 import { interval, fromEvent } from 'rxjs'
 import { map, tap, take, startWith, scan, switchMap } from 'rxjs/operators'
 import { ManualUpdater } from './ManualUpdater'
+import { GolfBall } from './GolfBall'
 import { start } from 'repl'
 
-interface Ball {
-    x: number
-    updater: ManualUpdater
-}
+// interface Ball {
+//     x: number
+//     updater: ManualUpdater
+// }
 
-type T = Ball
+type T = GolfBall
 
 interface GraphOptions extends SVGOptions {
     xrange: [number, number]
@@ -63,14 +64,14 @@ export class GolfHole1D extends SVGVisComponent<T> {
 
     sels: GraphSels = {}
 
-    updater: ManualUpdater
-
     constructor(d3parent: D3Sel, eventHandler?: SimpleEventHandler, options = {}) {
         super(d3parent, eventHandler, options)
         this.base.classed(this.cssname, true)
         this.init()
-        this.updater = new ManualUpdater(func, dFunc, ddFunc)
-        this.data({ x: 5, updater: this.updater })
+        const updater = new ManualUpdater(func, dFunc, ddFunc)
+        const x = 5
+        const data = new GolfBall(updater, x)
+        this.data(data)
         this.initBalls()
     }
 
@@ -88,29 +89,18 @@ export class GolfHole1D extends SVGVisComponent<T> {
         return { x: this.scales.x.invert(v.x), y: this.scales.y.invert(v.y) }
     }
 
-    // Get the datapoint that would represent the next ball
-    nextBall(b: Ball): Ball {
-        const newB = R.assoc('x', b.updater.next(b.x), b)
-        return newB
-    }
-
     // Turn a number into a vector
     num2vec(x: number): Vector2D {
         return { x: x, y: plotFunc(x) }
     }
 
-    // Turn a ball into a vector
-    ball2vec(b: Ball): Vector2D {
-        return this.num2vec(b.x)
-    }
-
     // Turn a ball into a vector in the visualization coordinate system
-    ball2vis(b: Ball) {
-        return this.intoVis(this.ball2vec(b))
+    ball2vis(b: GolfBall) {
+        return this.intoVis(b.toVec(plotFunc))
     }
 
     // Plot a ball on the chart
-    plotBall(b: Ball, cls = 'golf-ball') {
+    plotBall(b: GolfBall, cls = 'golf-ball') {
         const self = this;
 
         const toClass = name => '.' + name
@@ -199,20 +189,19 @@ export class GolfHole1D extends SVGVisComponent<T> {
             .attr("height", op.height)
             .attr("width", op.width)
 
-        const outOfBounds = (b: Ball) => {
-            const tooSmall = (x) => x < (1 * op.xrange[0])
-            const tooBig = (x) => x > (1 * op.xrange[1])
+        const outOfBounds = (b: GolfBall) => {
+            const tooSmall = (x:number) => x < (op.xrange[0])
+            const tooBig = (x:number) => x > (op.xrange[1])
             return (isNaN(b.x) || tooSmall(b.x) || tooBig(b.x))
         }
 
         const subObj = {
             next: b => {
-                self.plotBall(b)  
+                self.plotBall(b)
             },
             error: b => console.log("ERROR: ", b),
             complete: () => console.log("COMPLETE"),
         }
-
 
         // Running ticker starts as an empty subscription object, is later replaced by the running ticker
         let runningTicker = {
@@ -220,8 +209,8 @@ export class GolfHole1D extends SVGVisComponent<T> {
         }
 
         const ticker = () => interval(10).pipe(
-            scan((acc: Ball) => {
-                const newBall = self.nextBall(self.data())
+            scan((acc: GolfBall) => {
+                const newBall = self.data().next()
                 const currBallSel = d3.select('.golf-ball')
                 if (currBallSel.classed('dead-ball')) {
                     console.log("STAY DEAD");
@@ -244,8 +233,7 @@ export class GolfHole1D extends SVGVisComponent<T> {
         this.sels.backdrop.on('click', function () {
             runningTicker.unsubscribe()
             const click = toVec(d3.mouse(this))
-            self.data(R.assoc('x', self.intoMath(click).x, self.data()))
-            console.log(self.data());
+            self.data().x = self.intoMath(click).x
             self.plotBall(self.data())
 
             if (outOfBounds(self.data())) {
@@ -270,16 +258,16 @@ export class GolfHole1D extends SVGVisComponent<T> {
     q(): number
     q(val: number): this
     q(val?) {
-        if (val == null) return this.updater.q
-        this.updater.q = val
+        if (val == null) return this.data().updater.q
+        this.data().updater.q = val
         return this
     }
 
     eta(): number
     eta(val: number): this
     eta(val?) {
-        if (val == null) return this.updater.eta
-        this.updater.eta = val
+        if (val == null) return this.data().updater.eta
+        this.data().updater.eta = val
         return this
     }
 }
