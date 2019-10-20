@@ -4,27 +4,40 @@ import { Vector2D } from "../types"
 import * as R from 'ramda'
 
 export class GolfBall {
-    x: number
+    _x: number
     updater: ManualUpdater
 
     constructor(updater: ManualUpdater, x = 0) {
         this.updater = updater
-        this.x = x
+        this._x = x
+    }
+
+    get x () {
+        return this._x
+    }
+
+    set x(v: number) {
+        this._x = v
     }
 
     nextX(): number {
-        return this.updater.next(this.x)
+        return this.updater.next(this._x)
     }
 
     next(): GolfBall {
-        const out = R.assoc('x', this.updater.next(this.x), this)
+        const out = R.assoc('x', this.updater.next(this._x), this)
         return new GolfBall(this.updater, this.nextX())
+    }
+
+    step_(): this {
+        R.assoc('x', this.nextX(), this)
+        return this
     }
 
     toVec(f: (x: number) => number): Vector2D {
         return {
-            x: this.x,
-            y: f(this.x)
+            x: this._x,
+            y: f(this._x)
         }
     }
 }
