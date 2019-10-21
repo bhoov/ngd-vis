@@ -74,6 +74,8 @@ function plotGolfHole() {
 		etaSlider: vis2.select('#eta-slider'),
 	}
 
+
+
 	const vizs = {
 		graph: new GolfHole1D(sels.chart)
 	}
@@ -91,8 +93,8 @@ function plotGolfHole() {
 	}
 
 	// Initialize graph parameters to match the defaults
-	vizs.graph.q(defaults.q)
-	vizs.graph.eta(defaults.eta)
+	// vizs.graph.q(defaults.q)
+	// vizs.graph.eta(defaults.eta)
 	sels.qId.text(toQ(defaults.q))
 	sels.etaId.text(toEta(defaults.eta))
 
@@ -100,7 +102,7 @@ function plotGolfHole() {
 	sels.qSlider.on('input', function () {
 		const me = d3.select(this)
 		const v = scales.q(me.property('value'));
-		vizs.graph.q(v);
+		// vizs.graph.q(v);
 		console.log(v);
 		sels.qId.text(`${toQ(v)}`)
 	})
@@ -108,7 +110,7 @@ function plotGolfHole() {
 	sels.etaSlider.on('input', function () {
 		const me = d3.select(this)
 		const v = scales.eta(me.property('value'));
-		vizs.graph.eta(v)
+		// vizs.graph.eta(v)
 		sels.etaId.text(`${toEta(v)}`)
 	})
 }

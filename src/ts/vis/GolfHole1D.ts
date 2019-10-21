@@ -11,12 +11,7 @@ import { ManualUpdater } from './ManualUpdater'
 import { GolfBall } from './GolfBall'
 import { start } from 'repl'
 
-// interface Ball {
-//     x: number
-//     updater: ManualUpdater
-// }
-
-type T = GolfBall
+type T = GolfBall[]
 
 interface GraphOptions extends SVGOptions {
     xrange: [number, number]
@@ -68,9 +63,13 @@ export class GolfHole1D extends SVGVisComponent<T> {
         super(d3parent, eventHandler, options)
         this.base.classed(this.cssname, true)
         this.init()
-        const updater = new ManualUpdater(func, dFunc, ddFunc)
-        const x = 5
-        const data = new GolfBall(updater, x)
+
+        const data = [
+            new GolfBall(new ManualUpdater(func, dFunc, ddFunc, 0, 0.15), 'golf-ball-sgd', 4),
+            new GolfBall(new ManualUpdater(func, dFunc, ddFunc, 0.5, 0.07), 'golf-ball-sngd', 3),
+            new GolfBall(new ManualUpdater(func, dFunc, ddFunc, 1, 0.0012), 'golf-ball-ngd', 5)
+        ]
+
         this.data(data)
         this.initBalls()
     }
@@ -100,17 +99,18 @@ export class GolfHole1D extends SVGVisComponent<T> {
     }
 
     // Plot a ball on the chart
-    plotBall(b: GolfBall, cls = 'golf-ball') {
+    plotBall(b: GolfBall) {
         const self = this;
 
         const toClass = name => '.' + name
-        const clsSel = toClass(cls)
+        const clsSel = toClass(b.classname)
 
         const ball = this.ball2vis(b)
         self.sels.ball = self.base.selectAll(clsSel)
             .data([ball])
             .join('circle')
-            .classed(cls, true)
+            .classed('golf-ball', true)
+            .classed(b.classname, true)
             .attr("cx", d => d.x)
             .attr("cy", d => d.y)
             .attr("r", "5px")
@@ -190,58 +190,57 @@ export class GolfHole1D extends SVGVisComponent<T> {
             .attr("width", op.width)
 
         const outOfBounds = (b: GolfBall) => {
-            const tooSmall = (x:number) => x < (op.xrange[0])
-            const tooBig = (x:number) => x > (op.xrange[1])
+            const tooSmall = (x: number) => x < (op.xrange[0])
+            const tooBig = (x: number) => x > (op.xrange[1])
             return (isNaN(b.x) || tooSmall(b.x) || tooBig(b.x))
         }
 
+        function getNextBall(b: GolfBall): GolfBall {
+            const newBall = b.next()
+            const currBallSel = d3.select(`.${b.classname}`)
+            if (outOfBounds(newBall)) {
+                console.log("KILLING");
+                currBallSel.classed('dead-ball', true)
+            }
+            else if (!currBallSel.classed('dead-ball')) {
+                return newBall
+            }
+            return b
+        }
+
         const subObj = {
-            next: b => {
-                self.plotBall(b)
+            next: gbs => {
+                gbs.forEach(b => self.plotBall(b))
             },
             error: b => console.log("ERROR: ", b),
             complete: () => console.log("COMPLETE"),
         }
+
+        const ticker = () => interval(10).pipe(
+            scan((acc: T) => {
+                // Unsubscriber ticker if all balls dead
+                if (R.all((b: GolfBall) => d3.select(`.${b.classname}`).classed('dead-ball'), self.data())) {
+                    runningTicker.unsubscribe()
+                }
+
+                const newBalls = self.data().map(b => getNextBall(b))
+                self.data(newBalls)
+                return self.data()
+            }, self.data()),
+            take(5000)
+        ).subscribe(subObj)
 
         // Running ticker starts as an empty subscription object, is later replaced by the running ticker
         let runningTicker = {
             unsubscribe: () => console.log("Empty Ticker!")
         }
 
-        const ticker = () => interval(10).pipe(
-            scan((acc: GolfBall) => {
-                const newBall = self.data().next()
-                const currBallSel = d3.select('.golf-ball')
-                if (currBallSel.classed('dead-ball')) {
-                    console.log("STAY DEAD");
-                    runningTicker.unsubscribe()
-                }
-                else if (outOfBounds(newBall)) {
-                    console.log("KILLING");
-                    currBallSel.classed('dead-ball', true)
-                    runningTicker.unsubscribe()
-                }
-                else {
-                    self.data(newBall)
-                }
-                return self.data()
-
-            }, self.data()),
-            take(5000)
-        ).subscribe(subObj)
-
         this.sels.backdrop.on('click', function () {
             runningTicker.unsubscribe()
             const click = toVec(d3.mouse(this))
-            self.data().x = self.intoMath(click).x
-            self.plotBall(self.data())
-
-            if (outOfBounds(self.data())) {
-                self.sels.ball.classed('dead-ball', true)
-            }
-            else {
-                self.sels.ball.classed('dead-ball', false)
-            }
+            d3.selectAll('.golf-ball').classed('dead-ball', false)
+            self.data().forEach((b, i) => b.x = self.intoMath(click).x)
+            self.data().forEach(b => self.plotBall(b))
 
             runningTicker = ticker()
         })
@@ -255,21 +254,21 @@ export class GolfHole1D extends SVGVisComponent<T> {
         return this
     }
 
-    q(): number
-    q(val: number): this
-    q(val?) {
-        if (val == null) return this.data().updater.q
-        this.data().updater.q = val
-        return this
-    }
+    // q(): number
+    // q(val: number): this
+    // q(val?) {
+    //     if (val == null) return this.data().updater.q
+    //     this.data().updater.q = val
+    //     return this
+    // }
 
-    eta(): number
-    eta(val: number): this
-    eta(val?) {
-        if (val == null) return this.data().updater.eta
-        this.data().updater.eta = val
-        return this
-    }
+    // eta(): number
+    // eta(val: number): this
+    // eta(val?) {
+    //     if (val == null) return this.data().updater.eta
+    //     this.data().updater.eta = val
+    //     return this
+    // }
 }
 
 function toVec([x, y]: [number, number]): Vector2D {
