@@ -27,6 +27,14 @@
   }
 }
 
+.golf-losses {
+  .line {
+    stroke-width: 1px;
+    stroke: orange;
+    fill: none;
+  }
+}
+
 .dead-ball {
   outline: red 1px solid;
 }

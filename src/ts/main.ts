@@ -1,8 +1,8 @@
 import * as d3 from 'd3'
 import { ContourPlot } from './vis/ContourPlot'
 import { D3Sel } from './util/xd3'
-import { MultiParabola } from './vis/MultiParabola'
 import { GolfHole1D } from './vis/GolfHole1D'
+import { GolfLosses } from './vis/GolfLosses'
 import * as R from 'ramda'
 
 const toFixed = R.curry((ndigits, x) => x.toFixed(ndigits))
@@ -68,16 +68,16 @@ function plotGolfHole() {
 	const vis2 = d3.select("#vis2");
 	const sels = {
 		chart: vis2.select('#chart'),
+		chartLosses: vis2.select('#chart-losses'),
 		qId: vis2.select('#q-val'),
 		etaId: vis2.select('#eta-val'),
 		qSlider: vis2.select('#q-slider'),
 		etaSlider: vis2.select('#eta-slider'),
 	}
 
-
-
 	const vizs = {
-		graph: new GolfHole1D(sels.chart)
+		graph: new GolfHole1D(sels.chart),
+		lossChart: new GolfLosses(sels.chartLosses)
 	}
 
 	const defaults = {

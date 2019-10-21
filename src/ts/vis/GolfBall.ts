@@ -2,16 +2,24 @@ import * as d3 from 'd3'
 import { ManualUpdater } from "./ManualUpdater"
 import { Vector2D } from "../types"
 import * as R from 'ramda'
+import { Subject } from "rxjs"
+
+type BallHistory = {
+    classname: string
+    val: number
+}
 
 export class GolfBall {
     _x: number
     updater: ManualUpdater
     classname: string
+    stream: Subject<BallHistory> // Pushes history of x values to this
 
     constructor(updater: ManualUpdater, classname: string, x = 0) {
         this.updater = updater
         this._x = x
         this.classname = classname
+        this.stream = new Subject()
     }
 
     get x() {
@@ -27,7 +35,11 @@ export class GolfBall {
     }
 
     next(): GolfBall {
-        const out = R.assoc('x', this.updater.next(this._x), this)
+        const nextX = this.nextX()
+        this.stream.next({
+            classname: this.classname,
+            val: nextX
+        })
         return new GolfBall(this.updater, this.classname, this.nextX())
     }
 
