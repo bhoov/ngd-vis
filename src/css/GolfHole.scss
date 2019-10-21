@@ -1,20 +1,32 @@
 .grass {
-    opacity: 0.2;
-    fill: green;
+  opacity: 0.2;
+  fill: green;
 }
 
 .golf-ball {
-    fill: white;
+  opacity: 1;
+}
+
+.golf-ball-sgd {
+  fill: white;
+}
+
+.golf-ball-sngd {
+  fill: gray;
+}
+
+.golf-ball-ngd {
+  fill: darkslategray;
 }
 
 .golf-hole-chart {
-    .line{
-        stroke-width: 3px;
-        stroke:orange;
-        fill: none;
-    }
+  .line {
+    stroke-width: 3px;
+    stroke: orange;
+    fill: none;
+  }
 }
 
 .dead-ball {
-    outline: red 1px solid;
+  outline: red 1px solid;
 }

@@ -6,13 +6,15 @@ import * as R from 'ramda'
 export class GolfBall {
     _x: number
     updater: ManualUpdater
+    classname: string
 
-    constructor(updater: ManualUpdater, x = 0) {
+    constructor(updater: ManualUpdater, classname: string, x = 0) {
         this.updater = updater
         this._x = x
+        this.classname = classname
     }
 
-    get x () {
+    get x() {
         return this._x
     }
 
@@ -26,7 +28,7 @@ export class GolfBall {
 
     next(): GolfBall {
         const out = R.assoc('x', this.updater.next(this._x), this)
-        return new GolfBall(this.updater, this.nextX())
+        return new GolfBall(this.updater, this.classname, this.nextX())
     }
 
     step_(): this {
