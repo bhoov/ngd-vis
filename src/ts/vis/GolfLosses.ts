@@ -8,7 +8,7 @@ import { SVG } from '../util/SVGplus'
 import { range, from, interval, fromEvent } from 'rxjs'
 import { map, tap, take, startWith, scan, switchMap } from 'rxjs/operators'
 import { ManualUpdater } from './ManualUpdater'
-import { GolfBall } from './GolfBall'
+import { GolfBall, BallHistory } from './GolfBall'
 
 interface GraphOptions extends SVGOptions {
     xrange: [number, number]
@@ -30,7 +30,16 @@ interface GraphSels {
     ball?: D3Sel
 }
 
-type T = number[]
+type Tracker = {
+    sel: D3Sel,
+    vals: number[]
+}
+
+type LineTracker = {
+    (key: string): Tracker
+}
+
+type T = LineTracker
 
 export class GolfLosses extends SVGVisComponent<T> {
     cssname = "golf-losses"
@@ -39,8 +48,8 @@ export class GolfLosses extends SVGVisComponent<T> {
 
     options: GraphOptions = {
         maxWidth: 450,
-        maxHeight: 450,
-        margin: { top: 50, right: 75, bottom: 75, left: 50 },
+        maxHeight: 250,
+        margin: { top: 0, right: 75, bottom: 30, left: 50 },
         pad: 30,
         xrange: [-7, 7],
         yrange: [0, 1000],
@@ -52,8 +61,9 @@ export class GolfLosses extends SVGVisComponent<T> {
 
     constructor(d3parent: D3Sel, eventHandler?: SimpleEventHandler, options = {}) {
         super(d3parent, eventHandler, options)
+        super.initSVG(this.options)
         this.base.classed(this.cssname, true)
-        this.data([])
+        this.data(<LineTracker>{})
         this.init()
     }
 
@@ -76,97 +86,97 @@ export class GolfLosses extends SVGVisComponent<T> {
      * 
      * @param x A linspace of x values over which to plot a curve
      */
-    plotCurve(x: number[]) {
-        const self = this, scales = this.scales, sels = this.sels;
-
-        const toCurve = (line) => {
-            this.base.selectAll(".line")
-                .datum(x)
-                .join("path")
-                .classed("line", true)
-                // .attr("class", "line")
-                .attr("d", d => {
-                    return line(d)
-                })
+    private addDataKey_(classname: string) {
+        const self = this
+        if (!R.has(classname, this.data())) {
+            console.log(`Adding key: ${classname}`);
+            this.data()[classname] = {
+                sel: self.initBaseLine(classname),
+                vals: []
+            }
         }
+    }
 
-        toCurve(scales.path)
+    clearPaths() {
+        this.data(R.map(d => R.assoc('vals', [], d), this.data()))
+    }
+
+    plotPath(d: BallHistory) {
+        const self = this;
+        this.addDataKey_(d.classname);
+
+        const currVals = this.data()[d.classname];
+        currVals.vals.push(d.x);
+
+        const lim = R.takeLast(1000);
+
+        currVals.sel.data([currVals])
+            .join("path")
+            .classed(d.classname, true)
+            .attr("d", d => {
+                return self.scales.path(lim(d.vals))
+            })
+    }
+
+    private initBaseLine(classname: string) {
+        return this.base.append("path")
+            .classed(classname, true)
+            .classed('line', true)
     }
 
     init() {
-        console.log("RUNNING INIT");
         const self = this;
         const op = this.options;
         const scales = this.scales;
         const sels = this.sels;
 
-        op.width = op.maxWidth - (op.margin.left + op.margin.right)
-        op.height = op.maxHeight - (op.margin.top + op.margin.bottom)
-
-        this.svg
-            .attr("width", op.maxWidth)
-            .attr("height", op.maxHeight)
-
-        this.base = SVG.group(this.base, '', { x: op.margin.left, y: op.margin.top })
-
+        // Initialize Scales
         scales.x = d3.scaleLinear().domain(op.xrange).range([0, op.width])
         scales.y = d3.scaleLinear().domain(op.yrange).range([op.pad, op.height])
 
+        scales.path =  d3.line<number>()
+            .x((d: number, i: number) => scales.x(d))
+            .y((d: number, i: number) => scales.y(i))
+            .curve(d3.curveLinear)
+
+        // Create axes
         sels.xaxis = this.base.append("g")
             .attr("class", "axis axis--x")
             .attr("transform", SVG.translate(0, op.pad))
             .call(d3.axisTop(scales.x).ticks(3, "s"));
 
-        sels.xlabel = this.base.append("text")
-            .text("loss")
-            .attr("class", "titles")
-            // .attr("transform", SVG.translate(op.width / 2, op.height + op.pad))
-            .attr("transform", SVG.translate(op.width / 2, 0))
+        // sels.xlabel = this.base.append("text")
+        //     .text("x")
+        //     .attr("class", "titles")
+        //     .attr("transform", SVG.translate(op.width / 2, 0))
 
-        sels.line = this.base.append("path")
-            .classed("line", true)
 
-        const baseLine = d3.line<number>()
-            .x((d: number, i: number) => scales.x(d))
-            .y((d: number, i: number) => scales.y(i))
-            .curve(d3.curveLinear)
+        // Run example
+        // const linspace = (start, end, n) => {
+        //     const delta = (end - start) / (n - 1)
+        //     return d3.range(start, end + delta, delta).slice(0, n)
+        // }
 
-        scales.path = baseLine
+        // const f = x => 0.5 * Math.sin(x / 50) * op.xrange[1]
 
-        const linspace = (start, end, n) => {
-            const delta = (end - start) / (n - 1)
-            return d3.range(start, end + delta, delta).slice(0, n)
-        }
+        // const xs = linspace(op.yrange[0], op.yrange[1], 1000).map(f)
 
-        const f = x => 0.5 * Math.sin(x/50) * op.xrange[1]
+        // const ticker = interval(20).pipe(
+        //     map(i => xs[i]),
+        //     map(x => {
+        //         return {
+        //             x: x,
+        //             classname: 'tracked-line'
+        //         }
+        //     }),
+        //     take(1000)
+        // )
 
-        const xs = linspace(op.yrange[0], op.yrange[1], 1000).map(f)
-
-       const ticker = interval(20).pipe(
-           map(i => xs[i]),
-       )
-
-        const toCurve = line => x => {
-            sels.line
-                .datum(x)
-                .join("path")
-                .attr("class", "line")
-                .attr("d", d => {
-                    return line(d)
-                })
-        }
-
-        ticker.subscribe({
-            next: x => {
-                console.log(x);
-                this.data().push(x)
-                toCurve(scales.path)(this.data());
-            }
-        })
-    }
-
-    plotTest() {
-
+        // ticker.subscribe({
+        //     next: (x: BallHistory) => {
+        //         this.plotPath(x)
+        //     }
+        // })
     }
 
     data(): T

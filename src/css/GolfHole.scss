@@ -8,15 +8,18 @@
 }
 
 .golf-ball-sgd {
-  fill: white;
+  fill: lightsteelblue;
+  stroke: lightsteelblue;
 }
 
 .golf-ball-sngd {
   fill: gray;
+  stroke: gray;
 }
 
 .golf-ball-ngd {
   fill: darkslategray;
+  stroke: darkslategray;
 }
 
 .golf-hole-chart {
@@ -29,8 +32,7 @@
 
 .golf-losses {
   .line {
-    stroke-width: 1px;
-    stroke: orange;
+    stroke-width: 2px;
     fill: none;
   }
 }

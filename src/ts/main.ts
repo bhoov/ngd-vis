@@ -3,7 +3,10 @@ import { ContourPlot } from './vis/ContourPlot'
 import { D3Sel } from './util/xd3'
 import { GolfHole1D } from './vis/GolfHole1D'
 import { GolfLosses } from './vis/GolfLosses'
+import { BallHistory, GolfBall } from './vis/GolfBall'
+import { Subject } from 'rxjs'
 import * as R from 'ramda'
+import { SimpleEventHandler } from './util/SimpleEventHandler'
 
 const toFixed = R.curry((ndigits, x) => x.toFixed(ndigits))
 const toQ = toFixed(2)
@@ -66,19 +69,38 @@ function plotQuiverGraph() {
 
 function plotGolfHole() {
 	const vis2 = d3.select("#vis2");
+
 	const sels = {
 		chart: vis2.select('#chart'),
-		chartLosses: vis2.select('#chart-losses'),
+		chartXDist: vis2.select('#chart-xdist'),
 		qId: vis2.select('#q-val'),
 		etaId: vis2.select('#eta-val'),
 		qSlider: vis2.select('#q-slider'),
 		etaSlider: vis2.select('#eta-slider'),
 	}
 
+	const eventHandler = new SimpleEventHandler(<Element>vis2.node())
+
 	const vizs = {
-		graph: new GolfHole1D(sels.chart),
-		lossChart: new GolfLosses(sels.chartLosses)
+		graph: new GolfHole1D(sels.chart, eventHandler),
+		lossChart: new GolfLosses(sels.chartXDist, eventHandler)
 	}
+
+	eventHandler.bind('loss-click', (e) => {
+		vizs.lossChart.clearPaths()
+	})
+
+	// Attach golfball info to loss tracker
+	const streams = vizs.graph.data().map(b => b.stream)
+	const plotter = {
+		next: d => {
+			console.log("Last subscription");
+			console.log(d);
+			vizs.lossChart.plotPath(d)
+		}
+	}
+
+	streams.forEach(s => s.subscribe(plotter))
 
 	const defaults = {
 		// Note to also change the default value in the html file!
@@ -98,7 +120,6 @@ function plotGolfHole() {
 	sels.qId.text(toQ(defaults.q))
 	sels.etaId.text(toEta(defaults.eta))
 
-
 	sels.qSlider.on('input', function () {
 		const me = d3.select(this)
 		const v = scales.q(me.property('value'));
@@ -113,6 +134,15 @@ function plotGolfHole() {
 		// vizs.graph.eta(v)
 		sels.etaId.text(`${toEta(v)}`)
 	})
+
+	// R.range(0, 100).forEach(x => setTimeout(() => {
+	// 	streams.forEach(s => {
+	// 		s.next({
+	// 			x: x,
+	// 			classname: "hello"
+	// 		})
+	// 	})
+	// }, 1000))
 }
 
 export function main() {

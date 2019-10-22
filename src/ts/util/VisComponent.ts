@@ -2,25 +2,20 @@
  * Created by Hendrik Strobelt (hendrik.strobelt.com) on 12/3/16.
  * Modified by Ben Hoover on 4/16/2019
  */
-import {D3Sel} from "./xd3"
-import {SimpleEventHandler} from "./SimpleEventHandler";
-import {SVG} from "./SVGplus";
+import { D3Sel } from "./xd3"
+import { SimpleEventHandler } from "./SimpleEventHandler";
+import { SVG } from "./SVGplus";
 
-import {MarginInfo} from "../types"
+import { MarginInfo } from "../types"
 
 export interface SVGOptions {
     margin: MarginInfo
     maxWidth: number
     maxHeight: number
-    pad: number
-    width?:number
-    height?:number
+    width?: number
+    height?: number
+    pad?: number
 }
-
-export interface ChartOptions extends SVGOptions {
-
-}
-
 
 /**
  * Should have VComponentHTML and VComponentSVG
@@ -48,7 +43,7 @@ export abstract class VisComponent<DataInterface> {
     /**
      * Given an ID, create a new instance of this class with the events and css_name modified by the id
      */
-    newInstance(id:number) {}
+    newInstance(id: number) { }
 
     /**
      * The static property that contains all class related events.
@@ -81,7 +76,7 @@ export abstract class VisComponent<DataInterface> {
      * @param {D3Sel} d3parent  D3 selection of parent SVG DOM Element
      * @param {SimpleEventHandler} eventHandler a global event handler object or 'null' for local event handler
      */
-    protected constructor(d3parent: D3Sel, eventHandler?: SimpleEventHandler, ID=0) {
+    protected constructor(d3parent: D3Sel, eventHandler?: SimpleEventHandler, ID = 0) {
         this.parent = d3parent;
         this.eventHandler = eventHandler || new SimpleEventHandler(this.parent.node());
         this.ID = ID;
@@ -96,15 +91,15 @@ export abstract class VisComponent<DataInterface> {
     /**
      * Follow the D3 convention: retrieve the data inside the class if null. Otherwise, set the data and return 'this'
      */
-    abstract data():DataInterface;
-    abstract data(x:DataInterface):this;
+    abstract data(): DataInterface;
+    abstract data(x: DataInterface): this;
 
     /**
      * Set many options at once
      * 
      * @param options Reset options to passed values
      */
-    updateOptions(options:{}) {
+    updateOptions(options: {}) {
         Object.keys(options).forEach(k => this.options[k] = options[k]);
     }
 
@@ -115,12 +110,12 @@ export abstract class VisComponent<DataInterface> {
 
 export abstract class HTMLVisComponent<DataInterface> extends VisComponent<DataInterface> {
 
-    protected constructor(d3parent: D3Sel, eventHandler?: SimpleEventHandler, options:{}={}) {
+    protected constructor(d3parent: D3Sel, eventHandler?: SimpleEventHandler, options: {} = {}) {
         super(d3parent, eventHandler)
         this.initHTML(options)
     }
 
-    initHTML(options:{}={}) {
+    initHTML(options: {} = {}) {
         this.updateOptions(options)
         this.base = this.parent.append('div')
     }
@@ -131,18 +126,16 @@ export abstract class SVGVisComponent<DataInterface> extends VisComponent<DataIn
     protected layers: { main?: D3Sel, fg?: D3Sel, bg?: D3Sel, [key: string]: D3Sel };
     protected svg: D3Sel // Alias for this.parent
     protected options: SVGOptions = {
-        margin: {top: 0, right: 0, bottom: 0, left: 0},
-        pad: 0,
+        margin: { top: 0, right: 0, bottom: 0, left: 0 },
         maxWidth: 450,
         maxHeight: 450,
     }
 
-    protected constructor(d3parent: D3Sel, eventHandler?: SimpleEventHandler, options:{}={}) {
+    protected constructor(d3parent: D3Sel, eventHandler?: SimpleEventHandler, options: {} = {}) {
         super(d3parent, eventHandler)
-        this.initSVG(options)
     }
 
-    protected initSVG(options: {} = {}, defaultLayers=[]) {
+    protected initSVG(options = {}, defaultLayers = []) {
         // Set default options if not specified in constructor call
         this.updateOptions(options)
         const op = this.options;
@@ -159,7 +152,7 @@ export abstract class SVGVisComponent<DataInterface> extends VisComponent<DataIn
 
         if (defaultLayers) {
             // construction order is important !
-            defaultLayers.forEach(layer =>{
+            defaultLayers.forEach(layer => {
                 this.layers[layer] = SVG.group(this.base, layer);
             });
         }
