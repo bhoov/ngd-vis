@@ -47,8 +47,8 @@ export class GolfHole1D extends SVGVisComponent<T> {
 
     options: GraphOptions = {
         maxWidth: 450,
-        maxHeight: 200,
-        margin: { top: 50, right: 75, bottom: 75, left: 50 },
+        maxHeight: 150,
+        margin: { top: 10, right: 75, bottom: 40, left: 50 },
         pad: 30,
         xrange: [-7, 7],
         yrange: [0, 1.3],
@@ -61,6 +61,7 @@ export class GolfHole1D extends SVGVisComponent<T> {
 
     constructor(d3parent: D3Sel, eventHandler?: SimpleEventHandler, options = {}) {
         super(d3parent, eventHandler, options)
+        super.initSVG(this.options)
         this.base.classed(this.cssname, true)
         this.init()
 
@@ -140,14 +141,7 @@ export class GolfHole1D extends SVGVisComponent<T> {
         const scales = this.scales;
         const sels = this.sels;
 
-        op.width = op.maxWidth - (op.margin.left + op.margin.right)
-        op.height = op.maxHeight - (op.margin.top + op.margin.bottom)
-
-        this.svg
-            .attr("width", op.maxWidth)
-            .attr("height", op.maxHeight)
-
-        this.base = SVG.group(this.base, '', { x: op.margin.left, y: op.margin.top })
+        // this.base = SVG.group(this.base, '', { x: op.margin.left, y: op.margin.top })
 
         scales.x = d3.scaleLinear().domain(op.xrange).range([0, op.width])
         scales.y = d3.scaleLinear().domain(op.yrange).range([op.height, 0])
@@ -189,21 +183,24 @@ export class GolfHole1D extends SVGVisComponent<T> {
             .attr("height", op.height)
             .attr("width", op.width)
 
-        const outOfBounds = (b: GolfBall) => {
+        const outOfBounds = (x:number) => {
             const tooSmall = (x: number) => x < (op.xrange[0])
             const tooBig = (x: number) => x > (op.xrange[1])
-            return (isNaN(b.x) || tooSmall(b.x) || tooBig(b.x))
+            return (isNaN(x) || tooSmall(x) || tooBig(x))
         }
 
         function getNextBall(b: GolfBall): GolfBall {
-            const newBall = b.next()
+            // const newBall = b.next()
+            const nextX = b.nextX()
             const currBallSel = d3.select(`.${b.classname}`)
-            if (outOfBounds(newBall)) {
+            // if (outOfBounds(newBall.x)) {
+            if (outOfBounds(nextX)) {
                 console.log("KILLING");
                 currBallSel.classed('dead-ball', true)
             }
             else if (!currBallSel.classed('dead-ball')) {
-                return newBall
+                // return newBall
+                return b.step_()
             }
             return b
         }
@@ -223,8 +220,7 @@ export class GolfHole1D extends SVGVisComponent<T> {
                     runningTicker.unsubscribe()
                 }
 
-                const newBalls = self.data().map(b => getNextBall(b))
-                self.data(newBalls)
+                self.data().forEach(b => getNextBall(b))
                 return self.data()
             }, self.data()),
             take(5000)
@@ -241,6 +237,7 @@ export class GolfHole1D extends SVGVisComponent<T> {
             d3.selectAll('.golf-ball').classed('dead-ball', false)
             self.data().forEach((b, i) => b.x = self.intoMath(click).x)
             self.data().forEach(b => self.plotBall(b))
+            self.eventHandler.trigger("loss-click", {})
 
             runningTicker = ticker()
         })

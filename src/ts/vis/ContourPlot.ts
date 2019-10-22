@@ -47,8 +47,8 @@ export class ContourPlot extends SVGVisComponent<T> {
 
     options:GraphOptions = {
         maxWidth: 450,
-        maxHeight: 450,
-        margin: {top: 50, right: 75, bottom: 75, left: 50},
+        maxHeight: 500,
+        margin: {top: 50, right: 75, bottom: 125, left: 50},
         pad: 30,
         xrange: [0, 2.5],
         yrange: [0, 2.5],
@@ -70,6 +70,7 @@ export class ContourPlot extends SVGVisComponent<T> {
 
     constructor(d3parent: D3Sel, eventHandler?: SimpleEventHandler, options={}) {
         super(d3parent, eventHandler, options)
+        super.initSVG(this.options)
         this.base.classed(this.cssname, true)
         this.updater = new Updater()
         this.init()
@@ -267,22 +268,16 @@ export class ContourPlot extends SVGVisComponent<T> {
         const scales = this.scales;
         const sels = this.sels;
 
-        op.width = op.maxWidth - (op.margin.left + op.margin.right)
-        op.height = op.maxHeight - (op.margin.top + op.margin.bottom)
-
-        scales.contours = d3.contours().size([op.n, op.m])
-        scales.curve = d3.curveCatmullRom.alpha(0.5)
+        // Add definitions
         SVG.addArrows(this.svg)
 
-        this.svg
-            .attr("width", op.maxWidth)
-            .attr("height", op.maxHeight)
-
-        this.base = SVG.group(this.base, '', {x: op.margin.left, y: op.margin.top})
-
+        // Create scales
+        scales.contours = d3.contours().size([op.n, op.m])
+        scales.curve = d3.curveCatmullRom.alpha(0.5)
         scales.x = d3.scaleLinear().domain(op.xrange).range([0, op.width])
         scales.y = d3.scaleLinear().domain(op.yrange).range([op.height, 0])
 
+        // Add Axes and labels
         sels.xaxis = this.base.append("g")
             .attr("class", "axis axis--x")
             .attr("transform", SVG.translate(0, op.height))
@@ -303,10 +298,7 @@ export class ContourPlot extends SVGVisComponent<T> {
             .attr("class", "titles")
             .attr("transform", SVG.translate(-op.pad, op.height/2) + SVG.rotate(-90))
 
-        sels.legend = this.svg.append("g")
-            .attr("class", "legend")
-            .attr("transform", SVG.translate(op.width + op.pad / 2, 0)); 
-
+        // Create click behavior
         this.base.on('click', function() {
             if (self.ticker != undefined) {
                 self.ticker.unsubscribe()  
@@ -318,8 +310,8 @@ export class ContourPlot extends SVGVisComponent<T> {
             self.plotDescent();
         })
 
+        // Initialize plots
         this.plotContours()
-        // this.plotMinimum()
         this.createQuivers()
     }
 
