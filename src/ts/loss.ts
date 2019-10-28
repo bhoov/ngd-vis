@@ -63,8 +63,6 @@ export class RegressionLoss {
     }
   
    Hessian(b0, b1, X) {
-       console.log("Running Hessian")
-       console.log(X)
       var H00 = 0,
           H01 = 0,
           H10 = 0,

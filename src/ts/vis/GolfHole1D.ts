@@ -36,9 +36,9 @@ interface GraphSels {
 
 // Note that plotFunc is the loss function we plot and func is the component of the loss function needed for the updater
 const plotFunc = x => Math.pow(Math.tanh(x), 2)
-const func = x => Math.tanh(x)
-const dFunc = x => Math.pow(Math.cosh(x), -2)
-const ddFunc = x => -2 * Math.tanh(x) / Math.pow(Math.cosh(x), 2)
+export const func = x => Math.tanh(x)
+export const dFunc = x => Math.pow(Math.cosh(x), -2)
+export const ddFunc = x => -2 * Math.tanh(x) / Math.pow(Math.cosh(x), 2)
 
 export class GolfHole1D extends SVGVisComponent<T> {
     cssname = "golf-hole-chart"
@@ -59,7 +59,7 @@ export class GolfHole1D extends SVGVisComponent<T> {
 
     sels: GraphSels = {}
 
-    constructor(d3parent: D3Sel, eventHandler?: SimpleEventHandler, options = {}) {
+    constructor(d3parent: D3Sel, eventHandler?: SimpleEventHandler, options?:GraphOptions) {
         super(d3parent, eventHandler, options)
         super.initSVG(this.options)
         this.base.classed(this.cssname, true)
@@ -73,6 +73,17 @@ export class GolfHole1D extends SVGVisComponent<T> {
 
         this.data(data)
         this.initBalls()
+    }
+
+    /** Return first updater in data */
+    get dataHead(): GolfBall {
+        try {
+            return this.data()[0]
+        }
+        catch(err) {
+            console.log("Looks like there is no data in this golf hole");
+            console.log(err);
+        }
     }
 
     /**
@@ -190,16 +201,13 @@ export class GolfHole1D extends SVGVisComponent<T> {
         }
 
         function getNextBall(b: GolfBall): GolfBall {
-            // const newBall = b.next()
             const nextX = b.nextX()
             const currBallSel = d3.select(`.${b.classname}`)
-            // if (outOfBounds(newBall.x)) {
             if (outOfBounds(nextX)) {
                 console.log("KILLING");
                 currBallSel.classed('dead-ball', true)
             }
             else if (!currBallSel.classed('dead-ball')) {
-                // return newBall
                 return b.step_()
             }
             return b

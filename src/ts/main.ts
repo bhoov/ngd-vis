@@ -1,12 +1,13 @@
 import * as d3 from 'd3'
 import { ContourPlot } from './vis/ContourPlot'
 import { D3Sel } from './util/xd3'
-import { GolfHole1D } from './vis/GolfHole1D'
+import { GolfHole1D, func, dFunc, ddFunc } from './vis/GolfHole1D'
 import { GolfLosses } from './vis/GolfLosses'
 import { BallHistory, GolfBall } from './vis/GolfBall'
 import { Subject } from 'rxjs'
 import * as R from 'ramda'
 import { SimpleEventHandler } from './util/SimpleEventHandler'
+import { ManualUpdater } from './vis/ManualUpdater'
 
 const toFixed = R.curry((ndigits, x) => x.toFixed(ndigits))
 const toQ = toFixed(2)
@@ -35,14 +36,15 @@ function plotQuiverGraph() {
 
 	const scales = {
 		q: d3.scaleLinear().domain([0, 10]).range([0, 1]),
-		eta: d3.scalePow().domain([1, 1000]).range([Math.pow(10, -5), 0.6]).exponent(3)
+		eta: d3.scaleLinear().domain([1, 1000]).range([Math.pow(10, -5), 0.6])
 	}
 
 	// Initialize graph parameters to match the defaults
 	vizs.graph.q(defaults.q)
 	vizs.graph.eta(defaults.eta)
-	// sels.qSlider.property('value', scales.q.invert(defaults.q))
-	// sels.etaSlider.property('value', scales.q.invert(defaults.eta))
+	sels.qSlider.property('value', scales.q.invert(defaults.q))
+	sels.etaSlider.property('value', scales.eta.invert(defaults.eta))
+
 	sels.qId.text(toQ(defaults.q))
 	sels.etaId.text(toEta(defaults.eta))
 
@@ -94,19 +96,38 @@ function plotGolfHole() {
 	const streams = vizs.graph.data().map(b => b.stream)
 	const plotter = {
 		next: d => {
-			console.log("Last subscription");
-			console.log(d);
 			vizs.lossChart.plotPath(d)
 		}
 	}
 
 	streams.forEach(s => s.subscribe(plotter))
+}
+
+function plotGolfHoleSlider() {
+	const vis3 = d3.select("#vis3");
+
+	const sels = {
+		chart: vis3.select('#chart'),
+		qId: vis3.select('#q-val'),
+		etaId: vis3.select('#eta-val'),
+		qSlider: vis3.select('#q-slider'),
+		etaSlider: vis3.select('#eta-slider'),
+	}
+
+	const eventHandler = new SimpleEventHandler(<Element>vis3.node())
+
+	const vizs = {
+		graph: new GolfHole1D(sels.chart, eventHandler),
+	}
 
 	const defaults = {
 		// Note to also change the default value in the html file!
-		q: 0,
-		eta: 0.00001
+		q: 0.5,
+		eta: 0.1
 	}
+
+	// Put data into viz
+	vizs.graph.data([new GolfBall(new ManualUpdater(func, dFunc, ddFunc, defaults.q, defaults.eta), "golf-ball")])
 
 	const etaRange = [-5, 2].map(x => Math.pow(10, x))
 	const scales = {
@@ -115,15 +136,15 @@ function plotGolfHole() {
 	}
 
 	// Initialize graph parameters to match the defaults
-	// vizs.graph.q(defaults.q)
-	// vizs.graph.eta(defaults.eta)
+	sels.qSlider.property('value', scales.q.invert(defaults.q))
+	sels.etaSlider.property('value', scales.eta.invert(defaults.eta))
 	sels.qId.text(toQ(defaults.q))
 	sels.etaId.text(toEta(defaults.eta))
 
 	sels.qSlider.on('input', function () {
 		const me = d3.select(this)
 		const v = scales.q(me.property('value'));
-		// vizs.graph.q(v);
+		vizs.graph.dataHead.q(v)
 		console.log(v);
 		sels.qId.text(`${toQ(v)}`)
 	})
@@ -131,23 +152,15 @@ function plotGolfHole() {
 	sels.etaSlider.on('input', function () {
 		const me = d3.select(this)
 		const v = scales.eta(me.property('value'));
-		// vizs.graph.eta(v)
+		vizs.graph.dataHead.eta(v)
 		sels.etaId.text(`${toEta(v)}`)
 	})
-
-	// R.range(0, 100).forEach(x => setTimeout(() => {
-	// 	streams.forEach(s => {
-	// 		s.next({
-	// 			x: x,
-	// 			classname: "hello"
-	// 		})
-	// 	})
-	// }, 1000))
 }
 
 export function main() {
 	console.log("RUNNING");
 	plotQuiverGraph();
 	plotGolfHole();
+	plotGolfHoleSlider();
 }
 
