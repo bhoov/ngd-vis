@@ -7,6 +7,7 @@ import { Subject, BehaviorSubject } from "rxjs"
 export type BallHistory = {
     classname: string
     x: number
+    loss: number
 }
 
 export class GolfBall {
@@ -43,7 +44,8 @@ export class GolfBall {
         this.x = this.nextX()
         this.stream.next({
             classname: this.classname,
-            x: this.x
+            x: this.x,
+            loss: this.updater.loss(this.x)
         })
         return this
     }
