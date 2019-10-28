@@ -2,7 +2,7 @@ import * as d3 from 'd3'
 import { ContourPlot } from './vis/ContourPlot'
 import { D3Sel } from './util/xd3'
 import { GolfHole1D, func, dFunc, ddFunc } from './vis/GolfHole1D'
-import { GolfLosses } from './vis/GolfLosses'
+import { GolfXDist, GolfLosses } from './vis/GolfLosses'
 import { BallHistory, GolfBall } from './vis/GolfBall'
 import { Subject } from 'rxjs'
 import * as R from 'ramda'
@@ -35,29 +35,29 @@ function plotQuiverGraph() {
 	}
 
 	const scales = {
-		q: d3.scaleLinear().domain([0, 10]).range([0, 1]),
-		eta: d3.scaleLinear().domain([1, 1000]).range([Math.pow(10, -5), 0.6])
+		q: d3.scaleLinear().range([0, 10]).domain([0, 1]),
+		eta: d3.scaleLinear().range([1, 1000]).domain([Math.pow(10, -5), 0.6])
 	}
 
 	// Initialize graph parameters to match the defaults
 	vizs.graph.q(defaults.q)
 	vizs.graph.eta(defaults.eta)
-	sels.qSlider.property('value', scales.q.invert(defaults.q))
-	sels.etaSlider.property('value', scales.eta.invert(defaults.eta))
+	sels.qSlider.property('value', scales.q(defaults.q))
+	sels.etaSlider.property('value', scales.eta(defaults.eta))
 
 	sels.qId.text(toQ(defaults.q))
 	sels.etaId.text(toEta(defaults.eta))
 
 	sels.qSlider.on('input', function () {
 		const me = d3.select(this)
-		const v = scales.q(+me.property('value'));
+		const v = scales.q.invert(+me.property('value'));
 		vizs.graph.q(v);
 		sels.qId.text(`${toQ(v)}`)
 	})
 
 	sels.etaSlider.on('input', function () {
 		const me = d3.select(this)
-		const v = scales.eta(me.property('value'));
+		const v = scales.eta.invert(me.property('value'));
 		vizs.graph.eta(v)
 		sels.etaId.text(`${toEta(v)}`)
 	})
@@ -75,28 +75,28 @@ function plotGolfHole() {
 	const sels = {
 		chart: vis2.select('#chart'),
 		chartXDist: vis2.select('#chart-xdist'),
-		qId: vis2.select('#q-val'),
-		etaId: vis2.select('#eta-val'),
-		qSlider: vis2.select('#q-slider'),
-		etaSlider: vis2.select('#eta-slider'),
+		chartLosses: vis2.select('#chart-losses'),
 	}
 
 	const eventHandler = new SimpleEventHandler(<Element>vis2.node())
 
 	const vizs = {
 		graph: new GolfHole1D(sels.chart, eventHandler),
-		lossChart: new GolfLosses(sels.chartXDist, eventHandler)
+		chartXDist: new GolfXDist(sels.chartXDist, eventHandler),
+		chartLosses: new GolfLosses(sels.chartLosses, eventHandler)
 	}
 
 	eventHandler.bind('loss-click', (e) => {
-		vizs.lossChart.clearPaths()
+		vizs.chartXDist.clearPaths()
+		vizs.chartLosses.clearPaths()
 	})
 
 	// Attach golfball info to loss tracker
 	const streams = vizs.graph.data().map(b => b.stream)
 	const plotter = {
 		next: d => {
-			vizs.lossChart.plotPath(d)
+			vizs.chartXDist.plotPath(d)
+			vizs.chartLosses.plotPath(d)
 		}
 	}
 
@@ -108,6 +108,7 @@ function plotGolfHoleSlider() {
 
 	const sels = {
 		chart: vis3.select('#chart'),
+		losses: vis3.select('#chart-losses'),
 		qId: vis3.select('#q-val'),
 		etaId: vis3.select('#eta-val'),
 		qSlider: vis3.select('#q-slider'),
@@ -131,19 +132,19 @@ function plotGolfHoleSlider() {
 
 	const etaRange = [-5, 2].map(x => Math.pow(10, x))
 	const scales = {
-		q: d3.scaleLinear().domain([0, 10]).range([0, 1]),
-		eta: d3.scalePow().domain([1, 1000]).range(etaRange).exponent(5)
+		q: d3.scaleLinear().range([0, 10]).domain([0, 1]),
+		eta: d3.scalePow().range([1, 1000]).domain(etaRange).exponent(5)
 	}
 
 	// Initialize graph parameters to match the defaults
-	sels.qSlider.property('value', scales.q.invert(defaults.q))
-	sels.etaSlider.property('value', scales.eta.invert(defaults.eta))
+	sels.qSlider.property('value', scales.q(defaults.q))
+	sels.etaSlider.property('value', scales.eta(defaults.eta))
 	sels.qId.text(toQ(defaults.q))
 	sels.etaId.text(toEta(defaults.eta))
 
 	sels.qSlider.on('input', function () {
 		const me = d3.select(this)
-		const v = scales.q(me.property('value'));
+		const v = scales.q.invert(me.property('value'));
 		vizs.graph.dataHead.q(v)
 		console.log(v);
 		sels.qId.text(`${toQ(v)}`)
@@ -151,7 +152,7 @@ function plotGolfHoleSlider() {
 
 	sels.etaSlider.on('input', function () {
 		const me = d3.select(this)
-		const v = scales.eta(me.property('value'));
+		const v = scales.eta.invert(me.property('value'));
 		vizs.graph.dataHead.eta(v)
 		sels.etaId.text(`${toEta(v)}`)
 	})
