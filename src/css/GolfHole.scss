@@ -30,10 +30,25 @@
   }
 }
 
-.golf-losses {
+.line-plot {
   .line {
     stroke-width: 2px;
     fill: none;
+  }
+}
+
+.golf-xdist {
+  .line {
+    stroke-width: 2px;
+    fill: none;
+  }
+}
+
+#vis3 {
+  .golf-hole-chart {
+    .golf-ball {
+      fill: white;
+    }
   }
 }
 
