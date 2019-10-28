@@ -54,4 +54,20 @@ export class GolfBall {
             y: f(this._x)
         }
     }
+
+    q(): number
+    q(val: number): this 
+    q(val?) {
+        if (val == null) return this.updater.q
+        this.updater.q = val
+        return this
+    }
+
+    eta(): number
+    eta(val: number): this 
+    eta(val?) {
+        if (val == null) return this.updater.eta
+        this.updater.eta = val
+        return this
+    }
 }

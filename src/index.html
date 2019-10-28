@@ -57,18 +57,6 @@
 
             <div id="vis2" class="container">
                 <div class="row">
-                    <!-- <div class="col-md-3">
-                        <p>
-                            q: <span id=q-val></span>
-                        </p>
-                        <input type="range" min="0" max="2" value="0" class="slider" id="q-slider">
-                        <input type="range" min="0" max="10" value="0" class="slider" id="q-slider">
-
-                        <p>
-                            learning rate: <span id=eta-val></span>
-                        </p>
-                        <input type="range" min="1" max="1000" value="1" class="slider" id="eta-slider">
-                    </div> -->
                     <div class="col-md-9">
                         <div id="chart" class="img-fluid"></div>
                     </div>
@@ -77,6 +65,35 @@
                 <div class="row">
                     <div class="col-md-9" id="chart-xdist"></div>
                 </div>
+            </div>
+
+            <h3>Exploring the golf hole problem</h3>
+            <p>
+                Play with the provided sliders to see how the visualization changes at different values of q and
+                across different learning rates.
+            </p>
+            <div id="vis3" class="container">
+                <div class="row">
+                    <div class="col-md-3">
+                        <p>
+                            q: <span id=q-val></span>
+                        </p>
+                        <!-- <input type="range" min="0" max="2" value="0" class="slider" id="q-slider"> -->
+                        <input type="range" min="0" max="10" value="0" class="slider" id="q-slider">
+
+                        <p>
+                            learning rate: <span id=eta-val></span>
+                        </p>
+                        <input type="range" min="1" max="1000" value="1" class="slider" id="eta-slider">
+
+                    </div>
+                    <div class="col-md-9">
+                        <div id="chart" class="img-fluid"></div>
+                    </div>
+
+                </div>
+
+
             </div>
         </div>
 
