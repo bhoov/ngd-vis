@@ -3,7 +3,7 @@ import {D3Sel} from '../util/xd3'
 import * as R from 'ramda'
 import {legendColor} from 'd3-svg-legend'
 import {Vector2D} from '../types'
-import {SVGOptions, SVGVisComponent, HTMLVisComponent} from '../util/VisComponent'
+import {SVGOptions, SVGVisComponent} from '../util/SVGVisComponent'
 import { SimpleEventHandler } from '../util/SimpleEventHandler';
 import {SVG} from '../util/SVGplus'
 import {getContourValues} from '../plotting'
@@ -18,6 +18,7 @@ interface GraphOptions extends SVGOptions {
     yrange: [number, number]
     n: number                   // Number of meshgrid points along the x axis
     m: number                   // Number of meshgrid points along the y axis
+    pad: number                 // Annotations that happen in the margin must take place `pad` distance from the main graph
 }
 
 interface GraphScales {
@@ -73,7 +74,7 @@ export class ContourPlot extends SVGVisComponent<T> {
         super.initSVG(this.options)
         this.base.classed(this.cssname, true)
         this.updater = new Updater()
-        this.init()
+        this.initPlot()
     }
 
     setUpdater(name:'block'|'full'){
@@ -262,6 +263,12 @@ export class ContourPlot extends SVGVisComponent<T> {
         })
     }
 
+    initPlot() {
+        // Initialize plots
+        this.plotContours()
+        this.createQuivers()
+    }
+
     init() { 
         const self = this;
         const op = this.options;
@@ -309,10 +316,6 @@ export class ContourPlot extends SVGVisComponent<T> {
             self.clearCircles();
             self.plotDescent();
         })
-
-        // Initialize plots
-        this.plotContours()
-        this.createQuivers()
     }
 
     curr(): Vector2D

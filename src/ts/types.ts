@@ -14,13 +14,6 @@ export interface NetCoef {
     b1: number
 }
 
-export type MarginInfo = {
-    top:number
-    right:number
-    bottom:number
-    left:number
-}
-
 export interface Vector2D {
     x: number
     y: number

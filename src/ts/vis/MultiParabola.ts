@@ -2,7 +2,7 @@ import * as d3 from 'd3'
 import {D3Sel} from '../util/xd3'
 import * as R from 'ramda'
 import {Vector2D} from '../types'
-import {SVGOptions, SVGVisComponent} from '../util/VisComponent'
+import {SVGOptions, SVGVisComponent} from '../util/SVGVisComponent'
 import { SimpleEventHandler } from '../util/SimpleEventHandler';
 import {SVG} from '../util/SVGplus'
 
@@ -11,6 +11,7 @@ type T = number[]
 interface GraphOptions extends SVGOptions {
     xrange: [number, number]
     yrange: [number, number]
+    pad: number
 }
 
 interface GraphScales {
