@@ -5,6 +5,8 @@ const defaultStep2Lr: d3.ScaleLinear<number, number> = d3.scaleLinear().domain([
 
 type SimpleFunc = (x: number) => number
 
+const loss = x => 1/2 * Math.pow(x, 2)
+
 export class ManualUpdater {
     f: (x: number) => number
     df: (x: number) => number
@@ -23,7 +25,7 @@ export class ManualUpdater {
 
     // Calculate error squared of the base function
     loss(x: number): number {
-        return 0.5 * Math.pow(this.f(x), 2)
+        return loss(this.f(x))
     }
 
     // Gradient at x

@@ -49,9 +49,10 @@ export class GolfXDist extends SVGVisComponent<T> {
     options: GraphOptions = {
         maxWidth: 450,
         maxHeight: 250,
-        margin: { top: 0, right: 10, bottom: 30, left: 50 },
+        margin: { top: 0, right: 10, bottom: 30, left: 75},
         pad: 30,
-        xrange: [-7, 7],
+        xrange: [-7, 7], // For linear scale
+        // xrange: [1e-10, 7], // For log scale
         yrange: [0, 1000],
     }
 
@@ -106,7 +107,8 @@ export class GolfXDist extends SVGVisComponent<T> {
         this.addDataKey_(d.classname);
 
         const currVals = this.data()[d.classname];
-        currVals.vals.push(d.x);
+        currVals.vals.push(d.x); // For linear scale
+        // currVals.vals.push(Math.abs(d.x));
 
         const lim = R.takeLast(1000);
 
@@ -132,6 +134,7 @@ export class GolfXDist extends SVGVisComponent<T> {
 
         // Initialize Scales
         scales.x = d3.scaleLinear().domain(op.xrange).range([0, op.width])
+        // scales.x = d3.scaleLog().domain(op.xrange).range([0, op.width]).base(10).clamp(true)
         scales.y = d3.scaleLinear().domain(op.yrange).range([op.pad, op.height])
 
         this.createPath()
@@ -147,7 +150,7 @@ export class GolfXDist extends SVGVisComponent<T> {
         sels.xaxis = this.base.append("g")
             .attr("class", "axis axis--x")
             .attr("transform", SVG.translate(0, op.pad))
-            .call(d3.axisTop(scales.x).ticks(3, "s"));
+            .call(d3.axisTop(scales.x).ticks(3, ".1e"));
     }
 
     protected createPath() {
@@ -178,10 +181,10 @@ export class GolfLosses extends SVGVisComponent<T> {
     options: GraphOptions = {
         maxWidth: 250,
         maxHeight: 250,
-        margin: { top: 10, right: 75, bottom: 40, left: 50 },
+        margin: { top: 10, right: 10, bottom: 40, left: 30 },
         pad: 0,
         xrange: [0, 1000],
-        yrange: [1.3, 0],
+        yrange: [0.6, 0],
     }
 
     scales: GraphScales = {}
@@ -276,7 +279,14 @@ export class GolfLosses extends SVGVisComponent<T> {
         sels.yaxis = this.base.append("g")
             .attr("class", "axis axis--y")
             .attr("transform", SVG.translate(0, 0))
-            .call(d3.axisLeft(scales.y).ticks(3, "s"));
+            // @ts-ignore
+            .call(d3.axisLeft(scales.y).tickFormat("").tickValues([0, 0.25, 0.5]));
+
+        sels.xaxis = this.base.append("g")
+            .attr("class", "axis axis--x")
+            .attr("transform", SVG.translate(0, op.height))
+            // @ts-ignore
+            .call(d3.axisBottom(scales.x).tickFormat("").ticks(3));
     }
 
     protected createPath() {

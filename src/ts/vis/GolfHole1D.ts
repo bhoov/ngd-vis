@@ -35,10 +35,16 @@ interface GraphSels {
 }
 
 // Note that plotFunc is the loss function we plot and func is the component of the loss function needed for the updater
-const plotFunc = x => Math.pow(Math.tanh(x), 2)
+export const loss = l => 0.5 * Math.pow(l, 2)
 export const func = x => Math.tanh(x)
 export const dFunc = x => Math.pow(Math.cosh(x), -2)
 export const ddFunc = x => -2 * Math.tanh(x) / Math.pow(Math.cosh(x), 2)
+
+// export const func = x => Math.sign(x) * (1 - (1 / (1 + Math.abs(x))))
+// export const dFunc = x => 1 / Math.pow(1 + Math.abs(x), 2)
+// export const ddFunc = x => -2 * Math.tanh(x) / Math.pow(Math.cosh(x), 2)
+
+export const plotFunc = x => loss(func(x))
 
 export class GolfHole1D extends SVGVisComponent<T> {
     cssname = "golf-hole-chart"
@@ -51,7 +57,7 @@ export class GolfHole1D extends SVGVisComponent<T> {
         margin: { top: 10, right: 10, bottom: 40, left: 50 },
         pad: 30,
         xrange: [-7, 7],
-        yrange: [0, 1.3],
+        yrange: [0, 0.6],
         x0: -5
     }
 
