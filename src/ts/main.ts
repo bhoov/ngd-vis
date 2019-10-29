@@ -133,7 +133,7 @@ function plotGolfHoleSlider() {
 	const etaRange = [-5, 2].map(x => Math.pow(10, x))
 	const scales = {
 		q: d3.scaleLinear().range([0, 10]).domain([0, 1]),
-		eta: d3.scalePow().range([1, 1000]).domain(etaRange).exponent(5)
+		eta: d3.scaleLog().range([1, 1000]).domain(etaRange).base(10)
 	}
 
 	// Initialize graph parameters to match the defaults
