@@ -38,11 +38,9 @@ interface GraphSels {
 export const loss = l => 0.5 * Math.pow(l, 2)
 export const func = x => Math.tanh(x)
 export const dFunc = x => Math.pow(Math.cosh(x), -2)
-export const ddFunc = x => -2 * Math.tanh(x) / Math.pow(Math.cosh(x), 2)
 
 // export const func = x => Math.sign(x) * (1 - (1 / (1 + Math.abs(x))))
 // export const dFunc = x => 1 / Math.pow(1 + Math.abs(x), 2)
-// export const ddFunc = x => -2 * Math.tanh(x) / Math.pow(Math.cosh(x), 2)
 
 export const plotFunc = x => loss(func(x))
 
@@ -72,9 +70,9 @@ export class GolfHole1D extends SVGVisComponent<T> {
         this.init()
 
         const data = [
-            new GolfBall(new ManualUpdater(func, dFunc, ddFunc, 0, 0.15), 'golf-ball-sgd', 4),
-            new GolfBall(new ManualUpdater(func, dFunc, ddFunc, 0.5, 0.07), 'golf-ball-sngd', 3),
-            new GolfBall(new ManualUpdater(func, dFunc, ddFunc, 1, 0.0012), 'golf-ball-ngd', 5)
+            new GolfBall(new ManualUpdater(func, dFunc, 0, 0.15), 'golf-ball-sgd', 4),
+            new GolfBall(new ManualUpdater(func, dFunc, 0.5, 0.07), 'golf-ball-sngd', 3),
+            new GolfBall(new ManualUpdater(func, dFunc, 1, 0.0012), 'golf-ball-ngd', 5)
         ]
 
         this.data(data)

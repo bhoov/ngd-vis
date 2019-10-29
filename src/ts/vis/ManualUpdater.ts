@@ -10,15 +10,13 @@ const loss = x => 1/2 * Math.pow(x, 2)
 export class ManualUpdater {
     f: (x: number) => number
     df: (x: number) => number
-    ddf: (x: number) => number
 
     q: number   // 0 -> 1, where 0 is SGD and 1 is NGD. 0.5 is sqrt NGD. [step = - eta * H ^ (-1/q) * g] (H = 0 when q=0)
     eta: number // aka 'learning rate'
 
-    constructor(f, df, ddf, q = 0, eta = 0.1) {
+    constructor(f, df, q = 0, eta = 0.1) {
         this.f = f;
         this.df = df;
-        this.ddf = ddf;
         this.q = q;
         this.eta = eta;
     }
@@ -31,11 +29,6 @@ export class ManualUpdater {
     // Gradient at x
     gradient(x: number): number {
         return this.f(x) * this.df(x)
-    }
-
-    // Full hessian at x
-    hess(x: number): number {
-        return Math.pow(this.df(x), 2) + this.f(x) * this.ddf(x)
     }
 
     // The positive semi-definite hessian at x

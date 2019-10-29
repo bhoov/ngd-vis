@@ -1,7 +1,7 @@
 import * as d3 from 'd3'
 import { ContourPlot } from './vis/ContourPlot'
 import { D3Sel } from './util/xd3'
-import { GolfHole1D, func, dFunc, ddFunc } from './vis/GolfHole1D'
+import { GolfHole1D, func, dFunc } from './vis/GolfHole1D'
 import { GolfXDist, GolfLosses } from './vis/GolfLosses'
 import { BallHistory, GolfBall } from './vis/GolfBall'
 import { Subject } from 'rxjs'
@@ -128,7 +128,7 @@ function plotGolfHoleSlider() {
 	}
 
 	// Put data into viz
-	vizs.graph.data([new GolfBall(new ManualUpdater(func, dFunc, ddFunc, defaults.q, defaults.eta), "golf-ball")])
+	vizs.graph.data([new GolfBall(new ManualUpdater(func, dFunc, defaults.q, defaults.eta), "golf-ball")])
 
 	const etaRange = [-5, 2].map(x => Math.pow(10, x))
 	const scales = {
