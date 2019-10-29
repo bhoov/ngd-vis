@@ -206,7 +206,7 @@ export class GolfHole1D extends SVGVisComponent<T> {
 
         function getNextBall(b: GolfBall): GolfBall {
             const nextX = b.nextX()
-            const currBallSel = d3.select(`.${b.classname}`)
+            const currBallSel = self.base.select(`.${b.classname}`)
             if (outOfBounds(nextX)) {
                 console.log("KILLING");
                 currBallSel.classed('dead-ball', true)
