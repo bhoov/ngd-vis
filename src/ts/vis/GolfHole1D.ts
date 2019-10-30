@@ -71,7 +71,7 @@ export class GolfHole1D extends SVGVisComponent<T> {
         xrange: [-13.6, 13.6],
         yrange: [0, 2.5],
         x0: -5,
-        maxIter: 800
+        maxIter: 600
     }
 
     scales: GraphScales = {}
