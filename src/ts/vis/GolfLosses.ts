@@ -109,7 +109,7 @@ export class GolfXDist extends Chart2D<T> {
     protected createScales() {
         const op = this.options
         this.scales.x = d3.scaleLinear().domain(op.xrange).range([0, op.width]).clamp(true)
-        this.scales.y = d3.scaleLinear().domain(op.yrange).range([0, op.height]).clamp(true)
+        this.scales.y = d3.scaleLog().domain(op.yrange).range([0, op.height]).clamp(true)
     }
 
     init() {
