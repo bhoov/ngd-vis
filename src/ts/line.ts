@@ -1,7 +1,7 @@
 import * as d3 from 'd3'
 import { legendColor, LegendColor } from 'd3-svg-legend'
 import { D3Sel } from './util/xd3'
-import { MarginInfo } from './util/SVGplus'
+import { MarginInfo } from './util/SVGVisComponent'
 import { NetCoef, LabeledPoint } from './types'
 import { addSVG } from './plotting'
 import { uniform, normal } from './plotting'

@@ -1,7 +1,14 @@
 import { D3Sel } from "./xd3"
 import { VisComponent } from "./VisComponent"
 import { SimpleEventHandler } from "./SimpleEventHandler";
-import { SVG, MarginInfo } from "./SVGplus";
+import { SVG } from "./SVGplus";
+
+export type MarginInfo = {
+    top:number
+    right:number
+    bottom:number
+    left:number
+}
 
 export interface SVGOptions {
     margin: MarginInfo

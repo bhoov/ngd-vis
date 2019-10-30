@@ -1,19 +1,12 @@
 import * as d3 from "d3"
 import * as R from 'ramda'
-import {MarginInfo} from './SVGplus'
+import {MarginInfo} from './SVGVisComponent'
 import {D3Sel} from '../util/xd3'
 
 /**
  * Created by hen on 5/15/17.
  * Modified by hoo on 4/16/19.
  */
-
-export type MarginInfo = {
-    top:number
-    right:number
-    bottom:number
-    left:number
-}
 
 export class SVG {
     
