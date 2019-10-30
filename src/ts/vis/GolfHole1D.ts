@@ -185,10 +185,10 @@ export class GolfHole1D extends SVGVisComponent<T> {
             .attr("class", "axis axis--x")
             .attr("transform", SVG.translate(0, op.height))
             // .call(d3.axisBottom(scales.x).tickValues([0]).tickFormat(x => '\\(\\theta\\)*'));
-            .call(d3.axisBottom(scales.x).tickValues([0]).tickFormat(x => '\u03B8*'));
+            .call(d3.axisBottom(scales.x).tickValues([0]).tickFormat(x => '0'));
 
         sels.xlabel = this.base.append("text")
-            .text("\u03B8")
+            .text("\u03B8 - \u03B8*")
             .attr("class", "titles")
             .attr("transform", SVG.translate(op.width / 2, op.height + op.pad))
 
