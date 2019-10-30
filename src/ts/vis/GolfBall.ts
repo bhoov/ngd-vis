@@ -1,6 +1,6 @@
 import * as d3 from 'd3'
 import { ManualUpdater } from "./ManualUpdater"
-import { Vector2D } from "../types"
+import { Vector2D } from "../util/types"
 import * as R from 'ramda'
 import { Subject, BehaviorSubject } from "rxjs"
 
@@ -58,7 +58,7 @@ export class GolfBall {
     }
 
     q(): number
-    q(val: number): this 
+    q(val: number): this
     q(val?) {
         if (val == null) return this.updater.q
         this.updater.q = val
@@ -66,7 +66,7 @@ export class GolfBall {
     }
 
     eta(): number
-    eta(val: number): this 
+    eta(val: number): this
     eta(val?) {
         if (val == null) return this.updater.eta
         this.updater.eta = val

@@ -13,8 +13,3 @@ export interface NetCoef {
     b0: number
     b1: number
 }
-
-export interface Vector2D {
-    x: number
-    y: number
-}
