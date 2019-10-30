@@ -39,7 +39,7 @@ export class GolfXDist extends Chart2D<T> {
         margin: { top: 10, right: 10, bottom: 30, left: 30 },
         pad: { top: 5, right: 1, bottom: 10, left: 15 },
         xrange: [0, 1000],
-        yrange: [15, 1e-1],
+        yrange: [15, 2e-1],
     }
 
     scales: ChartScales = {}
@@ -183,7 +183,7 @@ export class GolfLosses extends Chart2D<T> {
         margin: { top: 10, right: 10, bottom: 30, left: 30 },
         pad: { top: 5, right: 1, bottom: 10, left: 15 },
         xrange: [0, 1000],
-        yrange: [2.5, 3e-2],
+        yrange: [2, 5e-2],
         // yrange: [0.6, 1e-4],
     }
 
