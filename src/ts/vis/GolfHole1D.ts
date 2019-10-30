@@ -245,7 +245,7 @@ export class GolfHole1D extends SVGVisComponent<T> {
                 self.data().forEach(b => getNextBall(b))
                 return self.data()
             }, self.data()),
-            take(5000)
+            take(500)
         ).subscribe(subObj)
 
         // Running ticker starts as an empty subscription object, is later replaced by the running ticker
