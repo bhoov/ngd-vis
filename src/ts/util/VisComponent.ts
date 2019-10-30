@@ -4,15 +4,6 @@
  */
 import { D3Sel } from "./xd3"
 import { SimpleEventHandler } from "./SimpleEventHandler";
-import { SVG, MarginInfo } from "./SVGplus";
-
-export interface SVGOptions {
-    margin: MarginInfo
-    maxWidth: number        // The total width of the component
-    maxHeight: number       // The total height of the component
-    width?: number          // The total width - applicable margins
-    height?: number         // The total height - applicable margins
-}
 
 /**
  * Should have VComponentHTML and VComponentSVG

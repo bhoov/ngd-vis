@@ -1,5 +1,5 @@
 import * as d3 from 'd3'
-import { MarginInfo } from './util/SVGplus'
+import { MarginInfo } from './util/SVGVisComponent'
 import { D3Sel } from './util/xd3'
 import {range} from 'ramda'
 
