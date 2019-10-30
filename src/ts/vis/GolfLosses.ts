@@ -240,7 +240,7 @@ export class GolfLosses extends Chart2D<T> {
             .join("path")
             .classed(d.classname, true)
             .attr("d", d => {
-                return self.path(lim(d.vals))
+                return self.path(d.vals)
             })
     }
 
