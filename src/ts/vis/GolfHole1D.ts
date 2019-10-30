@@ -71,9 +71,9 @@ export class GolfHole1D extends SVGVisComponent<T> {
         this.init()
 
         const data = [
-            new GolfBall(new ManualUpdater(func, dFunc, 0, 0.15), 'golf-ball-sgd', 4),
+            new GolfBall(new ManualUpdater(func, dFunc, 0, 1), 'golf-ball-sgd', 4),
             new GolfBall(new ManualUpdater(func, dFunc, 0.5, 0.07), 'golf-ball-sngd', 3),
-            new GolfBall(new ManualUpdater(func, dFunc, 1, 0.0012), 'golf-ball-ngd', 5)
+            new GolfBall(new ManualUpdater(func, dFunc, 1, 0.01), 'golf-ball-ngd', 5)
         ]
 
         this.data(data)
@@ -165,6 +165,7 @@ export class GolfHole1D extends SVGVisComponent<T> {
         sels.xaxis = this.base.append("g")
             .attr("class", "axis axis--x")
             .attr("transform", SVG.translate(0, op.height))
+            // .call(d3.axisBottom(scales.x).tickValues([0]).tickFormat(x => '\\(\\theta\\)*'));
             .call(d3.axisBottom(scales.x).tickValues([0]).tickFormat(x => '\u03B8*'));
 
         sels.xlabel = this.base.append("text")
