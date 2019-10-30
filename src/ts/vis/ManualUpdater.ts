@@ -1,4 +1,3 @@
-import { Vector2D } from '../types'
 import * as d3 from 'd3'
 
 const defaultStep2Lr: d3.ScaleLinear<number, number> = d3.scaleLinear().domain([0, 0.8]).range([0.001, 0.25])

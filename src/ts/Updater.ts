@@ -1,4 +1,4 @@
-import {Vector2D} from './types'
+import {Vector2D} from './util/types'
 import * as d3 from 'd3'
 
 type ErrorFunc = (v: Vector2D) => number
