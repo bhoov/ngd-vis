@@ -40,8 +40,8 @@ interface GraphSels {
 export const loss = l => 0.5 * Math.pow(l, 2)
 // export const func = x => Math.tanh(x)
 // export const dFunc = x => Math.pow(Math.cosh(x), -2)
-export const func = x => Math.tanh(x-11)/8 + Math.tanh(x-6)/6 + Math.tanh(x) + Math.tanh(x+6)/6 + Math.tanh(x+11)/8
-export const dFunc = x => Math.pow(Math.cosh(x-11), -2)/8 + Math.pow(Math.cosh(x-6), -2)/6 + Math.pow(Math.cosh(x), -2) + Math.pow(Math.cosh(x+6), -2)/6 + Math.pow(Math.cosh(x+11), -2)/8
+export const func = x => Math.tanh(x-11)/4 + Math.tanh(x-6)/4 + Math.tanh(x) + Math.tanh(x+6)/4 + Math.tanh(x+11)/4
+export const dFunc = x => Math.pow(Math.cosh(x-11), -2)/4 + Math.pow(Math.cosh(x-6), -2)/4 + Math.pow(Math.cosh(x), -2) + Math.pow(Math.cosh(x+6), -2)/4 + Math.pow(Math.cosh(x+11), -2)/4
 // export const func = x => Math.sign(x) * (1 - (1 / (1 + Math.abs(x))))
 // export const dFunc = x => 1 / Math.pow(1 + Math.abs(x), 2)
 
@@ -68,8 +68,8 @@ export class GolfHole1D extends SVGVisComponent<T> {
         maxHeight: 200,
         margin: { top: 10, right: 10, bottom: 40, left: 50 },
         pad: 30,
-        xrange: [-14, 14],
-        yrange: [0, 1.5],
+        xrange: [-13.6, 13.6],
+        yrange: [0, 2.5],
         x0: -5,
         maxIter: 800
     }
@@ -90,9 +90,9 @@ export class GolfHole1D extends SVGVisComponent<T> {
         //     new GolfBall(new ManualUpdater(func, dFunc, 1, 0.01), 'golf-ball-ngd', 5)
         // ]
         const data = [
-            new GolfBall(new ManualUpdater(func, dFunc, 0, 1.0), 'golf-ball-sgd', 4),
+            new GolfBall(new ManualUpdater(func, dFunc, 0, 0.9), 'golf-ball-sgd', 4),
             new GolfBall(new ManualUpdater(func, dFunc, 0.5, 0.1), 'golf-ball-sngd', 3),
-            new GolfBall(new ManualUpdater(func, dFunc, 1, 0.0028), 'golf-ball-ngd', 5)
+            new GolfBall(new ManualUpdater(func, dFunc, 1, 0.003), 'golf-ball-ngd', 5)
         ]
 
         this.data(data)

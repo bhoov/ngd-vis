@@ -39,7 +39,7 @@ export class GolfXDist extends Chart2D<T> {
         margin: { top: 10, right: 10, bottom: 30, left: 30 },
         pad: { top: 5, right: 1, bottom: 10, left: 15 },
         xrange: [0, 1000],
-        yrange: [7, 1e-7],
+        yrange: [15, 1e-1],
     }
 
     scales: ChartScales = {}
@@ -149,7 +149,7 @@ export class GolfXDist extends Chart2D<T> {
 
         this.base.append("text")
             .style("text-anchor", "middle")
-            .text("log(|\u03B8 - \u03B8*|)")
+            .text("\u03B8 - \u03B8*")
             .attr("y", op.pad.left - op.margin.left)
             .attr("x", op.pad.top - (op.height / 2))
             .attr("transform", SVG.rotate(-90))
@@ -183,7 +183,7 @@ export class GolfLosses extends Chart2D<T> {
         margin: { top: 10, right: 10, bottom: 30, left: 30 },
         pad: { top: 5, right: 1, bottom: 10, left: 15 },
         xrange: [0, 1000],
-        yrange: [1.5, 1e-4],
+        yrange: [2.5, 3e-2],
         // yrange: [0.6, 1e-4],
     }
 
@@ -297,7 +297,7 @@ export class GolfLosses extends Chart2D<T> {
         // Add ylabel
         this.base.append("text")
             .style("text-anchor", "middle")
-            .text("log(Loss)")
+            .text("Loss")
             .attr("y", op.pad.left - op.margin.left)
             .attr("x", op.pad.top - (op.height / 2))
             .attr("transform", SVG.rotate(-90))
