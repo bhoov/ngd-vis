@@ -18,6 +18,7 @@ interface GraphOptions extends SVGOptions {
     yrange: [number, number]
     pad: number
     x0: number // Where should the golf ball start?
+    maxIter: number // How many iterations to take?
 }
 
 interface GraphScales {
@@ -57,21 +58,22 @@ export class GolfHole1D extends SVGVisComponent<T> {
         pad: 30,
         xrange: [-7, 7],
         yrange: [0, 0.6],
-        x0: -5
+        x0: -5,
+        maxIter: 500
     }
 
     scales: GraphScales = {}
 
     sels: GraphSels = {}
 
-    constructor(d3parent: D3Sel, eventHandler?: SimpleEventHandler, options?:GraphOptions) {
+    constructor(d3parent: D3Sel, eventHandler?: SimpleEventHandler, options={}) {
         super(d3parent, eventHandler, options)
-        super.initSVG(this.options)
+        super.initSVG(options)
         this.base.classed(this.cssname, true)
         this.init()
 
         const data = [
-            new GolfBall(new ManualUpdater(func, dFunc, 0, 1), 'golf-ball-sgd', 4),
+            new GolfBall(new ManualUpdater(func, dFunc, 0, 0.5), 'golf-ball-sgd', 4),
             new GolfBall(new ManualUpdater(func, dFunc, 0.5, 0.07), 'golf-ball-sngd', 3),
             new GolfBall(new ManualUpdater(func, dFunc, 1, 0.01), 'golf-ball-ngd', 5)
         ]
@@ -235,6 +237,8 @@ export class GolfHole1D extends SVGVisComponent<T> {
             complete: () => console.log("COMPLETE"),
         }
 
+        console.log(op.maxIter);
+
         const ticker = () => interval(10).pipe(
             scan((acc: T) => {
                 // Unsubscriber ticker if all balls dead
@@ -245,7 +249,7 @@ export class GolfHole1D extends SVGVisComponent<T> {
                 self.data().forEach(b => getNextBall(b))
                 return self.data()
             }, self.data()),
-            take(500)
+            take(op.maxIter)
         ).subscribe(subObj)
 
         // Running ticker starts as an empty subscription object, is later replaced by the running ticker
