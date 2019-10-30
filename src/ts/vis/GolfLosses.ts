@@ -82,14 +82,22 @@ export class GolfXDist extends Chart2D<T> {
         const currVals = this.data()[d.classname];
         currVals.vals.push(Math.abs(d.x));
 
-        const lim = R.takeLast(1000);
+        const newXrange = [0, currVals.vals.length]
+        this.updateScales(newXrange)
+        this.createPath()
 
         currVals.sel.data([currVals])
             .join("path")
             .classed(d.classname, true)
             .attr("d", d => {
-                return self.path(lim(d.vals))
+                return self.path(d.vals)
             })
+    }
+
+    // Live update the xrange
+    updateScales(xrange) {
+        const op = this.options
+        this.scales.x = d3.scaleLinear().domain(xrange).range([0, op.width]).clamp(true)
     }
 
     private initBaseLine(classname: string) {
@@ -114,6 +122,7 @@ export class GolfXDist extends Chart2D<T> {
         this.createPath()
         this.createAxes()
     }
+
 
     protected createAxes() {
         const sels = this.sels
@@ -140,7 +149,7 @@ export class GolfXDist extends Chart2D<T> {
 
         this.base.append("text")
             .style("text-anchor", "middle")
-            .text("log(X error)")
+            .text("log(|\u03B8 - \u03B8*|)")
             .attr("y", op.pad.left - op.margin.left)
             .attr("x", op.pad.top - (op.height / 2))
             .attr("transform", SVG.rotate(-90))
@@ -171,8 +180,8 @@ export class GolfLosses extends Chart2D<T> {
     options: ChartOptions = {
         maxWidth: 350,
         maxHeight: 250,
-        margin: { top: 10, right: 10, bottom: 40, left: 30 },
-        pad: { top: 5, right: 0, bottom: 20, left: 15 },
+        margin: { top: 10, right: 10, bottom: 30, left: 30 },
+        pad: { top: 5, right: 1, bottom: 10, left: 15 },
         xrange: [0, 1000],
         yrange: [0.6, 1e-4],
     }
@@ -206,6 +215,12 @@ export class GolfLosses extends Chart2D<T> {
         }
     }
 
+    // Live update the xrange
+    updateScales(xrange) {
+        const op = this.options
+        this.scales.x = d3.scaleLinear().domain(xrange).range([0, op.width]).clamp(true)
+    }
+
     clearPaths() {
         this.data(R.map(d => R.assoc('vals', [], d), this.data()))
     }
@@ -217,7 +232,9 @@ export class GolfLosses extends Chart2D<T> {
         const currVals = this.data()[d.classname];
         currVals.vals.push(d.loss)
 
-        const lim = R.takeLast(this.options.xrange[1]);
+        const newXrange = [0, currVals.vals.length]
+        this.updateScales(newXrange)
+        this.createPath()
 
         currVals.sel.data([currVals])
             .join("path")
