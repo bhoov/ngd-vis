@@ -165,10 +165,10 @@ export class GolfHole1D extends SVGVisComponent<T> {
         sels.xaxis = this.base.append("g")
             .attr("class", "axis axis--x")
             .attr("transform", SVG.translate(0, op.height))
-            .call(d3.axisBottom(scales.x).ticks(3, "s"));
+            .call(d3.axisBottom(scales.x).tickValues([0]).tickFormat(x => '\u03B8*'));
 
         sels.xlabel = this.base.append("text")
-            .text("x")
+            .text("\u03B8")
             .attr("class", "titles")
             .attr("transform", SVG.translate(op.width / 2, op.height + op.pad))
 
@@ -198,22 +198,30 @@ export class GolfHole1D extends SVGVisComponent<T> {
             .append("rect")
             .attr("height", op.height)
             .attr("width", op.width)
+        const tooSmall = (x: number) => x < (op.xrange[0])
+        const tooBig = (x: number) => x > (op.xrange[1])
 
         const outOfBounds = (x:number) => {
-            const tooSmall = (x: number) => x < (op.xrange[0])
-            const tooBig = (x: number) => x > (op.xrange[1])
             return (isNaN(x) || tooSmall(x) || tooBig(x))
+        }
+
+        const fixOutOfBounds = (x:number) => {
+            let out: number
+
+            if (isNaN(x)) out = op.xrange[0]
+            else if (tooSmall(x)) out = op.xrange[0]
+            else if (tooBig(x)) out = op.xrange[1]
+            else out = x
+
+            return out
         }
 
         function getNextBall(b: GolfBall): GolfBall {
             const nextX = b.nextX()
             const currBallSel = self.base.select(`.${b.classname}`)
-            if (outOfBounds(nextX)) {
-                console.log("KILLING");
-                currBallSel.classed('dead-ball', true)
-            }
-            else if (!currBallSel.classed('dead-ball')) {
-                return b.step_()
+            const forceX = fixOutOfBounds(nextX)
+            if (!currBallSel.classed('dead-ball')) {
+                return b.step_(forceX)
             }
             return b
         }

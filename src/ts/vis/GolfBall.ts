@@ -40,8 +40,15 @@ export class GolfBall {
         return new GolfBall(this.updater, this.classname, this.nextX())
     }
 
-    step_(): this {
-        this.x = this.nextX()
+    /**
+     * Use the updater to take the next step
+     * 
+     * @param forceX Force the nextX to be of this value
+     */
+    step_(forceX:number|null=null): this {
+        if (forceX != null) this.x = forceX
+        else this.x = this.nextX()
+
         this.stream.next({
             classname: this.classname,
             x: this.x,
