@@ -1,26 +1,12 @@
 import * as d3 from 'd3'
-import { D3Sel } from '../util/xd3'
 import * as R from 'ramda'
-import { Vector2D } from '../util/types'
-import { SVGOptions, SVGVisComponent } from '../util/SVGVisComponent'
-import { SimpleEventHandler } from '../util/SimpleEventHandler';
+
+import { Chart2D, ChartOptions, ChartScales } from '../util/Chart2dVisComponent'
+import { SimpleEventHandler } from '../util/SimpleEventHandler'
+import { D3Sel } from '../util/xd3'
 import { SVG } from '../util/SVGplus'
-import { range, from, interval, fromEvent } from 'rxjs'
-import { map, tap, take, startWith, scan, switchMap } from 'rxjs/operators'
-import { ManualUpdater } from './ManualUpdater'
-import { GolfBall, BallHistory } from './GolfBall'
 
-interface GraphOptions extends SVGOptions {
-    xrange: [number, number]
-    yrange: [number, number]
-    pad: number
-}
-
-interface GraphScales {
-    x?: d3.ScaleLinear<number, number>,
-    y?: d3.ScaleLinear<number, number>,
-    path?: d3.Line<number>
-}
+import { BallHistory } from './GolfBall'
 
 interface GraphSels {
     xaxis?: D3Sel
@@ -42,44 +28,31 @@ type LineTracker = {
 
 type T = LineTracker
 
-export class GolfXDist extends SVGVisComponent<T> {
+export class GolfXDist extends Chart2D<T> {
     cssname = "line-plot"
 
     _data: T
 
-    options: GraphOptions = {
-        maxWidth: 450,
+    options: ChartOptions = {
+        maxWidth: 350,
         maxHeight: 250,
-        margin: { top: 0, right: 10, bottom: 30, left: 75},
-        pad: 30,
-        xrange: [-7, 7], // For linear scale
-        // xrange: [1e-10, 7], // For log scale
-        yrange: [0, 1000],
+        margin: { top: 10, right: 10, bottom: 30, left: 30 },
+        pad: { top: 5, right: 1, bottom: 10, left: 15 },
+        xrange: [0, 1000],
+        yrange: [7, 1e-7],
     }
 
-    scales: GraphScales = {}
+    scales: ChartScales = {}
 
     sels: GraphSels = {}
+
+    path: d3.Line<number>
 
     constructor(d3parent: D3Sel, eventHandler?: SimpleEventHandler, options = {}) {
         super(d3parent, eventHandler, options)
         super.initSVG(this.options)
         this.base.classed(this.cssname, true)
         this.data(<LineTracker>{})
-    }
-
-    /**
-     * Put a vector into the coordinate system used by the visualization
-     * 
-     * @param v Vector 
-     */
-    intoVis(v: Vector2D) {
-        return { x: this.scales.x(v.x), y: this.scales.y(v.y) }
-    }
-
-    // Take a vector in the coordinate system and return it to the math coordinates
-    intoMath(v: Vector2D) {
-        return { x: this.scales.x.invert(v.x), y: this.scales.y.invert(v.y) }
     }
 
     /**
@@ -107,8 +80,7 @@ export class GolfXDist extends SVGVisComponent<T> {
         this.addDataKey_(d.classname);
 
         const currVals = this.data()[d.classname];
-        currVals.vals.push(d.x); // For linear scale
-        // currVals.vals.push(Math.abs(d.x));
+        currVals.vals.push(Math.abs(d.x));
 
         const lim = R.takeLast(1000);
 
@@ -116,7 +88,7 @@ export class GolfXDist extends SVGVisComponent<T> {
             .join("path")
             .classed(d.classname, true)
             .attr("d", d => {
-                return self.scales.path(lim(d.vals))
+                return self.path(lim(d.vals))
             })
     }
 
@@ -126,17 +98,19 @@ export class GolfXDist extends SVGVisComponent<T> {
             .classed('line', true)
     }
 
+    protected createScales() {
+        const op = this.options
+        this.scales.x = d3.scaleLinear().domain(op.xrange).range([0, op.width]).clamp(true)
+        this.scales.y = d3.scaleLinear().domain(op.yrange).range([0, op.height]).clamp(true)
+    }
+
     init() {
         const self = this;
         const op = this.options;
         const scales = this.scales;
         const sels = this.sels;
 
-        // Initialize Scales
-        scales.x = d3.scaleLinear().domain(op.xrange).range([0, op.width])
-        // scales.x = d3.scaleLog().domain(op.xrange).range([0, op.width]).base(10).clamp(true)
-        scales.y = d3.scaleLinear().domain(op.yrange).range([op.pad, op.height])
-
+        this.createScales()
         this.createPath()
         this.createAxes()
     }
@@ -149,14 +123,33 @@ export class GolfXDist extends SVGVisComponent<T> {
         // Create axes
         sels.xaxis = this.base.append("g")
             .attr("class", "axis axis--x")
-            .attr("transform", SVG.translate(0, op.pad))
-            .call(d3.axisTop(scales.x).ticks(3, ".1e"));
+            .attr("transform", SVG.translate(0, op.height))
+            // @ts-ignore
+            .call(d3.axisBottom(scales.x).ticks(3, ".1e").tickFormat(""));
+
+        sels.yaxis = this.base.append("g")
+            .attr("class", "axis axis--y")
+            .attr("transform", SVG.translate(0, 0))
+            // @ts-ignore
+            .call(d3.axisLeft(scales.y).ticks(3, ".1e").tickFormat(""));
+
+        this.base.append("text")
+            .attr("transform", SVG.translate(op.width / 2, op.margin.top + op.height + 10))
+            .style("text-anchor", "middle")
+            .text("Iterations")
+
+        this.base.append("text")
+            .style("text-anchor", "middle")
+            .text("log(X error)")
+            .attr("y", op.pad.left - op.margin.left)
+            .attr("x", op.pad.top - (op.height / 2))
+            .attr("transform", SVG.rotate(-90))
     }
 
     protected createPath() {
-        this.scales.path =  d3.line<number>()
-            .x((d: number, i: number) => this.scales.x(d))
-            .y((d: number, i: number) => this.scales.y(i))
+        this.path = d3.line<number>()
+            .x((d: number, i: number) => this.scales.x(i))
+            .y((d: number, i: number) => this.scales.y(d))
             .curve(d3.curveLinear)
     }
 
@@ -169,47 +162,32 @@ export class GolfXDist extends SVGVisComponent<T> {
     }
 }
 
-function toVec([x, y]: [number, number]): Vector2D {
-    return { x: x, y: y }
-}
 
-export class GolfLosses extends SVGVisComponent<T> {
+export class GolfLosses extends Chart2D<T> {
     cssname = "line-plot"
 
     _data: T
 
-    options: GraphOptions = {
-        maxWidth: 250,
+    options: ChartOptions = {
+        maxWidth: 350,
         maxHeight: 250,
         margin: { top: 10, right: 10, bottom: 40, left: 30 },
-        pad: 0,
+        pad: { top: 5, right: 0, bottom: 20, left: 15 },
         xrange: [0, 1000],
-        yrange: [0.6, 0],
+        yrange: [0.6, 1e-4],
     }
 
-    scales: GraphScales = {}
+    scales: ChartScales = {}
 
     sels: GraphSels = {}
+
+    path: d3.Line<number>
 
     constructor(d3parent: D3Sel, eventHandler?: SimpleEventHandler, options = {}) {
         super(d3parent, eventHandler, options)
         super.initSVG(this.options)
         this.base.classed(this.cssname, true)
         this.data(<LineTracker>{})
-    }
-
-    /**
-     * Put a vector into the coordinate system used by the visualization
-     * 
-     * @param v Vector 
-     */
-    intoVis(v: Vector2D) {
-        return { x: this.scales.x(v.x), y: this.scales.y(v.y) }
-    }
-
-    // Take a vector in the coordinate system and return it to the math coordinates
-    intoMath(v: Vector2D) {
-        return { x: this.scales.x.invert(v.x), y: this.scales.y.invert(v.y) }
     }
 
     /**
@@ -237,7 +215,7 @@ export class GolfLosses extends SVGVisComponent<T> {
         this.addDataKey_(d.classname);
 
         const currVals = this.data()[d.classname];
-        currVals.vals.push(d.loss);
+        currVals.vals.push(d.loss)
 
         const lim = R.takeLast(this.options.xrange[1]);
 
@@ -245,7 +223,7 @@ export class GolfLosses extends SVGVisComponent<T> {
             .join("path")
             .classed(d.classname, true)
             .attr("d", d => {
-                return self.scales.path(lim(d.vals))
+                return self.path(lim(d.vals))
             })
     }
 
@@ -261,12 +239,17 @@ export class GolfLosses extends SVGVisComponent<T> {
         const scales = this.scales;
         const sels = this.sels;
 
-        // Initialize Scales
-        scales.x = d3.scaleLinear().domain(op.xrange).range([0, op.width])
-        scales.y = d3.scaleLinear().domain(op.yrange).range([op.pad, op.height])
-
+        this.createScales()
         this.createPath()
         this.createAxes()
+    }
+
+    protected createScales() {
+        const scales = this.scales
+        const op = this.options
+
+        scales.x = d3.scaleLinear().domain(op.xrange).range([0, op.width]).clamp(true)
+        scales.y = d3.scaleLog().domain(op.yrange).range([0, op.height]).clamp(true)
     }
 
     protected createAxes() {
@@ -286,10 +269,25 @@ export class GolfLosses extends SVGVisComponent<T> {
             .attr("transform", SVG.translate(0, op.height))
             // @ts-ignore
             .call(d3.axisBottom(scales.x).tickFormat("").ticks(3));
+
+        // Add xlabel
+        this.base.append("text")
+            .attr("transform", SVG.translate(op.width / 2, op.margin.top + op.height + 10))
+            .style("text-anchor", "middle")
+            .text("Iterations")
+
+        // Add ylabel
+        this.base.append("text")
+            .style("text-anchor", "middle")
+            .text("log(Loss)")
+            .attr("y", op.pad.left - op.margin.left)
+            .attr("x", op.pad.top - (op.height / 2))
+            .attr("transform", SVG.rotate(-90))
+        // .attr("transform", SVG.translate(op.margin.left, op.height/2))
     }
 
     protected createPath() {
-        this.scales.path =  d3.line<number>()
+        this.path = d3.line<number>()
             .x((d: number, i: number) => this.scales.x(i))
             .y((d: number, i: number) => this.scales.y(d))
             .curve(d3.curveLinear)
