@@ -1,24 +1,23 @@
 import * as d3 from 'd3'
-import { D3Sel } from '../util/xd3'
+import { D3Sel, linspace } from '../util/xd3'
 import * as R from 'ramda'
 import { Vector2D } from '../util/types'
 import { SVGOptions, SVGVisComponent } from '../util/SVGVisComponent'
 import { SimpleEventHandler } from '../util/SimpleEventHandler';
 import { SVG } from '../util/SVGplus'
 import { interval, fromEvent } from 'rxjs'
-import { map, tap, take, startWith, scan, switchMap } from 'rxjs/operators'
+import { take, scan } from 'rxjs/operators'
 import { ManualUpdater } from './ManualUpdater'
 import { GolfBall } from './GolfBall'
-import { start } from 'repl'
+import { landscapes, Landscape, baseLoss, getPlotFunc } from "../GolfLandscapes";
+
 
 type T = GolfBall[]
 
 interface GraphOptions extends SVGOptions {
-    xrange: [number, number]
-    yrange: [number, number]
     pad: number
-    x0: number // Where should the golf ball start?
     maxIter: number // How many iterations to take?
+    landscape: Landscape
 }
 
 interface GraphScales {
@@ -36,49 +35,35 @@ interface GraphSels {
     ball?: D3Sel
 }
 
-// Note that plotFunc is the loss function we plot and func is the component of the loss function needed for the updater
-export const loss = l => 0.5 * Math.pow(l, 2)
-// export const func = x => Math.tanh(x)
-// export const dFunc = x => Math.pow(Math.cosh(x), -2)
-export const func = x => Math.tanh(x-11)/4 + Math.tanh(x-6)/4 + Math.tanh(x) + Math.tanh(x+6)/4 + Math.tanh(x+11)/4
-export const dFunc = x => Math.pow(Math.cosh(x-11), -2)/4 + Math.pow(Math.cosh(x-6), -2)/4 + Math.pow(Math.cosh(x), -2) + Math.pow(Math.cosh(x+6), -2)/4 + Math.pow(Math.cosh(x+11), -2)/4
-// export const func = x => Math.sign(x) * (1 - (1 / (1 + Math.abs(x))))
-// export const dFunc = x => 1 / Math.pow(1 + Math.abs(x), 2)
+// // Note that plotFunc is the loss function we plot and func is the component of the loss function needed for the updater
+// // export const func = x => Math.tanh(x)
+// // export const dFunc = x => Math.pow(Math.cosh(x), -2)
+// export const func = x => Math.tanh(x - 11) / 4 + Math.tanh(x - 6) / 4 + Math.tanh(x) + Math.tanh(x + 6) / 4 + Math.tanh(x + 11) / 4
+// export const dFunc = x => Math.pow(Math.cosh(x - 11), -2) / 4 + Math.pow(Math.cosh(x - 6), -2) / 4 + Math.pow(Math.cosh(x), -2) + Math.pow(Math.cosh(x + 6), -2) / 4 + Math.pow(Math.cosh(x + 11), -2) / 4
+// // export const func = x => Math.sign(x) * (1 - (1 / (1 + Math.abs(x))))
+// // export const dFunc = x => 1 / Math.pow(1 + Math.abs(x), 2)
 
-export const plotFunc = x => loss(func(x))
+// export const plotFunc = x => baseLoss(func(x))
 
 export class GolfHole1D extends SVGVisComponent<T> {
     cssname = "golf-hole-chart"
 
     _data: T
 
-    // options: GraphOptions = {
-    //     maxWidth: 400,
-    //     maxHeight: 200,
-    //     margin: { top: 10, right: 10, bottom: 40, left: 50 },
-    //     pad: 30,
-    //     xrange: [-7, 7],
-    //     yrange: [0, 0.6],
-    //     x0: -5,
-    //     maxIter: 500
-    // }
-
     options: GraphOptions = {
         maxWidth: 400,
         maxHeight: 200,
         margin: { top: 10, right: 10, bottom: 40, left: 50 },
         pad: 30,
-        xrange: [-13.6, 13.6],
-        yrange: [0, 2.5],
-        x0: -5,
-        maxIter: 600
+        maxIter: 600,
+        landscape: landscapes.hole
     }
 
     scales: GraphScales = {}
 
     sels: GraphSels = {}
 
-    constructor(d3parent: D3Sel, eventHandler?: SimpleEventHandler, options={}) {
+    constructor(d3parent: D3Sel, eventHandler?: SimpleEventHandler, options = {}) {
         super(d3parent, eventHandler, options)
         super.initSVG(options)
         this.base.classed(this.cssname, true)
@@ -89,14 +74,39 @@ export class GolfHole1D extends SVGVisComponent<T> {
         //     new GolfBall(new ManualUpdater(func, dFunc, 0.5, 0.07), 'golf-ball-sngd', 3),
         //     new GolfBall(new ManualUpdater(func, dFunc, 1, 0.01), 'golf-ball-ngd', 5)
         // ]
+        const z = this.options.landscape
         const data = [
-            new GolfBall(new ManualUpdater(func, dFunc, 0, 0.9), 'golf-ball-sgd', 4),
-            new GolfBall(new ManualUpdater(func, dFunc, 0.5, 0.1), 'golf-ball-sngd', 3),
-            new GolfBall(new ManualUpdater(func, dFunc, 1, 0.003), 'golf-ball-ngd', 5)
+            new GolfBall(new ManualUpdater(z.f, z.df, 0, 0.9), 'golf-ball-sgd', 4),
+            new GolfBall(new ManualUpdater(z.f, z.df, 0.5, 0.1), 'golf-ball-sngd', 3),
+            new GolfBall(new ManualUpdater(z.f, z.df, 1, 0.003), 'golf-ball-ngd', 5)
         ]
 
         this.data(data)
         this.initBalls()
+    }
+
+    landscape(): Landscape
+    landscape(val: Landscape): this
+    landscape(val?) {
+        if (val == null) return this.options.landscape
+        const op = this.options
+        op.landscape = val
+
+        // Update xrange and yrange
+        this.updateScales(op)
+        this.updateAxes(this.scales, op)
+
+        // Update data
+        this.data().forEach(b => {
+            b.updater.f = val.f
+            b.updater.df = val.df
+        })
+
+        const xs = linspace(op.landscape.xrange[0], op.landscape.xrange[1], 1000)
+        this.clearCurve()
+        this.plotCurve(xs)
+
+        return this
     }
 
     /** Return first updater in data */
@@ -104,7 +114,7 @@ export class GolfHole1D extends SVGVisComponent<T> {
         try {
             return this.data()[0]
         }
-        catch(err) {
+        catch (err) {
             console.log("Looks like there is no data in this golf hole");
             console.log(err);
         }
@@ -126,12 +136,13 @@ export class GolfHole1D extends SVGVisComponent<T> {
 
     // Turn a number into a vector
     num2vec(x: number): Vector2D {
-        return { x: x, y: plotFunc(x) }
+        const op = this.options
+        return { x: x, y: op.landscape.loss(x) }
     }
 
     // Turn a ball into a vector in the visualization coordinate system
     ball2vis(b: GolfBall) {
-        return this.intoVis(b.toVec(plotFunc))
+        return this.intoVis(b.toVec(getPlotFunc(this.options.landscape)))
     }
 
     // Plot a ball on the chart
@@ -152,6 +163,10 @@ export class GolfHole1D extends SVGVisComponent<T> {
             .attr("r", "5px")
     }
 
+    clearCurve() {
+        this.base.selectAll('.line').remove()
+    }
+
     /**
      * Plot the values of all x according to the function
      * 
@@ -170,41 +185,45 @@ export class GolfHole1D extends SVGVisComponent<T> {
         })
     }
 
+    updateScales(op: GraphOptions) {
+        const scales = this.scales
+
+        scales.x = d3.scaleLinear().domain(op.landscape.xrange).range([0, op.width])
+        scales.y = d3.scaleLinear().domain(op.landscape.yrange).range([op.height, 0])
+    }
+
+    updateAxes(scales: GraphScales, op: GraphOptions) {
+        const sels = this.sels
+        sels.xaxis.call(d3.axisBottom(scales.x).tickValues([0]).tickFormat(x => '0'))
+    }
+
     init() {
         const self = this;
         const op = this.options;
         const scales = this.scales;
         const sels = this.sels;
 
-        // this.base = SVG.group(this.base, '', { x: op.margin.left, y: op.margin.top })
-
-        scales.x = d3.scaleLinear().domain(op.xrange).range([0, op.width])
-        scales.y = d3.scaleLinear().domain(op.yrange).range([op.height, 0])
+        this.updateScales(op)
 
         sels.xaxis = this.base.append("g")
             .attr("class", "axis axis--x")
             .attr("transform", SVG.translate(0, op.height))
-            // .call(d3.axisBottom(scales.x).tickValues([0]).tickFormat(x => '\\(\\theta\\)*'));
-            .call(d3.axisBottom(scales.x).tickValues([0]).tickFormat(x => '0'));
 
         sels.xlabel = this.base.append("text")
             .text("\u03B8 - \u03B8*")
             .attr("class", "titles")
             .attr("transform", SVG.translate(op.width / 2, op.height + op.pad))
 
+        this.updateAxes(scales, op)
+
         const baseLine = d3.line<number>()
             .x((d: number, i: number) => scales.x(d))
-            .y((d: number, i: number) => scales.y(plotFunc(d)))
+            .y((d: number, i: number) => scales.y(getPlotFunc(op.landscape)(d)))
             .curve(d3.curveLinear)
 
         scales.paths = [baseLine]
 
-        const linspace = (start, end, n) => {
-            const delta = (end - start) / (n - 1)
-            return d3.range(start, end + delta, delta).slice(0, n)
-        }
-
-        const xs = linspace(op.xrange[0], op.xrange[1], 1000)
+        const xs = linspace(op.landscape.xrange[0], op.landscape.xrange[1], 1000)
         this.plotCurve(xs)
     }
 
@@ -218,19 +237,19 @@ export class GolfHole1D extends SVGVisComponent<T> {
             .append("rect")
             .attr("height", op.height)
             .attr("width", op.width)
-        const tooSmall = (x: number) => x < (op.xrange[0])
-        const tooBig = (x: number) => x > (op.xrange[1])
+        const tooSmall = (x: number) => x < (op.landscape.xrange[0])
+        const tooBig = (x: number) => x > (op.landscape.xrange[1])
 
-        const outOfBounds = (x:number) => {
+        const outOfBounds = (x: number) => {
             return (isNaN(x) || tooSmall(x) || tooBig(x))
         }
 
-        const fixOutOfBounds = (x:number) => {
+        const fixOutOfBounds = (x: number) => {
             let out: number
 
-            if (isNaN(x)) out = op.xrange[0]
-            else if (tooSmall(x)) out = op.xrange[0]
-            else if (tooBig(x)) out = op.xrange[1]
+            if (isNaN(x)) out = op.landscape.xrange[0]
+            else if (tooSmall(x)) out = op.landscape.xrange[0]
+            else if (tooBig(x)) out = op.landscape.xrange[1]
             else out = x
 
             return out
@@ -293,22 +312,6 @@ export class GolfHole1D extends SVGVisComponent<T> {
         this._data = val;
         return this
     }
-
-    // q(): number
-    // q(val: number): this
-    // q(val?) {
-    //     if (val == null) return this.data().updater.q
-    //     this.data().updater.q = val
-    //     return this
-    // }
-
-    // eta(): number
-    // eta(val: number): this
-    // eta(val?) {
-    //     if (val == null) return this.data().updater.eta
-    //     this.data().updater.eta = val
-    //     return this
-    // }
 }
 
 function toVec([x, y]: [number, number]): Vector2D {
