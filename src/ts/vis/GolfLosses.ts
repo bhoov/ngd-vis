@@ -39,8 +39,7 @@ export class GolfXDist extends Chart2D<T> {
         margin: { top: 10, right: 10, bottom: 30, left: 30 },
         pad: { top: 5, right: 1, bottom: 10, left: 15 },
         xrange: [0, 600],
-        // yrange: [15, 3e-1],
-        yrange: [15, 0],
+        yrange: [15, 3e-1],
     }
 
     scales: ChartScales = {}
@@ -110,8 +109,7 @@ export class GolfXDist extends Chart2D<T> {
     protected createScales() {
         const op = this.options
         this.scales.x = d3.scaleLinear().domain(op.xrange).range([0, op.width]).clamp(true)
-        this.scales.y = d3.scaleLinear().domain(op.yrange).range([0, op.height]).clamp(true)
-        // this.scales.y = d3.scaleLog().domain(op.yrange).range([0, op.height]).clamp(true)
+        this.scales.y = d3.scaleLog().domain(op.yrange).range([0, op.height]).clamp(true)
     }
 
     init() {
@@ -136,13 +134,13 @@ export class GolfXDist extends Chart2D<T> {
             .attr("class", "axis axis--x")
             .attr("transform", SVG.translate(0, op.height))
             // @ts-ignore
-            .call(d3.axisBottom(scales.x).ticks(3, ".1e").tickFormat(""));
+            .call(d3.axisBottom(scales.x).tickFormat(""));
 
         sels.yaxis = this.base.append("g")
             .attr("class", "axis axis--y")
             .attr("transform", SVG.translate(0, 0))
             // @ts-ignore
-            .call(d3.axisLeft(scales.y).ticks(3, ".01e").tickFormat(""));
+            .call(d3.axisLeft(scales.y).ticks(4).tickFormat(""));
 
         this.base.append("text")
             .attr("transform", SVG.translate(op.width / 2, op.margin.top + op.height + 10))
@@ -185,8 +183,7 @@ export class GolfLosses extends Chart2D<T> {
         margin: { top: 10, right: 10, bottom: 30, left: 30 },
         pad: { top: 5, right: 1, bottom: 10, left: 15 },
         xrange: [0, 600],
-        yrange: [2, 5e-2],
-        // yrange: [0.6, 1e-4],
+        yrange: [0.6, 1e-4],
     }
 
     scales: ChartScales = {}
@@ -282,13 +279,13 @@ export class GolfLosses extends Chart2D<T> {
             .attr("class", "axis axis--y")
             .attr("transform", SVG.translate(0, 0))
             // @ts-ignore
-            .call(d3.axisLeft(scales.y).tickFormat("").tickValues([0, 0.25, 0.5]));
+            .call(d3.axisLeft(scales.y).tickFormat("").ticks(4));
 
         sels.xaxis = this.base.append("g")
             .attr("class", "axis axis--x")
             .attr("transform", SVG.translate(0, op.height))
             // @ts-ignore
-            .call(d3.axisBottom(scales.x).tickFormat("").ticks(3));
+            .call(d3.axisBottom(scales.x).tickFormat("").ticks(10));
 
         // Add xlabel
         this.base.append("text")
