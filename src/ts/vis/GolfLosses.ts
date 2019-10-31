@@ -38,8 +38,9 @@ export class GolfXDist extends Chart2D<T> {
         maxHeight: 250,
         margin: { top: 10, right: 10, bottom: 30, left: 30 },
         pad: { top: 5, right: 1, bottom: 10, left: 15 },
-        xrange: [0, 1000],
-        yrange: [15, 3e-1],
+        xrange: [0, 600],
+        // yrange: [15, 3e-1],
+        yrange: [15, 0],
     }
 
     scales: ChartScales = {}
@@ -82,8 +83,8 @@ export class GolfXDist extends Chart2D<T> {
         const currVals = this.data()[d.classname];
         currVals.vals.push(Math.abs(d.x));
 
-        const newXrange = [0, currVals.vals.length]
-        this.updateScales(newXrange)
+        // const newXrange = [0, currVals.vals.length]
+        // this.updateScales(newXrange)
         this.createPath()
 
         currVals.sel.data([currVals])
@@ -109,7 +110,8 @@ export class GolfXDist extends Chart2D<T> {
     protected createScales() {
         const op = this.options
         this.scales.x = d3.scaleLinear().domain(op.xrange).range([0, op.width]).clamp(true)
-        this.scales.y = d3.scaleLog().domain(op.yrange).range([0, op.height]).clamp(true)
+        this.scales.y = d3.scaleLinear().domain(op.yrange).range([0, op.height]).clamp(true)
+        // this.scales.y = d3.scaleLog().domain(op.yrange).range([0, op.height]).clamp(true)
     }
 
     init() {
@@ -140,12 +142,12 @@ export class GolfXDist extends Chart2D<T> {
             .attr("class", "axis axis--y")
             .attr("transform", SVG.translate(0, 0))
             // @ts-ignore
-            .call(d3.axisLeft(scales.y).ticks(3, ".1e").tickFormat(""));
+            .call(d3.axisLeft(scales.y).ticks(3, ".01e").tickFormat(""));
 
         this.base.append("text")
             .attr("transform", SVG.translate(op.width / 2, op.margin.top + op.height + 10))
             .style("text-anchor", "middle")
-            .text("Iterations")
+            .text("Time")
 
         this.base.append("text")
             .style("text-anchor", "middle")
@@ -182,7 +184,7 @@ export class GolfLosses extends Chart2D<T> {
         maxHeight: 250,
         margin: { top: 10, right: 10, bottom: 30, left: 30 },
         pad: { top: 5, right: 1, bottom: 10, left: 15 },
-        xrange: [0, 1000],
+        xrange: [0, 600],
         yrange: [2, 5e-2],
         // yrange: [0.6, 1e-4],
     }
@@ -233,8 +235,8 @@ export class GolfLosses extends Chart2D<T> {
         const currVals = this.data()[d.classname];
         currVals.vals.push(d.loss)
 
-        const newXrange = [0, currVals.vals.length]
-        this.updateScales(newXrange)
+        // const newXrange = [0, currVals.vals.length]
+        // this.updateScales(newXrange)
         this.createPath()
 
         currVals.sel.data([currVals])
@@ -292,7 +294,7 @@ export class GolfLosses extends Chart2D<T> {
         this.base.append("text")
             .attr("transform", SVG.translate(op.width / 2, op.margin.top + op.height + 10))
             .style("text-anchor", "middle")
-            .text("Iterations")
+            .text("Time")
 
         // Add ylabel
         this.base.append("text")
