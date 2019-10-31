@@ -30,5 +30,12 @@ export const landscapes: { [k: string]: Landscape } = {
         xrange: [-12, 12],
         yrange: [0, 0.6],
         loss: baseLoss
+    },
+    bowl: {
+        f:  x => Math.sinh(x),
+        df: x => Math.cosh(x),
+        xrange: [-3, 3],
+        yrange: [0, 100],
+        loss: baseLoss
     }
 }
