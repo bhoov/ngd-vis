@@ -65,7 +65,7 @@ export class GolfHole1D extends SVGVisComponent<T> {
 
     constructor(d3parent: D3Sel, eventHandler?: SimpleEventHandler, options = {}) {
         super(d3parent, eventHandler, options)
-        super.initSVG(options)
+        super.initSVG(options, ["bg"])
         this.base.classed(this.cssname, true)
         this.init()
 
@@ -164,7 +164,7 @@ export class GolfHole1D extends SVGVisComponent<T> {
     }
 
     clearCurve() {
-        this.base.selectAll('.line').remove()
+        this.layers.bg.selectAll('.line').remove()
     }
 
     /**
@@ -176,7 +176,7 @@ export class GolfHole1D extends SVGVisComponent<T> {
         const self = this, scales = this.scales, sels = this.sels;
 
         scales.paths.forEach(line => {
-            this.base.append("path")
+            this.layers.bg.append("path")
                 .datum(x)
                 .attr("class", "line")
                 .attr("d", d => {
