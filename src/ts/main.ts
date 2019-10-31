@@ -129,7 +129,8 @@ function plotGolfHoleSlider() {
 	// Put data into viz
 	vizs.graph.data([new GolfBall(new ManualUpdater(func, dFunc, defaults.q, defaults.eta), "golf-ball")])
 
-	const etaRange = [-5, 2].map(x => Math.pow(10, x))
+	// const etaRange = [-5, 2].map(x => Math.pow(10, x))
+	const etaRange = [-3, 2].map(x => Math.pow(10, x))
 	const scales = {
 		q: d3.scaleLinear().range([0, 10]).domain([0, 1]),
 		eta: d3.scaleLog().range([1, 1000]).domain(etaRange).base(10)
