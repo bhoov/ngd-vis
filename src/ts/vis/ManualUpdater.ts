@@ -1,10 +1,5 @@
 import * as d3 from 'd3'
-
-const defaultStep2Lr: d3.ScaleLinear<number, number> = d3.scaleLinear().domain([0, 0.8]).range([0.001, 0.25])
-
-type SimpleFunc = (x: number) => number
-
-const loss = x => 1/2 * Math.pow(x, 2)
+import { baseLoss } from '../GolfLandscapes'
 
 export class ManualUpdater {
     f: (x: number) => number
@@ -22,7 +17,7 @@ export class ManualUpdater {
 
     // Calculate error squared of the base function
     loss(x: number): number {
-        return loss(this.f(x))
+        return baseLoss(this.f(x))
     }
 
     // Gradient at x
