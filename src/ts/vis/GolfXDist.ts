@@ -5,7 +5,6 @@ import { Chart2D, ChartOptions, ChartScales } from '../util/Chart2dVisComponent'
 import { SimpleEventHandler } from '../util/SimpleEventHandler'
 import { D3Sel } from '../util/xd3'
 import { SVG } from '../util/SVGplus'
-
 import { BallHistory } from './GolfBall'
 
 interface GraphSels {
@@ -28,8 +27,7 @@ type LineTracker = {
 
 type T = LineTracker
 
-
-export class GolfLosses extends Chart2D<T> {
+export class GolfXDist extends Chart2D<T> {
     cssname = "line-plot"
 
     _data: T
@@ -40,7 +38,7 @@ export class GolfLosses extends Chart2D<T> {
         margin: { top: 10, right: 10, bottom: 30, left: 30 },
         pad: { top: 5, right: 1, bottom: 10, left: 15 },
         xrange: [0, 600],
-        yrange: [2, 5e-2],
+        yrange: [15, 0],
     }
 
     scales: ChartScales = {}
@@ -72,12 +70,6 @@ export class GolfLosses extends Chart2D<T> {
         }
     }
 
-    // Live update the xrange
-    updateScales(xrange) {
-        const op = this.options
-        this.scales.x = d3.scaleLinear().domain(xrange).range([0, op.width]).clamp(true)
-    }
-
     clearPaths() {
         this.data(R.map(d => R.assoc('vals', [], d), this.data()))
     }
@@ -87,7 +79,7 @@ export class GolfLosses extends Chart2D<T> {
         this.addDataKey_(d.classname);
 
         const currVals = this.data()[d.classname];
-        currVals.vals.push(d.loss)
+        currVals.vals.push(Math.abs(d.x));
 
         // const newXrange = [0, currVals.vals.length]
         // this.updateScales(newXrange)
@@ -101,10 +93,22 @@ export class GolfLosses extends Chart2D<T> {
             })
     }
 
+    // Live update the xrange
+    updateScales(xrange) {
+        const op = this.options
+        this.scales.x = d3.scaleLinear().domain(xrange).range([0, op.width]).clamp(true)
+    }
+
     private initBaseLine(classname: string) {
         return this.layers.bg.append("path")
             .classed(classname, true)
             .classed('line', true)
+    }
+
+    protected createScales() {
+        const op = this.options
+        this.scales.x = d3.scaleLinear().domain(op.xrange).range([0, op.width]).clamp(true)
+        this.scales.y = d3.scaleLinear().domain(op.yrange).range([0, op.height]).clamp(true)
     }
 
     init() {
@@ -118,13 +122,6 @@ export class GolfLosses extends Chart2D<T> {
         this.createAxes()
     }
 
-    protected createScales() {
-        const scales = this.scales
-        const op = this.options
-
-        scales.x = d3.scaleLinear().domain(op.xrange).range([0, op.width]).clamp(true)
-        scales.y = d3.scaleLog().domain(op.yrange).range([0, op.height]).clamp(true)
-    }
 
     protected createAxes() {
         const sels = this.sels
@@ -132,32 +129,29 @@ export class GolfLosses extends Chart2D<T> {
         const op = this.options
 
         // Create axes
-        sels.yaxis = this.base.append("g")
-            .attr("class", "axis axis--y")
-            .attr("transform", SVG.translate(0, -0.5))
-            // @ts-ignore
-            .call(d3.axisLeft(scales.y).tickFormat("").ticks(4));
-
         sels.xaxis = this.base.append("g")
             .attr("class", "axis axis--x")
             .attr("transform", SVG.translate(0, op.height - 0.5))
             // @ts-ignore
-            .call(d3.axisBottom(scales.x).tickFormat("").ticks(4));
+            .call(d3.axisBottom(scales.x).ticks(4).tickFormat(""));
 
-        // Add xlabel
+        sels.yaxis = this.base.append("g")
+            .attr("class", "axis axis--y")
+            .attr("transform", SVG.translate(0, -0.5))
+            // @ts-ignore
+            .call(d3.axisLeft(scales.y).ticks(4).tickFormat(""));
+
         this.base.append("text")
             .attr("transform", SVG.translate(op.width / 2, op.margin.top + op.height + 10))
             .style("text-anchor", "middle")
             .text("Time")
 
-        // Add ylabel
         this.base.append("text")
             .style("text-anchor", "middle")
-            .text("Loss")
+            .text("\u03B8 - \u03B8*")
             .attr("y", op.pad.left - op.margin.left)
             .attr("x", op.pad.top - (op.height / 2))
             .attr("transform", SVG.rotate(-90))
-        // .attr("transform", SVG.translate(op.margin.left, op.height/2))
     }
 
     protected createPath() {
