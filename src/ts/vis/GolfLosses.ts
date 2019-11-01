@@ -8,6 +8,8 @@ import { SVG } from '../util/SVGplus'
 
 import { BallHistory } from './GolfBall'
 
+const axisOffset = 1 // Use this to cover the plotted lines
+
 interface GraphSels {
     xaxis?: D3Sel
     yaxis?: D3Sel
@@ -134,13 +136,13 @@ export class GolfLosses extends Chart2D<T> {
         // Create axes
         sels.yaxis = this.base.append("g")
             .attr("class", "axis axis--y")
-            .attr("transform", SVG.translate(0, -0.5))
+            .attr("transform", SVG.translate(0, - axisOffset))
             // @ts-ignore
             .call(d3.axisLeft(scales.y).tickFormat("").ticks(4));
 
         sels.xaxis = this.base.append("g")
             .attr("class", "axis axis--x")
-            .attr("transform", SVG.translate(0, op.height - 0.5))
+            .attr("transform", SVG.translate(0, op.height - axisOffset))
             // @ts-ignore
             .call(d3.axisBottom(scales.x).tickFormat("").ticks(4));
 

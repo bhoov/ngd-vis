@@ -32,15 +32,21 @@
 
 .line-plot {
   .line {
-    stroke-width: 1px;
+    stroke-width: 1.5px;
     fill: none;
   }
 }
 
 .golf-xdist {
   .line {
-    stroke-width: 1px;
+    stroke-width: 1.5px;
     fill: none;
+  }
+}
+
+.axis {
+  .domain {
+    stroke-width: 2.5px
   }
 }
 
