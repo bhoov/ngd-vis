@@ -42,7 +42,7 @@ export class GolfLosses extends Chart2D<T> {
         margin: { top: 10, right: 10, bottom: 30, left: 30 },
         pad: { top: 5, right: 1, bottom: 10, left: 15 },
         xrange: [0, 600],
-        yrange: [2, 5e-2],
+        yrange: [2, 1e-2],
     }
 
     scales: ChartScales = {}
@@ -91,8 +91,10 @@ export class GolfLosses extends Chart2D<T> {
         const currVals = this.data()[d.classname];
         currVals.vals.push(d.loss)
 
+        // sliding x-axis
+        const newXrange = [Math.max(0, currVals.vals.length-this.options.xrange[1]), Math.max(currVals.vals.length,this.options.xrange[1])]
         // const newXrange = [0, currVals.vals.length]
-        // this.updateScales(newXrange)
+        this.updateScales(newXrange)
         this.createPath()
 
         currVals.sel.data([currVals])

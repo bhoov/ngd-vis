@@ -11,8 +11,8 @@ import { ManualUpdater } from './vis/ManualUpdater'
 import { landscapes, Landscape } from './GolfLandscapes'
 
 const toFixed = R.curry((ndigits, x) => x.toFixed(ndigits))
-const toQ = toFixed(2)
-const toEta = toFixed(6)
+const toQ = toFixed(1)
+const toEta = toFixed(4)
 
 function plotQuiverGraph() {
 	const vis1 = d3.select('#vis1')
@@ -122,7 +122,8 @@ function plotGolfHoleSlider() {
 
 	const sels = {
 		chart: vis3.select('#chart'),
-		losses: vis3.select('#chart-losses'),
+		chartLosses: vis3.select('#chart-losses'),
+		chartXDist: vis3.select('#chart-xdist'),
 		qId: vis3.select('#q-val'),
 		etaId: vis3.select('#eta-val'),
 		qSlider: vis3.select('#q-slider'),
@@ -134,6 +135,8 @@ function plotGolfHoleSlider() {
 
 	const vizs = {
 		graph: new GolfHole1D(sels.chart, eventHandler, { maxIter: 1e4 }),
+		chartLosses: new GolfLosses(sels.chartLosses, eventHandler),
+		chartXDist: new GolfXDist(sels.chartXDist, eventHandler)
 	}
 
 	const defaults = {
@@ -142,6 +145,12 @@ function plotGolfHoleSlider() {
 		eta: 0.1,
 		landscape: "seagull"
 	}
+
+	// Attach golfball info to loss tracker
+	eventHandler.bind('loss-click', (e) => {
+		vizs.chartXDist.clearPaths()
+		vizs.chartLosses.clearPaths()
+	})
 
 	// Put data into viz
 	vizs.graph.data([new GolfBall(new ManualUpdater(landscapes.hole.f, landscapes.hole.df, defaults.q, defaults.eta), "golf-ball")])
@@ -185,6 +194,17 @@ function plotGolfHoleSlider() {
 		const v = self.property('value')
 		vizs.graph.landscape(landscapes[v])
 	})
+
+	// Assign streams
+	const streams = vizs.graph.data().map(b => b.stream)
+	const plotter = {
+		next: d => {
+			console.log(d);
+			vizs.chartXDist.plotPath(d)
+			vizs.chartLosses.plotPath(d)
+		}
+	}
+	streams.forEach(s => s.subscribe(plotter))
 }
 
 export function main() {

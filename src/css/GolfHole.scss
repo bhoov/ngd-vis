@@ -46,14 +46,26 @@
 
 .axis {
   .domain {
-    stroke-width: 2.5px
+    stroke-width: 2.5px;
   }
 }
 
 #vis3 {
-  .golf-hole-chart {
-    .golf-ball {
-      fill: white;
+  .golf-ball {
+    fill: black;
+  }
+  #chart-losses {
+    .line {
+      fill: none;
+      stroke: black;
+      stroke-width: 1.75px
+    }
+  }
+  #chart-xdist {
+    .line {
+      fill: none;
+      stroke: black;
+      stroke-width: 1.75px
     }
   }
 }

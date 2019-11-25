@@ -83,8 +83,10 @@ export class GolfXDist extends Chart2D<T> {
         const currVals = this.data()[d.classname];
         currVals.vals.push(Math.abs(d.x));
 
+        // sliding x-axis
+        const newXrange = [Math.max(0, currVals.vals.length-this.options.xrange[1]), Math.max(currVals.vals.length,this.options.xrange[1])]
         // const newXrange = [0, currVals.vals.length]
-        // this.updateScales(newXrange)
+        this.updateScales(newXrange)
         this.createPath()
 
         currVals.sel.data([currVals])

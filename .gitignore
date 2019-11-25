@@ -5,3 +5,4 @@ public/
 .cache
 *-checkpoint.ipynb
 .cache-loader
+*.swp
