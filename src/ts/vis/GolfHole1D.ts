@@ -273,8 +273,6 @@ export class GolfHole1D extends SVGVisComponent<T> {
             complete: () => console.log("COMPLETE"),
         }
 
-        console.log(op.maxIter);
-
         const ticker = () => interval(10).pipe(
             scan((acc: T) => {
                 // Unsubscriber ticker if all balls dead
