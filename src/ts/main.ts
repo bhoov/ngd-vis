@@ -178,7 +178,6 @@ function plotGolfHoleSlider() {
 		const me = d3.select(this)
 		const v = scales.q.invert(me.property('value'));
 		vizs.graph.dataHead.q(v)
-		console.log(v);
 		sels.qId.text(`${toQ(v)}`)
 	})
 
@@ -199,7 +198,6 @@ function plotGolfHoleSlider() {
 	const streams = vizs.graph.data().map(b => b.stream)
 	const plotter = {
 		next: d => {
-			console.log(d);
 			vizs.chartXDist.plotPath(d)
 			vizs.chartLosses.plotPath(d)
 		}
