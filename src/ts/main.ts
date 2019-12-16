@@ -134,7 +134,7 @@ function plotGolfHoleSlider() {
 	const eventHandler = new SimpleEventHandler(<Element>vis3.node())
 
 	const vizs = {
-		graph: new GolfHole1D(sels.chart, eventHandler, { maxIter: 1e4 }),
+		graph: new GolfHole1D(sels.chart, eventHandler, { maxIter: 1.5e3 }),
 		chartLosses: new GolfLosses(sels.chartLosses, eventHandler),
 		chartXDist: new GolfXDist(sels.chartXDist, eventHandler)
 	}
