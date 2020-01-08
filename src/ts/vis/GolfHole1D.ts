@@ -220,7 +220,8 @@ export class GolfHole1D extends SVGVisComponent<T> {
         console.log("Extent: ", extent);
 
         //@ts-ignore
-        const cscale = d3.scaleLinear().domain([0, 0.5, 1]).range(["#67a9cf", "#f7f7f7", "#ef8a62"])
+        // const cscale = d3.scaleLinear().domain([0, 0.5, 1]).range(["#67a9cf", "#f7f7f7", "#ef8a62"])
+        const cscale = d3.scaleLog().domain([1e-7, 0.5, 1]).range(["#67a9cf", "#f7f7f7", "#ef8a62"])
 
         sels.lineBackground.selectAll('.grad-box')
             .data(data)
@@ -398,8 +399,8 @@ export class GolfHole1D extends SVGVisComponent<T> {
             runningTicker = ticker()
         }
 
-        this.sels.backdrop.on('click', plotBalls)
-        this.sels.mask.on('click', plotBalls)
+        // this.sels.backdrop.on('click', plotBalls)
+        // this.sels.mask.on('click', plotBalls)
         this.sels.lineBackground.on('click', plotBalls)
     }
 
