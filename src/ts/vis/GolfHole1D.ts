@@ -397,7 +397,7 @@ export class GolfHole1D extends SVGVisComponent<T> {
             runningTicker = ticker()
         }
 
-        // this.sels.backdrop.on('click', plotBalls)
+        this.sels.backdrop.on('click', plotBalls)
         // this.sels.mask.on('click', plotBalls)
         this.sels.lineBackground.on('click', plotBalls)
     }
