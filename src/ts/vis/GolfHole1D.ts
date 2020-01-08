@@ -203,7 +203,7 @@ export class GolfHole1D extends SVGVisComponent<T> {
         const colorScale = d3.scaleSequential(d3.interpolatePlasma)
         
         // Check the gradient range
-        const updateAmts = xs.map(x => Math.abs(ballUpdater.updateAmt(x)))
+        const updateAmts = xs.map(x => Math.abs(ballUpdater.updateModifier(x)))
 
         const clampedScale = R.curry((min:number, max:number, arr:number[]) => {
             const clamper = R.clamp(min, max)
