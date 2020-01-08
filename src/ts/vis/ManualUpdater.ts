@@ -30,12 +30,14 @@ export class ManualUpdater {
         return Math.pow(this.df(x), 2)
     }
 
+    updateAmt(x: number): number {
+        return this.f(x) * Math.pow(this.df(x), 1 - (2 * this.q))
+    }
+
     // The amount to update at x given the learning rate eta
     step(x: number): number {
-        const step = y => - this.eta * y;
         // Could use psdhess in the equation below, but due to numerical issues this formulation computes more reliably
-        const updateAmt = this.f(x) * Math.pow(this.df(x), 1 - (2 * this.q))
-        return step(updateAmt)
+        return - this.eta * this.updateAmt(x)
     }
 
     // Get the next x value after taking a step

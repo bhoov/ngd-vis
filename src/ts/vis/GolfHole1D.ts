@@ -23,7 +23,8 @@ interface GraphOptions extends SVGOptions {
 interface GraphScales {
     x?: d3.ScaleLinear<number, number>,
     y?: d3.ScaleLinear<number, number>,
-    paths?: d3.Line<number>[]
+    paths?: d3.Line<number>[],
+    color?: d3.ScaleSequential<number>,
 }
 
 interface GraphSels {
@@ -33,8 +34,13 @@ interface GraphSels {
     line?: D3Sel
     backdrop?: D3Sel
     ball?: D3Sel
+    mask?: D3Sel
+    maskLine?: D3Sel
+    maskBackground?: D3Sel
+    lineBackground?: D3Sel
 }
 
+let CLEARED = 0;
 // // Note that plotFunc is the loss function we plot and func is the component of the loss function needed for the updater
 // // export const func = x => Math.tanh(x)
 // // export const dFunc = x => Math.pow(Math.cosh(x), -2)
@@ -47,6 +53,7 @@ interface GraphSels {
 
 export class GolfHole1D extends SVGVisComponent<T> {
     cssname = "golf-hole-chart"
+    maskId: string
 
     _data: T
 
@@ -63,11 +70,11 @@ export class GolfHole1D extends SVGVisComponent<T> {
 
     sels: GraphSels = {}
 
-    constructor(d3parent: D3Sel, eventHandler?: SimpleEventHandler, options = {}) {
-        super(d3parent, eventHandler, options)
+    constructor(d3parent: D3Sel, eventHandler?: SimpleEventHandler, options = {}, ID = 0) {
+        super(d3parent, eventHandler, options, ID)
+        this.maskId = `line-mask-${this.ID}`
         super.initSVG(options, ["bg"])
         this.base.classed(this.cssname, true)
-        this.init()
 
         // const data = [
         //     new GolfBall(new ManualUpdater(func, dFunc, 0, 0.5), 'golf-ball-sgd', 4),
@@ -102,9 +109,8 @@ export class GolfHole1D extends SVGVisComponent<T> {
             b.updater.df = val.df
         })
 
-        const xs = linspace(op.landscape.xrange[0], op.landscape.xrange[1], 1000)
         this.clearCurve()
-        this.plotCurve(xs)
+        this.plotCurve()
 
         return this
     }
@@ -165,19 +171,16 @@ export class GolfHole1D extends SVGVisComponent<T> {
 
     clearCurve() {
         this.layers.bg.selectAll('.line').remove()
+        this.sels.maskLine.html('')
+        this.base.selectAll('#line-background').html('')
     }
 
-    /**
-     * Plot the values of all x according to the function
-     * 
-     * @param x A linspace of x values over which to plot a curve
-     */
-    plotCurve(x: number[]) {
+    plotCurveByDefault(xs: number[]) {
         const self = this, scales = this.scales, sels = this.sels;
 
         scales.paths.forEach(line => {
             this.layers.bg.append("path")
-                .datum(x)
+                .datum(xs)
                 .attr("class", "line")
                 .attr("d", d => {
                     return line(d)
@@ -185,11 +188,77 @@ export class GolfHole1D extends SVGVisComponent<T> {
         })
     }
 
+    plotCurveByGradient(xs: number[]) {
+        const self = this, scales = this.scales, sels = this.sels, op = this.options;
+
+        const xwidth = op.width * (xs[1] - xs[0]) / (d3.max(xs) - d3.min(xs)) // Assumes length of xs > 1
+
+        const ballUpdater = self.data()[0].updater
+
+        // Clear mask
+        const line = scales.paths[0]
+
+        sels.maskLine.attr('d', line(xs))
+
+        const colorScale = d3.scaleSequential(d3.interpolatePlasma)
+        
+        // Check the gradient range
+        const updateAmts = xs.map(x => Math.abs(ballUpdater.updateAmt(x)))
+
+        const clampedScale = R.curry((min:number, max:number, arr:number[]) => {
+            const clamper = R.clamp(min, max)
+            const clampedArr = R.map(clamper, arr)
+            const maxOfArr = d3.max(clampedArr)
+            return R.map(x => x / maxOfArr, clampedArr)
+        })
+
+        const clamper = clampedScale(0, 20);
+
+        const data = d3.zip(xs, clamper(updateAmts)).map(d => {return {x: d[0], updateAmt: d[1]}})
+
+        const extent = d3.extent(clamper(updateAmts))
+        console.log("Extent: ", extent);
+
+        //@ts-ignore
+        const cscale = d3.scaleLinear().domain([0, 0.5, 1]).range(["#67a9cf", "#f7f7f7", "#ef8a62"])
+
+        sels.lineBackground.selectAll('.grad-box')
+            .data(data)
+            .join('rect')
+            .classed('grad-box', true)
+            .attr('height', op.height)
+            .attr('width', self.scales.x(xwidth))
+            .attr('x', d => self.scales.x(d.x))
+            .attr('y', 0)
+            .attr('fill', d => {
+                return cscale(d.updateAmt)
+            })
+
+        sels.lineBackground.attr('mask', `url(#${this.maskId})`)
+    }
+
+    /**
+     * Plot the values of all x according to the function
+     * 
+     * @param x A linspace of x values over which to plot a curve
+     */
+    plotCurve() {
+        const op = this.options
+        const xs = linspace(op.landscape.xrange[0], op.landscape.xrange[1], 1000)
+        const self = this, scales = this.scales, sels = this.sels;
+
+        if (self.data() != null) {
+            if (self.data().length > 1) self.plotCurveByDefault(xs)
+            else self.plotCurveByGradient(xs)
+        }
+    }
+
     updateScales(op: GraphOptions) {
         const scales = this.scales
 
         scales.x = d3.scaleLinear().domain(op.landscape.xrange).range([0, op.width])
         scales.y = d3.scaleLinear().domain(op.landscape.yrange).range([op.height, 0])
+        scales.paths = this.newPaths(op.landscape)
     }
 
     updateAxes(scales: GraphScales, op: GraphOptions) {
@@ -214,29 +283,56 @@ export class GolfHole1D extends SVGVisComponent<T> {
             .attr("class", "titles")
             .attr("transform", SVG.translate(op.width / 2, op.height + op.pad))
 
+        // Add base mask
+        sels.mask = this.base.append('mask').attr('id', this.maskId)
+
+        sels.maskBackground = sels.mask.append('rect')
+            .attr('width', op.width)
+            .attr('height', op.height)
+            .attr('fill', 'black')
+
+        sels.maskLine = sels.mask.
+            selectAll("#transparent-line").
+            data([1])
+            .join('path')
+            .attr('id', 'transparent-line')
+            .attr('stroke', 'white')
+            .attr('stroke-width', '5px')
+
+        sels.lineBackground = self.base.selectAll('#line-background')
+            .data([1])
+            .join('g')
+            .attr('id', 'line-background')
+
         this.updateAxes(scales, op)
 
-        const baseLine = d3.line<number>()
-            .x((d: number, i: number) => scales.x(d))
-            .y((d: number, i: number) => scales.y(getPlotFunc(op.landscape)(d)))
-            .curve(d3.curveLinear)
-
-        scales.paths = [baseLine]
+        scales.paths = this.newPaths(op.landscape)
 
         const xs = linspace(op.landscape.xrange[0], op.landscape.xrange[1], 1000)
-        this.plotCurve(xs)
+        this.plotCurve()
+    }
+
+    newPaths(landscape: Landscape) {
+        const scales = this.scales
+        const baseLine = d3.line<number>()
+            .x((d: number, i: number) => scales.x(d))
+            .y((d: number, i: number) => scales.y(getPlotFunc(landscape)(d)))
+            .curve(d3.curveLinear)
+
+        return [baseLine]
     }
 
     initBalls() {
         const self = this, op = this.options;
 
         // Create Backdrop for mouse interfaces
-        this.sels.backdrop = this.base.append("g")
+        this.sels.backdrop = this.layers.bg.append("g")
             .attr("id", "backdrop")
             .classed('grass', true)
             .append("rect")
             .attr("height", op.height)
             .attr("width", op.width)
+
         const tooSmall = (x: number) => x < (op.landscape.xrange[0])
         const tooBig = (x: number) => x > (op.landscape.xrange[1])
 
@@ -291,7 +387,7 @@ export class GolfHole1D extends SVGVisComponent<T> {
             unsubscribe: () => console.log("Empty Ticker!")
         }
 
-        this.sels.backdrop.on('click', function () {
+        const plotBalls = function () {
             runningTicker.unsubscribe()
             const click = toVec(d3.mouse(this))
             d3.selectAll('.golf-ball').classed('dead-ball', false)
@@ -300,7 +396,29 @@ export class GolfHole1D extends SVGVisComponent<T> {
             self.eventHandler.trigger("loss-click", {})
 
             runningTicker = ticker()
-        })
+        }
+
+        this.sels.backdrop.on('click', plotBalls)
+        this.sels.mask.on('click', plotBalls)
+        this.sels.lineBackground.on('click', plotBalls)
+    }
+
+    q(): number
+    q(val: number): this
+    q(val?) {
+        if (val == null) return this.dataHead.updater.q
+        this.dataHead.q(val)
+        this.plotCurve()
+        return this
+    }
+
+    eta(): number
+    eta(val: number): this
+    eta(val?) {
+        if (val == null) return this.dataHead.updater.q
+        this.dataHead.eta(val)
+        // this.plotCurve()
+        return this
     }
 
     data(): T
