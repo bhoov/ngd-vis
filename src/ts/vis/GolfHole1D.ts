@@ -203,16 +203,15 @@ export class GolfHole1D extends SVGVisComponent<T> {
         const colorScale = d3.scaleSequential(d3.interpolatePlasma)
         
         // Check the gradient range
-        const updateAmts = xs.map(x => Math.abs(ballUpdater.updateModifier(x)))
+        const updateAmts = xs.map(x => Math.log(Math.abs(ballUpdater.updateModifier(x))))
 
         const clampedScale = R.curry((min:number, max:number, arr:number[]) => {
             const clamper = R.clamp(min, max)
             const clampedArr = R.map(clamper, arr)
-            const maxOfArr = d3.max(clampedArr)
-            return R.map(x => x / maxOfArr, clampedArr)
+            return clampedArr.map(x => x - d3.mean(clampedArr))
         })
 
-        const clamper = clampedScale(0, 20);
+        const clamper = clampedScale(-4, 4);
 
         const data = d3.zip(xs, clamper(updateAmts)).map(d => {return {x: d[0], updateAmt: d[1]}})
 
@@ -220,8 +219,7 @@ export class GolfHole1D extends SVGVisComponent<T> {
         console.log("Extent: ", extent);
 
         //@ts-ignore
-        // const cscale = d3.scaleLinear().domain([0, 0.5, 1]).range(["#67a9cf", "#f7f7f7", "#ef8a62"])
-        const cscale = d3.scaleLog().domain([1e-7, 0.5, 1]).range(["#67a9cf", "#f7f7f7", "#ef8a62"])
+        const cscale = d3.scaleLinear().domain([-4, 0, 4]).range(["#67a9cf", "#f7f7f7", "#ef8a62"]).clamp(true)
 
         sels.lineBackground.selectAll('.grad-box')
             .data(data)
