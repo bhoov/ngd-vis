@@ -30,8 +30,12 @@ export class ManualUpdater {
         return Math.pow(this.df(x), 2)
     }
 
+    updateModifier(x: number): number {
+        return Math.pow(this.df(x), 1 - (2 * this.q))
+    }
+
     updateAmt(x: number): number {
-        return this.f(x) * Math.pow(this.df(x), 1 - (2 * this.q))
+        return this.f(x) * this.updateModifier(x)
     }
 
     // The amount to update at x given the learning rate eta
