@@ -27,8 +27,8 @@ export abstract class SVGVisComponent<DataInterface> extends VisComponent<DataIn
         maxHeight: 450,
     }
 
-    protected constructor(d3parent: D3Sel, eventHandler?: SimpleEventHandler, options: {} = {}) {
-        super(d3parent, eventHandler)
+    protected constructor(d3parent: D3Sel, eventHandler?: SimpleEventHandler, options: {} = {}, ID=0) {
+        super(d3parent, eventHandler, ID)
     }
 
     /** 

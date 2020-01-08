@@ -4,8 +4,8 @@ import {D3Sel} from './xd3'
 
 export abstract class HTMLVisComponent<DataInterface> extends VisComponent<DataInterface> {
 
-    protected constructor(d3parent: D3Sel, eventHandler?: SimpleEventHandler, options: {} = {}) {
-        super(d3parent, eventHandler)
+    protected constructor(d3parent: D3Sel, eventHandler?: SimpleEventHandler, options: {} = {}, ID=0) {
+        super(d3parent, eventHandler, ID)
         this.initHTML(options)
     }
 

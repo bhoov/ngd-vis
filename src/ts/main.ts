@@ -1,4 +1,5 @@
 import * as d3 from 'd3'
+import { UId } from './util/UId'
 import { ContourPlot } from './vis/ContourPlot'
 import { D3Sel } from './util/xd3'
 import { GolfHole1D } from './vis/GolfHole1D'
@@ -85,7 +86,7 @@ function plotGolfHole() {
 
 	const eventHandler = new SimpleEventHandler(<Element>vis2.node())
 	const vizs = {
-		graph: new GolfHole1D(sels.chart, eventHandler),
+		graph: new GolfHole1D(sels.chart, eventHandler, {}, UId.uid()),
 		chartXDist: new GolfXDist(sels.chartXDist, eventHandler),
 		chartLosses: new GolfLosses(sels.chartLosses, eventHandler)
 	}
@@ -134,7 +135,7 @@ function plotGolfHoleSlider() {
 	const eventHandler = new SimpleEventHandler(<Element>vis3.node())
 
 	const vizs = {
-		graph: new GolfHole1D(sels.chart, eventHandler, { maxIter: 1.5e3 }),
+		graph: new GolfHole1D(sels.chart, eventHandler, { maxIter: 1.5e3 }, UId.uid()),
 		chartLosses: new GolfLosses(sels.chartLosses, eventHandler),
 		chartXDist: new GolfXDist(sels.chartXDist, eventHandler)
 	}
@@ -177,14 +178,14 @@ function plotGolfHoleSlider() {
 	sels.qSlider.on('input', function () {
 		const me = d3.select(this)
 		const v = scales.q.invert(me.property('value'));
-		vizs.graph.dataHead.q(v)
+		vizs.graph.q(v)
 		sels.qId.text(`${toQ(v)}`)
 	})
 
 	sels.etaSlider.on('input', function () {
 		const me = d3.select(this)
 		const v = scales.eta.invert(me.property('value'));
-		vizs.graph.dataHead.eta(v)
+		vizs.graph.eta(v)
 		sels.etaId.text(`${toEta(v)}`)
 	})
 
