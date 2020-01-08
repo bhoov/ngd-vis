@@ -208,7 +208,7 @@ export class ContourPlot extends SVGVisComponent<T> {
             prevVal = this.curr()
         }
 
-        this.ticker = interval(20).pipe(
+        this.ticker = interval(10).pipe(
             startWith(prep()),
             scan(v => self.updater.next(v), self.curr()),
             take(1000)
