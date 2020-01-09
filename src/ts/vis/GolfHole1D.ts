@@ -212,8 +212,9 @@ export class GolfHole1D extends SVGVisComponent<T> {
             // return clampedArr.map(x => x - d3.mean(clampedArr))
         })
 
-        const clamper = clampedScale(-2, 2);
-        const data = d3.zip(xs, clamper(updateAmts)).map(d => {return {x: d[0], updateAmt: d[1]}})
+        // const clamper = clampedScale(-2, 2);
+        // const data = d3.zip(xs, clamper(updateAmts)).map(d => {return {x: d[0], updateAmt: d[1]}})
+        const data = d3.zip(xs, updateAmts).map(d => {return {x: d[0], updateAmt: d[1]}})
         // const extent = d3.extent(clamper(updateAmts))
         // console.log("Extent: ", extent);
 
