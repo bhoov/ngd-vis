@@ -208,18 +208,18 @@ export class GolfHole1D extends SVGVisComponent<T> {
         const clampedScale = R.curry((min:number, max:number, arr:number[]) => {
             const clamper = R.clamp(min, max)
             const clampedArr = R.map(clamper, arr)
-            return clampedArr.map(x => x - d3.mean(clampedArr))
+            return arr.map(x => x - d3.mean(clampedArr))
+            // return clampedArr.map(x => x - d3.mean(clampedArr))
         })
 
-        const clamper = clampedScale(-4, 4);
-
+        const clamper = clampedScale(-2, 2);
         const data = d3.zip(xs, clamper(updateAmts)).map(d => {return {x: d[0], updateAmt: d[1]}})
+        // const extent = d3.extent(clamper(updateAmts))
+        // console.log("Extent: ", extent);
 
-        const extent = d3.extent(clamper(updateAmts))
-        console.log("Extent: ", extent);
 
         //@ts-ignore
-        const cscale = d3.scaleLinear().domain([-4, 0, 4]).range(["#67a9cf", "#f7f7f7", "#ef8a62"]).clamp(true)
+        const cscale = d3.scaleLinear().domain([-2, 0, 2]).range(["#67a9cf", "#f7f7f7", "#d90036"]).clamp(false)
 
         sels.lineBackground.selectAll('.grad-box')
             .data(data)
