@@ -212,14 +212,15 @@ export class GolfHole1D extends SVGVisComponent<T> {
             // return clampedArr.map(x => x - d3.mean(clampedArr))
         })
 
-        const clamper = clampedScale(-2, 2);
-        const data = d3.zip(xs, clamper(updateAmts)).map(d => {return {x: d[0], updateAmt: d[1]}})
+        // const clamper = clampedScale(-2, 2);
+        // const data = d3.zip(xs, clamper(updateAmts)).map(d => {return {x: d[0], updateAmt: d[1]}})
+        const data = d3.zip(xs, updateAmts).map(d => {return {x: d[0], updateAmt: d[1]}})
         // const extent = d3.extent(clamper(updateAmts))
         // console.log("Extent: ", extent);
 
 
         //@ts-ignore
-        const cscale = d3.scaleLinear().domain([-2, 0, 2]).range(["#67a9cf", "#f7f7f7", "#d90036"]).clamp(false)
+        const cscale = d3.scaleLinear().domain([-2, 0, 2]).range(["#67a9cf", "#f7f7f7", "#d90036"])
 
         sels.lineBackground.selectAll('.grad-box')
             .data(data)
