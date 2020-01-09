@@ -22,9 +22,9 @@ export const landscapes: { [k: string]: Landscape } = {
     },
     steps: {
         name: "steps",
-        f: x => Math.tanh(x * 6.5 - 11) / 4 + Math.tanh(x * 6.5 - 6) / 4 + Math.tanh(x * 6.5) + Math.tanh(x * 6.5 + 6) / 4 + Math.tanh(x * 6.5 + 11) / 4,
-        df: x => (Math.pow(Math.cosh(x * 6.5 - 11), -2) / 4 + Math.pow(Math.cosh(x * 6.5 - 6), -2) / 4 + Math.pow(Math.cosh(x * 6.5), -2) + Math.pow(Math.cosh(x * 6.5 + 6), -2) / 4 + Math.pow(Math.cosh(x * 6.5 + 11), -2) / 4 ) * 6.5,
-        xrange: [-13.6 / 6.5, 13.6 / 6.5],
+        f: x => Math.tanh(x * 9.5 - 11) / 4 + Math.tanh(x * 9.5 - 6) / 4 + Math.tanh(x * 9.5) + Math.tanh(x * 9.5 + 6) / 4 + Math.tanh(x * 9.5 + 11) / 4,
+        df: x => (Math.pow(Math.cosh(x * 9.5 - 11), -2) / 4 + Math.pow(Math.cosh(x * 9.5 - 6), -2) / 4 + Math.pow(Math.cosh(x * 9.5), -2) + Math.pow(Math.cosh(x * 9.5 + 6), -2) / 4 + Math.pow(Math.cosh(x * 9.5 + 11), -2) / 4 ) * 9.5,
+        xrange: [-13.6 / 9.5, 13.6 / 9.5],
         yrange: [0, 2.5],
         loss: baseLoss
     },
