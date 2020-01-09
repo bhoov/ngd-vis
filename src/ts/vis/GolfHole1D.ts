@@ -220,7 +220,7 @@ export class GolfHole1D extends SVGVisComponent<T> {
 
 
         //@ts-ignore
-        const cscale = d3.scaleLinear().domain([-2, 0, 2]).range(["#67a9cf", "#f7f7f7", "#ef8a62"]).clamp(false)
+        const cscale = d3.scaleLinear().domain([-2, 0, 2]).range(["#67a9cf", "#f7f7f7", "#d90036"])
 
         sels.lineBackground.selectAll('.grad-box')
             .data(data)
