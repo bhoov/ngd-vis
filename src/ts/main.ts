@@ -15,6 +15,7 @@ const toFixed = R.curry((ndigits, x) => x.toFixed(ndigits))
 const toQ = toFixed(1)
 const toEta = toFixed(4)
 
+
 function plotQuiverGraph() {
 	const vis1 = d3.select('#vis1')
 	const sels = {
@@ -87,6 +88,13 @@ function plotGolfHole3Ball() {
 		chartLosses: new GolfLosses(sels.chartLosses, eventHandler)
 	}
 
+	interface GolfDefaults {
+		landscape: string
+		qs: number[]
+		classNames: string[]
+		etas?: number[]
+	}
+
 	// Corresponds to qs = [0, 0.5, 1]
 	const defaultEta = {
 		seagull: [0.9, 0.1, 0.003],
@@ -96,12 +104,12 @@ function plotGolfHole3Ball() {
 		deep_net: [0.9, 0.1, 0.003],
 	}
 
-	const defaults = {
+	const defaults: GolfDefaults = {
 		landscape: "seagull",
 		qs: [0, 0.5, 1],
-		etas: [0.9, 0.1, 0.003],
 		classNames: ['golf-ball-sgd', 'golf-ball-sngd', 'golf-ball-ngd'], // Don't change these unless you want to play with CSS!!
 	}
+	defaults.etas = defaultEta[defaults.landscape]
 
 	const defaultLandscape = landscapes[defaults.landscape]
 
@@ -172,9 +180,9 @@ function plotGolfHoleSlider() {
 
 	const defaults = {
 		// Note to also change the default value in the html file!
+		landscape: "seagull",
 		q: 0.5,
-		eta: 0.1,
-		landscape: "seagull"
+		eta: 0.1
 	}
 
 	// Attach golfball info to loss tracker
