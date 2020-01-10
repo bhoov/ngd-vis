@@ -71,7 +71,7 @@ function plotQuiverGraph() {
 	})
 }
 
-function plotGolfHole() {
+function plotGolfHole3Ball() {
 	const vis2 = d3.select("#vis2");
 	const sels = {
 		chart: vis2.select('#chart'),
@@ -85,6 +85,15 @@ function plotGolfHole() {
 		graph: new GolfHole1D(sels.chart, eventHandler, {}, UId.uid()),
 		chartXDist: new GolfXDist(sels.chartXDist, eventHandler),
 		chartLosses: new GolfLosses(sels.chartLosses, eventHandler)
+	}
+
+	// Corresponds to qs = [0, 0.5, 1]
+	const defaultEta = {
+		seagull: [0.9, 0.1, 0.003],
+		hole: [0.9, 0.1, 0.003],
+		steps: [0.9, 0.1, 0.003],
+		bowl: [0.9, 0.1, 0.003],
+		deep_net: [0.9, 0.1, 0.003],
 	}
 
 	const defaults = {
@@ -236,6 +245,6 @@ function plotGolfHoleSlider() {
 export function main() {
 	console.log("RUNNING");
 	plotQuiverGraph();
-	plotGolfHole();
+	plotGolfHole3Ball();
 	plotGolfHoleSlider();
 }
