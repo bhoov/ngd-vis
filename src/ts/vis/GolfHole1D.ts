@@ -444,6 +444,30 @@ export class GolfHole1D extends SVGVisComponent<T> {
         this.initBalls()
         return this
     }
+
+    /**
+     * INPLACE change the golf balls into the BASE scale
+     */
+    dataToBase_(): T {
+        this.data().map(b => {
+            b.x = this.scales.base2math.x.invert(b.x)
+            return b
+        })
+
+        return this.data()
+    }
+
+    /**
+     * Modify the golf balls and change their x value from BASE to the new MATH
+     */
+    dataFromBase(val: T): this {
+        val.forEach(b => {
+            b.x = this.scales.base2math.x(b.x)
+        })
+
+        this.initBalls()
+        return this
+    }
 }
 
 function toVec([x, y]: [number, number]): Vector2D {

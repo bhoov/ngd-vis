@@ -95,7 +95,6 @@ export class GolfLosses extends Chart2D<T> {
 
         // sliding x-axis
         const newXrange = [Math.max(0, currVals.vals.length-this.options.xrange[1]), Math.max(currVals.vals.length,this.options.xrange[1])]
-        // const newXrange = [0, currVals.vals.length]
         this.updateScales(newXrange)
         this.createPath()
 
