@@ -20,9 +20,15 @@ interface GraphOptions extends SVGOptions {
     landscape: Landscape
 }
 
+interface ScaleXY {
+    x: d3.ScaleLinear<number,number>
+    y: d3.ScaleLinear<number,number>
+}
+
 interface GraphScales {
-    x?: d3.ScaleLinear<number, number>,
-    y?: d3.ScaleLinear<number, number>,
+    base2math?: ScaleXY,
+    base2px?: ScaleXY,
+    math2px?: ScaleXY,
     paths?: d3.Line<number>[],
     color?: d3.ScaleSequential<number>,
 }
@@ -132,12 +138,12 @@ export class GolfHole1D extends SVGVisComponent<T> {
      * @param v Vector 
      */
     intoVis(v: Vector2D) {
-        return { x: this.scales.x(v.x), y: this.scales.y(v.y) }
+        return { x: this.scales.math2px.x(v.x), y: this.scales.math2px.y(v.y) }
     }
 
     // Take a vector in the coordinate system and return it to the math coordinates
     intoMath(v: Vector2D) {
-        return { x: this.scales.x.invert(v.x), y: this.scales.y.invert(v.y) }
+        return { x: this.scales.math2px.x.invert(v.x), y: this.scales.math2px.y.invert(v.y) }
     }
 
     // Turn a number into a vector
@@ -227,8 +233,8 @@ export class GolfHole1D extends SVGVisComponent<T> {
             .join('rect')
             .classed('grad-box', true)
             .attr('height', op.height)
-            .attr('width', self.scales.x(xwidth))
-            .attr('x', d => self.scales.x(d.x))
+            .attr('width', self.scales.math2px.x(xwidth))
+            .attr('x', d => self.scales.math2px.x(d.x))
             .attr('y', 0)
             .attr('fill', d => {
                 return cscale(d.updateAmt)
@@ -256,14 +262,31 @@ export class GolfHole1D extends SVGVisComponent<T> {
     updateScales(op: GraphOptions) {
         const scales = this.scales
 
-        scales.x = d3.scaleLinear().domain(op.landscape.xrange).range([0, op.width])
-        scales.y = d3.scaleLinear().domain(op.landscape.yrange).range([op.height, 0])
+        const xbaseRange = [-1, 1]
+        const ybaseRange = [1, 0]
+
+        const xpxRange = [0, op.width]
+        const ypxRange = [op.height, 0]
+
+        scales.base2math = {
+            x: d3.scaleLinear().domain(xbaseRange).range(op.landscape.xrange),
+            y: d3.scaleLinear().domain(ybaseRange).range(op.landscape.yrange)
+        }
+        scales.base2px = {
+            x: d3.scaleLinear().domain(xbaseRange).range(xpxRange),
+            y: d3.scaleLinear().domain(ybaseRange).range(ypxRange)
+        }
+        scales.math2px = {
+            x: d3.scaleLinear().domain(op.landscape.xrange).range(xpxRange),
+            y: d3.scaleLinear().domain(op.landscape.yrange).range(ypxRange)
+        }
+
         scales.paths = this.newPaths(op.landscape)
     }
 
     updateAxes(scales: GraphScales, op: GraphOptions) {
         const sels = this.sels
-        sels.xaxis.call(d3.axisBottom(scales.x).tickValues([0]).tickFormat(x => '0'))
+        sels.xaxis.call(d3.axisBottom(scales.math2px.x).tickValues([0]).tickFormat(x => '0'))
     }
 
     init() {
@@ -308,15 +331,14 @@ export class GolfHole1D extends SVGVisComponent<T> {
 
         scales.paths = this.newPaths(op.landscape)
 
-        const xs = linspace(op.landscape.xrange[0], op.landscape.xrange[1], 1000)
         this.plotCurve()
     }
 
     newPaths(landscape: Landscape) {
         const scales = this.scales
         const baseLine = d3.line<number>()
-            .x((d: number, i: number) => scales.x(d))
-            .y((d: number, i: number) => scales.y(getPlotFunc(landscape)(d)))
+            .x((d: number, i: number) => scales.math2px.x(d))
+            .y((d: number, i: number) => scales.math2px.y(getPlotFunc(landscape)(d)))
             .curve(d3.curveLinear)
 
         return [baseLine]

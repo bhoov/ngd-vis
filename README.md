@@ -7,7 +7,7 @@ Before you start, make sure you have `npm` installed
 From this project's root folder:
 1. Run `npm install`
 2. Run `npm run build`
-3. Open the new `public/index.html` file in a browser window
+3. Open the new `docs/index.html` file in a browser window
 
 If you are developing, you can run `npm run ww` to recompile the static files whenever a file is changed.
 

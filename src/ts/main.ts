@@ -199,7 +199,7 @@ function plotGolfHoleSlider() {
 	const streams = vizs.graph.data().map(b => b.stream)
 	const plotter = {
 		next: d => {
-			vizs.chartXDist.plotPath(d)
+			vizs.chartXDist.plotPath(d, vizs.graph.scales.base2math.x.invert)
 			vizs.chartLosses.plotPath(d)
 		}
 	}

@@ -40,7 +40,7 @@ export class GolfXDist extends Chart2D<T> {
         margin: { top: 10, right: 10, bottom: 30, left: 30 },
         pad: { top: 5, right: 1, bottom: 10, left: 15 },
         xrange: [0, 600],
-        yrange: [15, 0],
+        yrange: [1, 0],
     }
 
     scales: ChartScales = {}
@@ -76,18 +76,20 @@ export class GolfXDist extends Chart2D<T> {
         this.data(R.map(d => R.assoc('vals', [], d), this.data()))
     }
 
-    plotPath(d: BallHistory) {
+    plotPath(d: BallHistory, scale?) {
         const self = this;
         this.addDataKey_(d.classname);
 
+        const scaler = (scale == null) ? x => x : scale
+
         const currVals = this.data()[d.classname];
-        currVals.vals.push(Math.abs(d.x));
+        currVals.vals.push(scaler(Math.abs(d.x)));
 
         // sliding x-axis
         const newXrange = [Math.max(0, currVals.vals.length-this.options.xrange[1]), Math.max(currVals.vals.length,this.options.xrange[1])]
-        // const newXrange = [0, currVals.vals.length]
         this.updateScales(newXrange)
-        this.createPath()
+        this.createPath() // Depends on x scale
+
 
         currVals.sel.data([currVals])
             .join("path")
