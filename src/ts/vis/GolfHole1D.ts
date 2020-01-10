@@ -29,6 +29,7 @@ interface GraphScales {
     base2math?: ScaleXY,
     base2px?: ScaleXY,
     math2px?: ScaleXY,
+    base2loss?: d3.ScaleLinear<number, number>,
     paths?: d3.Line<number>[],
     color?: d3.ScaleSequential<number>,
 }
@@ -82,16 +83,11 @@ export class GolfHole1D extends SVGVisComponent<T> {
         super.initSVG(options, ["bg"])
         this.base.classed(this.cssname, true)
 
-        // const data = [
-        //     new GolfBall(new ManualUpdater(func, dFunc, 0, 0.5), 'golf-ball-sgd', 4),
-        //     new GolfBall(new ManualUpdater(func, dFunc, 0.5, 0.07), 'golf-ball-sngd', 3),
-        //     new GolfBall(new ManualUpdater(func, dFunc, 1, 0.01), 'golf-ball-ngd', 5)
-        // ]
         const z = this.options.landscape
+        
+        // Need to have initial data
         const data = [
             new GolfBall(new ManualUpdater(z.f, z.df, 0, 0.9), 'golf-ball-sgd', 4),
-            new GolfBall(new ManualUpdater(z.f, z.df, 0.5, 0.1), 'golf-ball-sngd', 3),
-            new GolfBall(new ManualUpdater(z.f, z.df, 1, 0.003), 'golf-ball-ngd', 5)
         ]
 
         this.data(data)
@@ -281,6 +277,8 @@ export class GolfHole1D extends SVGVisComponent<T> {
             y: d3.scaleLinear().domain(op.landscape.yrange).range(ypxRange)
         }
 
+        scales.base2loss = d3.scaleLinear().domain(op.landscape.yrange).range([0, 1])
+
         scales.paths = this.newPaths(op.landscape)
     }
 
@@ -327,6 +325,13 @@ export class GolfHole1D extends SVGVisComponent<T> {
             .join('g')
             .attr('id', 'line-background')
 
+        sels.backdrop = this.layers.bg.append("g")
+            .attr("id", "backdrop")
+            .classed('grass', true)
+            .append("rect")
+            .attr("height", op.height)
+            .attr("width", op.width)
+
         this.updateAxes(scales, op)
 
         scales.paths = this.newPaths(op.landscape)
@@ -347,20 +352,8 @@ export class GolfHole1D extends SVGVisComponent<T> {
     initBalls() {
         const self = this, op = this.options;
 
-        // Create Backdrop for mouse interfaces
-        this.sels.backdrop = this.layers.bg.append("g")
-            .attr("id", "backdrop")
-            .classed('grass', true)
-            .append("rect")
-            .attr("height", op.height)
-            .attr("width", op.width)
-
         const tooSmall = (x: number) => x < (op.landscape.xrange[0])
         const tooBig = (x: number) => x > (op.landscape.xrange[1])
-
-        const outOfBounds = (x: number) => {
-            return (isNaN(x) || tooSmall(x) || tooBig(x))
-        }
 
         const fixOutOfBounds = (x: number) => {
             let out: number
@@ -448,6 +441,7 @@ export class GolfHole1D extends SVGVisComponent<T> {
     data(val?) {
         if (val == null) return this._data
         this._data = val;
+        this.initBalls()
         return this
     }
 }

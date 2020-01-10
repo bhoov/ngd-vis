@@ -15,6 +15,7 @@ const toFixed = R.curry((ndigits, x) => x.toFixed(ndigits))
 const toQ = toFixed(1)
 const toEta = toFixed(4)
 
+
 function plotQuiverGraph() {
 	const vis1 = d3.select('#vis1')
 	const sels = {
@@ -71,7 +72,7 @@ function plotQuiverGraph() {
 	})
 }
 
-function plotGolfHole() {
+function plotGolfHole3Ball() {
 	const vis2 = d3.select("#vis2");
 	const sels = {
 		chart: vis2.select('#chart'),
@@ -80,16 +81,42 @@ function plotGolfHole() {
 		landscapeSelector: vis2.select('.landscape-select')
 	}
 
-	const defaults = {
-		landscape: "seagull"
-	}
-
 	const eventHandler = new SimpleEventHandler(<Element>vis2.node())
 	const vizs = {
 		graph: new GolfHole1D(sels.chart, eventHandler, {}, UId.uid()),
 		chartXDist: new GolfXDist(sels.chartXDist, eventHandler),
 		chartLosses: new GolfLosses(sels.chartLosses, eventHandler)
 	}
+
+	interface GolfDefaults {
+		landscape: string
+		qs: number[]
+		classNames: string[]
+		etas?: number[]
+	}
+
+	// Corresponds to qs = [0, 0.5, 1]
+	const defaultEta = {
+		seagull: [0.9, 0.1, 0.003],
+		hole: [0.9, 0.1, 0.003],
+		steps: [0.9, 0.1, 0.003],
+		bowl: [0.9, 0.1, 0.003],
+		deep_net: [0.9, 0.1, 0.003],
+	}
+
+	const defaults: GolfDefaults = {
+		landscape: "seagull",
+		qs: [0, 0.5, 1],
+		classNames: ['golf-ball-sgd', 'golf-ball-sngd', 'golf-ball-ngd'], // Don't change these unless you want to play with CSS!!
+	}
+	defaults.etas = defaultEta[defaults.landscape]
+
+	const defaultLandscape = landscapes[defaults.landscape]
+
+	//@ts-ignore
+	const defaultBalls = d3.zip(defaults.qs, defaults.etas, defaults.classNames).map((x) => new GolfBall(new ManualUpdater(defaultLandscape.f, defaultLandscape.df, x[0], x[1]), x[2]))
+
+	vizs.graph.data(defaultBalls)
 
 	// Attach golfball info to loss tracker
 	eventHandler.bind('loss-click', (e) => {
@@ -101,20 +128,31 @@ function plotGolfHole() {
 	sels.landscapeSelector.property('value', defaults.landscape)
 	vizs.graph.landscape(landscapes[defaults.landscape])
 
-	const streams = vizs.graph.data().map(b => b.stream)
-	const plotter = {
-		next: d => {
-			vizs.chartXDist.plotPath(d)
-			vizs.chartLosses.plotPath(d)
+
+	// Assign streams
+	const assignStreams = (graph:GolfHole1D) => {
+		const streams = graph.data().map(b => b.stream)
+
+		const plotter = {
+			next: d => {
+				vizs.chartXDist.plotPath(d, graph.scales.base2math.x.invert)
+				vizs.chartLosses.plotPath(d)
+			}
 		}
+
+		streams.forEach(s => {
+			s.subscribe(plotter)
+		})
 	}
-	streams.forEach(s => s.subscribe(plotter))
+
+	assignStreams(vizs.graph)
 
 	// Gather interactivity for the golf ball plot
 	sels.landscapeSelector.on('input', function () {
 		const self = d3.select(this)
 		const v = self.property('value')
 		vizs.graph.landscape(landscapes[v])
+		assignStreams(vizs.graph)
 	})
 }
 
@@ -142,9 +180,9 @@ function plotGolfHoleSlider() {
 
 	const defaults = {
 		// Note to also change the default value in the html file!
+		landscape: "seagull",
 		q: 0.5,
-		eta: 0.1,
-		landscape: "seagull"
+		eta: 0.1
 	}
 
 	// Attach golfball info to loss tracker
@@ -155,8 +193,6 @@ function plotGolfHoleSlider() {
 
 	// Put data into viz
 	vizs.graph.data([new GolfBall(new ManualUpdater(landscapes.hole.f, landscapes.hole.df, defaults.q, defaults.eta), "golf-ball")])
-
-	vizs.graph.landscape(landscapes.steps)
 
 	// const etaRange = [-5, 2].map(x => Math.pow(10, x))
 	const etaRange = [-3, 2].map(x => Math.pow(10, x))
@@ -174,7 +210,23 @@ function plotGolfHoleSlider() {
 	sels.qId.text(toQ(defaults.q))
 	sels.etaId.text(toEta(defaults.eta))
 
-	// Configure Interactivity
+	// Assign streams
+	const assignStreams = (graph:GolfHole1D) => {
+		const streams = graph.data().map(b => b.stream)
+
+		const plotter = {
+			next: d => {
+				vizs.chartXDist.plotPath(d, graph.scales.base2math.x.invert)
+				vizs.chartLosses.plotPath(d, graph.scales.base2loss)
+			}
+		}
+
+		streams.forEach(s => {
+			s.subscribe(plotter)
+		})
+	}
+
+	// Adjust slider reactivity
 	sels.qSlider.on('input', function () {
 		const me = d3.select(this)
 		const v = scales.q.invert(me.property('value'));
@@ -193,23 +245,14 @@ function plotGolfHoleSlider() {
 		const self = d3.select(this)
 		const v = self.property('value')
 		vizs.graph.landscape(landscapes[v])
+		assignStreams(vizs.graph)
 	})
-
-	// Assign streams
-	const streams = vizs.graph.data().map(b => b.stream)
-	const plotter = {
-		next: d => {
-			vizs.chartXDist.plotPath(d, vizs.graph.scales.base2math.x.invert)
-			vizs.chartLosses.plotPath(d)
-		}
-	}
-	streams.forEach(s => s.subscribe(plotter))
+	assignStreams(vizs.graph)
 }
 
 export function main() {
 	console.log("RUNNING");
 	plotQuiverGraph();
-	plotGolfHole();
+	plotGolfHole3Ball();
 	plotGolfHoleSlider();
 }
-
