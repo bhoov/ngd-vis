@@ -97,11 +97,11 @@ function plotGolfHole3Ball() {
 
 	// Corresponds to qs = [0, 0.5, 1]
 	const defaultEta = {
-		seagull: [0.9, 0.1, 0.003],
-		hole: [0.9, 0.1, 0.003],
-		steps: [0.9, 0.1, 0.003],
-		bowl: [0.9, 0.1, 0.003],
-		deep_net: [0.9, 0.1, 0.003],
+		seagull: [0.005, 0.005, 0.005],
+		hole: [0.005, 0.005, 0.005],
+		steps: [0.005, 0.005, 0.005],
+		bowl: [0.03, 0.03, 0.03],
+		deep_net: [0.01, 0.01, 0.01],
 	}
 
 	const defaults: GolfDefaults = {

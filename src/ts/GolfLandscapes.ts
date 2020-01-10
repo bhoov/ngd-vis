@@ -14,9 +14,9 @@ export interface Landscape {
 export const landscapes: { [k: string]: Landscape } = {
     hole: {
         name: "hole",
-        f: x => Math.tanh(x*16.5),
-        df: x => Math.pow(Math.cosh(x*16.5), -2) * 16.5,
-        xrange: [-6 / 16.5, 6 / 16.5],
+        f: x => Math.tanh(x*13.5),
+        df: x => Math.pow(Math.cosh(x*13.5), -2) * 13.5,
+        xrange: [-6 / 13.5, 6 / 13.5],
         yrange: [0, 0.6],
         loss: baseLoss
     },
