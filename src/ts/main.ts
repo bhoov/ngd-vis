@@ -145,11 +145,10 @@ function plotGolfHole3Ball() {
         currentStreams.forEach(s => s.unsubscribe())
 
         const activatedStreams = streams.map(s => {
-            s.subscribe(plotter)
+            return s.subscribe(plotter)
         })
         return activatedStreams
     }
-
 
     // Gather interactivity for the golf ball plot
     sels.landscapeSelector.on('input', function () {
@@ -159,9 +158,9 @@ function plotGolfHole3Ball() {
         vizs.chartXDist.resetXrange_()
         vizs.graph.landscape(landscapes[v])
         vizs.graph.dataFromBase(vizs.graph.dataToBase_())
-        runningStreams = assignStreams(vizs.graph)
+        runningStreams = assignStreams(vizs.graph, runningStreams)
     })
-    runningStreams = assignStreams(vizs.graph)
+    runningStreams = assignStreams(vizs.graph, runningStreams)
 }
 
 function plotGolfHoleSlider() {
