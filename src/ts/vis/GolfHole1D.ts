@@ -178,7 +178,7 @@ export class GolfHole1D extends SVGVisComponent<T> {
     }
 
     plotCurveByDefault(xs: number[]) {
-        const self = this, scales = this.scales, sels = this.sels;
+        const self = this, op = this.options, scales = this.scales, sels = this.sels;
 
         scales.paths.forEach(line => {
             this.layers.bg.append("path")
@@ -188,6 +188,14 @@ export class GolfHole1D extends SVGVisComponent<T> {
                     return line(d)
                 })
         })
+
+        sels.lineBackground.selectAll(".grad-box")
+            .data([1])
+            .join('rect')
+            .classed('grad-box', true)
+            .attr("width", op.width)
+            .attr("height", op.height)
+            .attr("fill-opacity", 0.0)
     }
 
     plotCurveByGradient(xs: number[]) {
@@ -413,7 +421,8 @@ export class GolfHole1D extends SVGVisComponent<T> {
             runningTicker = ticker()
         }
 
-        this.sels.backdrop.on('click', plotBalls)
+        // this.sels.backdrop.on('click', plotBalls)
+        // this.sels.maskBackground.on('click', plotBalls)
         // this.sels.mask.on('click', plotBalls)
         this.sels.lineBackground.on('click', plotBalls)
     }

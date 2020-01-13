@@ -43,6 +43,8 @@ export class GolfXDist extends Chart2D<T> {
         yrange: [1, 0],
     }
 
+    defaultXrange: [number, number]
+
     scales: ChartScales = {}
 
     sels: GraphSels = {}
@@ -53,6 +55,7 @@ export class GolfXDist extends Chart2D<T> {
         super(d3parent, eventHandler, options)
         super.initSVG(this.options, ["bg"])
         this.base.classed(this.cssname, true)
+        this.defaultXrange = this.options.xrange
         this.data(<LineTracker>{})
     }
 
@@ -172,6 +175,11 @@ export class GolfXDist extends Chart2D<T> {
     data(val?) {
         if (val == null) return this._data
         this._data = val;
+        return this
+    }
+
+    resetXrange_(): this {
+        this.options.xrange = this.defaultXrange
         return this
     }
 }

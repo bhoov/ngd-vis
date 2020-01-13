@@ -44,6 +44,7 @@ export class GolfLosses extends Chart2D<T> {
         xrange: [0, 600],
         yrange: [1.1, 1e-3],
     }
+    defaultXrange: [number, number]
 
     scales: ChartScales = {}
 
@@ -55,6 +56,7 @@ export class GolfLosses extends Chart2D<T> {
         super(d3parent, eventHandler, options)
         super.initSVG(this.options, ["bg"])
         this.base.classed(this.cssname, true)
+        this.defaultXrange = this.options.xrange
         this.data(<LineTracker>{})
     }
 
@@ -177,6 +179,11 @@ export class GolfLosses extends Chart2D<T> {
     data(val?) {
         if (val == null) return this._data
         this._data = val;
+        return this
+    }
+
+    resetXrange_(): this {
+        this.options.xrange = this.defaultXrange
         return this
     }
 }

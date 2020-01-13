@@ -138,7 +138,7 @@ function plotGolfHole3Ball() {
         const plotter = {
             next: d => {
                 vizs.chartXDist.plotPath(d, graph.scales.base2math.x.invert)
-                vizs.chartLosses.plotPath(d)
+                vizs.chartLosses.plotPath(d, graph.scales.base2loss)
             }
         }
 
@@ -155,6 +155,8 @@ function plotGolfHole3Ball() {
     sels.landscapeSelector.on('input', function () {
         const self = d3.select(this)
         const v = self.property('value')
+        vizs.chartLosses.resetXrange_()
+        vizs.chartXDist.resetXrange_()
         vizs.graph.landscape(landscapes[v])
         vizs.graph.dataFromBase(vizs.graph.dataToBase_())
         runningStreams = assignStreams(vizs.graph)
@@ -255,6 +257,8 @@ function plotGolfHoleSlider() {
     sels.landscapeSelector.on('input', function () {
         const self = d3.select(this)
         const v = self.property('value')
+        vizs.chartLosses.resetXrange_()
+        vizs.chartXDist.resetXrange_()
         vizs.graph.landscape(landscapes[v])
         vizs.graph.dataFromBase(vizs.graph.dataToBase_())
         runningStreams = assignStreams(vizs.graph, runningStreams)
