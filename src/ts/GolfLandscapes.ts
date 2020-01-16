@@ -49,7 +49,7 @@ export const landscapes: { [k: string]: Landscape } = {
         f: x => Math.pow(Math.abs(x/3+1), 3) - 1,  // depth = 4
         df: x => 3/3 * Math.pow(Math.abs(x/3+1), 2),
         // xrange: [-0.7*4, 0.7*4],
-        xrange: [-0.9*3, 0.9*3],
+        xrange: [-0.95*3, 0.95*3],
         yrange: [0, 4],
         loss: baseLoss
     }
