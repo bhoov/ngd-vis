@@ -51,8 +51,8 @@ export class ContourPlot extends SVGVisComponent<T> {
         maxHeight: 500,
         margin: { top: 50, right: 75, bottom: 125, left: 50 },
         pad: 30,
-        xrange: [0, 2.5],
-        yrange: [0, 2.5],
+        xrange: [0, 1.6],
+        yrange: [0, 1.6],
         n: 500,
         m: 500,
     } // #state
@@ -93,31 +93,31 @@ export class ContourPlot extends SVGVisComponent<T> {
         this.updateQuivers()
     }
 
-    plotMinimum() {
-        const self = this;
-        const op = this.options;
-        const scales = this.scales;
+    // plotMinimum() {
+    //     const self = this;
+    //     const op = this.options;
+    //     const scales = this.scales;
 
-        const makeX = (nx: number) => R.range(0, nx).map(d3.scaleLinear().domain([0, nx]).range([0.00001, op.xrange[1]]))
-        const yFunc = x => 1 / x;
-        const xvals = makeX(100)
-        const yvals = xvals.map(yFunc)//.map(y => scales.y(y))
+    //     const makeX = (nx: number) => R.range(0, nx).map(d3.scaleLinear().domain([0, nx]).range([0.00001, op.xrange[1]]))
+    //     const yFunc = x => 1 / x;
+    //     const xvals = makeX(100)
+    //     const yvals = xvals.map(yFunc)//.map(y => scales.y(y))
 
-        const data = R.zip(xvals.map(scales.x), yvals.map(scales.y))
-        const lineGen = d3.line()
-        const pathData = lineGen(data)
+    //     const data = R.zip(xvals.map(scales.x), yvals.map(scales.y))
+    //     const lineGen = d3.line()
+    //     const pathData = lineGen(data)
 
-        const minimumGroup = this.base.append('g').attr('id', 'minimum-group')
+    //     const minimumGroup = this.base.append('g').attr('id', 'minimum-group')
 
-        console.log("Path data: ", pathData);
+    //     console.log("Path data: ", pathData);
 
-        minimumGroup.append('path')
-            .attr('d', lineGen(data))
-            .classed('minimum', true)
-            .style('stroke-width', 2.5)
-            .style('stroke', 'blue')
-            .style('fill', null)
-    }
+    //     minimumGroup.append('path')
+    //         .attr('d', lineGen(data))
+    //         .classed('minimum', true)
+    //         .style('stroke-width', 2.5)
+    //         .style('stroke', 'blue')
+    //         .style('fill', null)
+    // }
 
     plotContours() {
         const self = this;
@@ -126,15 +126,18 @@ export class ContourPlot extends SVGVisComponent<T> {
 
         const contourFunc = (x, y) => this.updater.absErr({ x: x, y: y })
         const vals = getContourValues(op.n, op.m, op.xrange, op.yrange, contourFunc)
-        let thresholds = d3.range(d3.min(vals), d3.max(vals), 0.25);
+        let thresholds = d3.range(d3.min(vals), d3.max(vals), 0.08);
 
         // Because the minimum value is not a contour but a value, we need to do what we can to approach the min.
-        const weighted = 0.91;
+        const weighted = 0.95;
         const newMin = (weighted * thresholds[0] + (1 - weighted) * thresholds[1]) / 2
-        thresholds = R.insert(1, newMin, thresholds)
         // const newMin = 0;
+        thresholds = R.insert(1, newMin, thresholds)
 
-        scales.color = d3.scaleLog().interpolate(() => d3.interpolateYlGnBu);
+        scales.color = d3.scaleLog().interpolate(() => d3.interpolateGnBu);
+        // scales.color = d3.scaleLinear().interpolate(() => d3.interpolateGnBu);
+        // scales.color = d3.scaleSequential().domain([0, 100]).interpolator(() =>d3.interpolateRainbow);
+        // scales.color = d3.scaleSequentialLog(d3.extent(thresholds), d3.interpolateMagma)
 
         scales.contours.thresholds(thresholds)
 
@@ -155,6 +158,8 @@ export class ContourPlot extends SVGVisComponent<T> {
             .classed('not-fit', d => {
                 return d.value != newMin;
             })
+
+        // legend({color, title: "Value", tickFormat: ","})
     }
 
     addCircle(v: Vector2D, prev: Vector2D = null) {
@@ -247,10 +252,10 @@ export class ContourPlot extends SVGVisComponent<T> {
         const scales = this.scales;
         const sels = this.sels;
 
-        const nx = 8, ny = 8;
+        const nx = 11, ny = 11;
         const points = SVG.meshgrid(nx, ny, op.xrange, op.yrange)
-        const color = "red";
-        const width = 2;
+        const color = "blue"; 
+        const width = 1.25; 
 
         const quiverGroup = this.base.append('g').attr('id', 'quiver-group') // init should have these groups already selected
         this.clearQuivers()

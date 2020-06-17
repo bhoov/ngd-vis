@@ -34,7 +34,7 @@ function plotQuiverGraph() {
     const defaults = {
         // Note to also change the default value in the html file!
         q: 0,
-        eta: 0.1
+        eta: 0.05
     }
 
     const scales = {
@@ -189,7 +189,7 @@ function plotGolfHoleSlider() {
         // Note to also change the default value in the html file!
         landscape: "seagull",
         q: 0.5,
-        eta: 0.1
+        eta: 0.01
     }
 
     // Attach golfball info to loss tracker
@@ -202,7 +202,7 @@ function plotGolfHoleSlider() {
     vizs.graph.data([new GolfBall(new ManualUpdater(landscapes.hole.f, landscapes.hole.df, defaults.q, defaults.eta), "golf-ball")])
 
     // const etaRange = [-5, 2].map(x => Math.pow(10, x))
-    const etaRange = [-3, 2].map(x => Math.pow(10, x))
+    const etaRange = [-3, 0].map(x => Math.pow(10, x))
     const scales = {
         q: d3.scaleLinear().range([0, 10]).domain([0, 1]),
         eta: d3.scaleLog().range([1, 1000]).domain(etaRange).base(10)

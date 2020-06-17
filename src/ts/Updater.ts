@@ -76,8 +76,11 @@ export class Updater {
 
     nextLr(v:Vector2D): Vector2D {
         const g = this.lr(v);
-        const x = v.x + g.x;
-        const y = v.y + g.y;
+        const x = v.x + g.x * 3;
+        const y = v.y + g.y * 3;
+        // const dv = this.dv(v)
+        // const x = v.x + dv.x * this.eta;
+        // const y = v.y + dv.y * this.eta;
         return {x: x, y: y}
     }
 }

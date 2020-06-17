@@ -43,7 +43,7 @@ export class RegressionLoss {
 
     this.thresholds = [];
     this.contours = d3.contours().size([this.n, this.m]);
-    this.color = d3.scaleLog().interpolate(function () { return d3.interpolateYlGnBu; });
+    // this.color = d3.scaleLog().interpolate(function () { return d3.interpolateGreys; });
     this.x = d3.scaleLinear().domain([-5, 5]).range([0, this.width]);
     this.y = d3.scaleLinear().domain([-5, 5]).range([this.height, 0]);
 

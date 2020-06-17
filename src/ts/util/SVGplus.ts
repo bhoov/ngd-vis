@@ -63,15 +63,15 @@ export class SVG {
             .append('marker')
             .attr("id", "arrow")
             .attr("markerUnits", "strokeWidth")
-            .attr("markerWidth", 9)
-            .attr("markerHeight", 9)
+            .attr("markerWidth", 5.5)
+            .attr("markerHeight", 5.5)
             .attr("viewBox", "0 0 12 12")
             .attr("refX", 6)
             .attr("refY", 6)
             .attr("orient", 'auto')
             .append('path')
             .attr('d', "M2,2 L10,6 L2,10 L6,6 L2,2")
-            .style("fill: #f00")
+            // .style("fill: #f00")
     }
 
     static insertArrow(parent:D3Sel, x1:number, y1:number, x2:number, y2:number, color:string, width:number) {
