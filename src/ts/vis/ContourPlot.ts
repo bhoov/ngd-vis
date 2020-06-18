@@ -24,7 +24,7 @@ interface GraphOptions extends SVGOptions {
 interface GraphScales {
     x?: d3.ScaleLinear<number, number>,
     y?: d3.ScaleLinear<number, number>,
-    color?: d3.ScaleLogarithmic<number, string>,
+    color?: d3.ScaleLinear<number, string>,
     curve?: d3.CurveCatmullRomFactory,
     contours?: d3.Contours,
     thresholds?: number[]
@@ -134,7 +134,8 @@ export class ContourPlot extends SVGVisComponent<T> {
         // const newMin = 0;
         thresholds = R.insert(1, newMin, thresholds)
 
-        scales.color = d3.scaleLog().interpolate(() => d3.interpolateGnBu);
+
+        scales.color = d3.scaleLinear().domain([0,2]).range([0.2, 0.7]).interpolate(() => d3.interpolateGnBu);
         // scales.color = d3.scaleLinear().interpolate(() => d3.interpolateGnBu);
         // scales.color = d3.scaleSequential().domain([0, 100]).interpolator(() =>d3.interpolateRainbow);
         // scales.color = d3.scaleSequentialLog(d3.extent(thresholds), d3.interpolateMagma)

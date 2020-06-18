@@ -106,7 +106,7 @@ module.exports = {
             checkSyntacticErrors: true
         }),
         new CopyWebpackPlugin([
-            {from: 'img', to: 'img'},
+            // {from: 'img', to: 'img'},
             // {from: "demo", to:"demo"}
         ]),
     ],
