@@ -127,7 +127,10 @@ export class ContourPlot extends SVGVisComponent<T> {
         const contourFunc = (x, y) => this.updater.absErr({ x: x, y: y })
         const vals = getContourValues(op.n, op.m, op.xrange, op.yrange, contourFunc)
         let thresholds = d3.range(d3.min(vals), d3.max(vals), 0.08);
-
+        // const contourFunc = (x, y) => this.updater.Err({ x: x, y: y })
+        // const vals = getContourValues(op.n, op.m, op.xrange, op.yrange, contourFunc)
+        // let thresholds = d3.range(d3.min(vals), -d3.min(vals), 0.08);
+// 
         // Because the minimum value is not a contour but a value, we need to do what we can to approach the min.
         const weighted = 0.95;
         const newMin = (weighted * thresholds[0] + (1 - weighted) * thresholds[1]) / 2
@@ -135,9 +138,8 @@ export class ContourPlot extends SVGVisComponent<T> {
         thresholds = R.insert(1, newMin, thresholds)
 
 
-        scales.color = d3.scaleLinear().domain([0,2]).range([0.2, 0.7]).interpolate(() => d3.interpolateGnBu);
-        // scales.color = d3.scaleLinear().interpolate(() => d3.interpolateGnBu);
-        // scales.color = d3.scaleSequential().domain([0, 100]).interpolator(() =>d3.interpolateRainbow);
+        // scales.color = d3.scaleLinear().domain([-3,3]).range([0.4, 0.6]).interpolate(() => d3.interpolateRdYlBu);
+        scales.color = d3.scaleLinear().domain([-1,0.1]).range([0, 1]).interpolate(() => d3.interpolateBlues);
         // scales.color = d3.scaleSequentialLog(d3.extent(thresholds), d3.interpolateMagma)
 
         scales.contours.thresholds(thresholds)
@@ -151,7 +153,7 @@ export class ContourPlot extends SVGVisComponent<T> {
             .attr("class", "contour")
             .attr("d", d3.geoPath(d3.geoIdentity().scale(op.width / op.n)))
             .attr("fill", d => {
-                return scales.color(d.value)
+                return scales.color(-Math.sqrt(d.value))
             })
             .classed('main-fit', d => {
                 return d.value == newMin;

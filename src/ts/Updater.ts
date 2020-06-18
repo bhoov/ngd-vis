@@ -26,6 +26,14 @@ export class Updater {
     }
 
     // Take abs value of error
+    // Err(v:Vector2D):number {
+    //     return this.err(v)
+    // }
+    // Take abs value of error
+    sqrtErr(v:Vector2D):number {
+        return Math.sqrt(Math.abs(this.err(v)))
+    }
+
     absErr(v:Vector2D):number {
         return Math.abs(this.err(v))
     }

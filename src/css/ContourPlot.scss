@@ -1,12 +1,12 @@
 .simple-graph {
     .contour {
-        stroke-width: 0.2px;
-        stroke: rgba(0, 0, 0, 0.308);
+        stroke-width: 0.1px;
+        stroke: rgba(0, 0, 0, 0.171);
     }
 
     .main-fit {
         stroke-width: 2px;
-        stroke: rgb(12, 230, 211);
+        stroke: black;
     }
 
     .not-fit {
@@ -15,11 +15,11 @@
     }
 
     .descending-point {
-        fill: rgb(253, 0, 253);
+        fill: rgb(255, 0, 200);
     }
 
     .descending-line {
         stroke-width: 1px;
-        stroke:rgb(253, 0, 253);
+        stroke:rgb(255, 0, 200);
     }
 }
