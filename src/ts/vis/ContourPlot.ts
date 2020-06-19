@@ -19,6 +19,7 @@ interface GraphOptions extends SVGOptions {
     n: number                   // Number of meshgrid points along the x axis
     m: number                   // Number of meshgrid points along the y axis
     pad: number                 // Annotations that happen in the margin must take place `pad` distance from the main graph
+    circleEvery: number
 }
 
 interface GraphScales {
@@ -55,6 +56,7 @@ export class ContourPlot extends SVGVisComponent<T> {
         yrange: [0, 1.6],
         n: 500,
         m: 500,
+        circleEvery: 4,
     } // #state
 
     scales: GraphScales = {}
@@ -62,7 +64,13 @@ export class ContourPlot extends SVGVisComponent<T> {
 
 
     // Other
-    _curr: Vector2D = { x: 0.1, y: 0.2 } // #state
+    _curr = {
+        currLoc: {
+            x: 0.1,
+            y: 0.2
+        },
+        step: 0
+    }
     ticker
     updater: Updater
 
@@ -165,8 +173,9 @@ export class ContourPlot extends SVGVisComponent<T> {
         // legend({color, title: "Value", tickFormat: ","})
     }
 
-    addCircle(v: Vector2D, prev: Vector2D = null) {
+    addStep(v: Vector2D, prev: Vector2D = null) {
         const self = this;
+        const op = this.options;
         const scales = this.scales;
         const sels = this.sels;
 
@@ -179,11 +188,16 @@ export class ContourPlot extends SVGVisComponent<T> {
                 .classed('descending-line', true)
         }
 
-        sels.circle = this.base.append('circle')
-            .attr('cx', scales.x(v.x))
-            .attr('cy', scales.y(v.y))
-            .attr('r', 2)
-            .classed('descending-point', true)
+        if (this._curr.step % op.circleEvery == 0) {
+            console.log("Curr step: ", this._curr.step);
+            sels.circle = this.base.append('circle')
+                .attr('cx', scales.x(v.x))
+                .attr('cy', scales.y(v.y))
+                .attr('r', 2)
+                .classed('descending-point', true)
+        }
+
+        this._curr.step += 1
 
         return v;
     }
@@ -204,7 +218,7 @@ export class ContourPlot extends SVGVisComponent<T> {
 
         const subObj = {
             next: (val) => {
-                this.addCircle(val, prevVal)
+                this.addStep(val, prevVal)
                 prevVal = val
             },
             err: (err) => console.log(err),
@@ -212,7 +226,7 @@ export class ContourPlot extends SVGVisComponent<T> {
         }
 
         const prep = () => {
-            this.addCircle(this.curr())
+            this.addStep(this.curr())
             prevVal = this.curr()
         }
 
@@ -319,8 +333,9 @@ export class ContourPlot extends SVGVisComponent<T> {
                 self.ticker.unsubscribe()
             }
             const coords = d3.mouse(this);
+            self._curr.step = 0
             self.curr({ x: scales.x.invert(coords[0]), y: scales.y.invert(coords[1]) })
-            self.addCircle(self.curr())
+            self.addStep(self.curr())
             self.clearCircles();
             self.plotDescent();
         })
@@ -330,10 +345,10 @@ export class ContourPlot extends SVGVisComponent<T> {
     curr(val: Vector2D): this
     curr(val?) {
         if (val == null) {
-            return this._curr
+            return this._curr.currLoc
         }
 
-        this._curr = val;
+        this._curr.currLoc = val;
         return this;
     }
 
