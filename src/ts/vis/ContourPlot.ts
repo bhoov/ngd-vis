@@ -179,20 +179,29 @@ export class ContourPlot extends SVGVisComponent<T> {
         const scales = this.scales;
         const sels = this.sels;
 
+        const cx = scales.x(v.x)
+        const cy = scales.y(v.y)
+
+        // Check border conditions
+        if (v.x >= op.xrange[1] || v.y >= op.yrange[1]) {
+            this.ticker.unsubscribe()
+            return v
+        }
+
         if (prev != null) {
             this.base.append('line')
                 .attr('x1', scales.x(prev.x))
                 .attr('y1', scales.y(prev.y))
-                .attr('x2', scales.x(v.x))
-                .attr('y2', scales.y(v.y))
+                .attr('x2', cx)
+                .attr('y2', cy)
                 .classed('descending-line', true)
         }
 
         if (((this._curr.step % op.circleEvery) == 0) || (prev == null)) {
             console.log("Curr step: ", this._curr.step);
             sels.circle = this.base.append('circle')
-                .attr('cx', scales.x(v.x))
-                .attr('cy', scales.y(v.y))
+                .attr('cx', cx)
+                .attr('cy', cy)
                 .attr('r', 2)
                 .classed('descending-point', true)
         }
