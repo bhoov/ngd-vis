@@ -182,12 +182,6 @@ export class ContourPlot extends SVGVisComponent<T> {
         const cx = scales.x(v.x)
         const cy = scales.y(v.y)
 
-        // Check border conditions
-        if (v.x >= op.xrange[1] || v.y >= op.yrange[1]) {
-            this.ticker.unsubscribe()
-            return v
-        }
-
         if (prev != null) {
             this.base.append('line')
                 .attr('x1', scales.x(prev.x))
@@ -196,6 +190,13 @@ export class ContourPlot extends SVGVisComponent<T> {
                 .attr('y2', cy)
                 .classed('descending-line', true)
         }
+
+        // Check border conditions
+        if (v.x >= op.xrange[1] || v.y >= op.yrange[1]) {
+            this.ticker.unsubscribe()
+            return v
+        }
+
 
         if (((this._curr.step % op.circleEvery) == 0) || (prev == null)) {
             console.log("Curr step: ", this._curr.step);
@@ -312,8 +313,8 @@ export class ContourPlot extends SVGVisComponent<T> {
         // Create scales
         scales.contours = d3.contours().size([op.n, op.m])
         scales.curve = d3.curveCatmullRom.alpha(0.5)
-        scales.x = d3.scaleLinear().domain(op.xrange).range([0, op.width])
-        scales.y = d3.scaleLinear().domain(op.yrange).range([op.height, 0])
+        scales.x = d3.scaleLinear().domain(op.xrange).range([0, op.width]).clamp(true)
+        scales.y = d3.scaleLinear().domain(op.yrange).range([op.height, 0]).clamp(true)
 
         // Add Axes and labels
         sels.xaxis = this.base.append("g")
