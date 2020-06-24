@@ -179,8 +179,8 @@ export class ContourPlot extends SVGVisComponent<T> {
         const scales = this.scales;
         const sels = this.sels;
 
-        const cx = scales.x(v.x)
-        const cy = scales.y(v.y)
+        const cx = scales.x.clamp(true)(v.x)
+        const cy = scales.y.clamp(true)(v.y)
 
         if (prev != null) {
             this.base.append('line')
@@ -313,8 +313,8 @@ export class ContourPlot extends SVGVisComponent<T> {
         // Create scales
         scales.contours = d3.contours().size([op.n, op.m])
         scales.curve = d3.curveCatmullRom.alpha(0.5)
-        scales.x = d3.scaleLinear().domain(op.xrange).range([0, op.width]).clamp(true)
-        scales.y = d3.scaleLinear().domain(op.yrange).range([op.height, 0]).clamp(true)
+        scales.x = d3.scaleLinear().domain(op.xrange).range([0, op.width])
+        scales.y = d3.scaleLinear().domain(op.yrange).range([op.height, 0])
 
         // Add Axes and labels
         sels.xaxis = this.base.append("g")
