@@ -335,9 +335,13 @@ export class ContourPlot extends SVGVisComponent<T> {
             const coords = d3.mouse(this);
             self._curr.step = 0
             self.curr({ x: scales.x.invert(coords[0]), y: scales.y.invert(coords[1]) })
-            self.addStep(self.curr())
-            self.clearCircles();
-            self.plotDescent();
+
+            // if (self.curr().x > 0 && self.curr().y > 0 && self.curr().x < (op.xrange[1] - 0.1) && self.curr().y < (op.yrange[1] - 0.1)) {
+            if (self.curr().x > 0 && self.curr().y > 0) {
+                self.addStep(self.curr())
+                self.clearCircles();
+                self.plotDescent();
+            }
         })
     }
 
