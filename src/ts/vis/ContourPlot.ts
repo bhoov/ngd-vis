@@ -188,7 +188,7 @@ export class ContourPlot extends SVGVisComponent<T> {
                 .classed('descending-line', true)
         }
 
-        if (this._curr.step % op.circleEvery == 0) {
+        if (((this._curr.step % op.circleEvery) == 0) || (prev == null)) {
             console.log("Curr step: ", this._curr.step);
             sels.circle = this.base.append('circle')
                 .attr('cx', scales.x(v.x))

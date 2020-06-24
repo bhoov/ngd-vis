@@ -67,7 +67,7 @@ export class GolfHole1D extends SVGVisComponent<T> {
     options: GraphOptions = {
         maxWidth: 400,
         maxHeight: 200,
-        margin: { top: 10, right: 10, bottom: 40, left: 50 },
+        margin: { top: 5, right: 10, bottom: 40, left: 10 },
         pad: 30,
         maxIter: 600,
         landscape: landscapes.hole

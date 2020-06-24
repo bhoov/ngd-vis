@@ -104,7 +104,6 @@ function plotGolfHole3Ball() {
 		deep_net: [0.01, 0.01, 0.01],
 	}
 
-
     const defaults: GolfDefaults = {
         landscape: "seagull",
         qs: [0, 0.5, 1],
