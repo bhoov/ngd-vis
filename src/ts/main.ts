@@ -6,10 +6,12 @@ import { GolfHole1D } from './vis/GolfHole1D'
 import { GolfLosses } from './vis/GolfLosses'
 import { GolfXDist } from './vis/GolfXDist'
 import { GolfBall } from './vis/GolfBall'
+import { SimpleNet } from "./vis/SimpleNet"
 import * as R from 'ramda'
 import { SimpleEventHandler } from './util/SimpleEventHandler'
 import { ManualUpdater } from './vis/ManualUpdater'
 import { landscapes, Landscape } from './GolfLandscapes'
+import { Vector2D } from './util/types'
 
 const toFixed = R.curry((ndigits, x) => x.toFixed(ndigits))
 const toQ = toFixed(1)
@@ -24,11 +26,14 @@ function plotQuiverGraph() {
         etaId: vis1.select('#eta-val'),
         qSlider: vis1.select('#q-slider'),
         etaSlider: vis1.select('#eta-slider'),
-        hessType: vis1.select('#hess-type')
+        hessType: vis1.select('#hess-type'),
+        simpleNet: vis1.select("#simple-net-container"),
     }
+    const eventHandler = new SimpleEventHandler(<Element>vis1.node())
 
     const vizs = {
-        graph: new ContourPlot(sels.quiverPlot)
+        graph: new ContourPlot(sels.quiverPlot, eventHandler),
+        simpleNet: new SimpleNet(sels.simpleNet, eventHandler)
     }
 
     const defaults = {
@@ -70,6 +75,11 @@ function plotQuiverGraph() {
         const v = self.property('value')
         vizs.graph.setUpdater(v)
     })
+
+    // Catch event of step
+    eventHandler.bind(ContourPlot.events.stepAdded, (v: Vector2D) => {
+        vizs.simpleNet.setState(v)
+    })
 }
 
 function plotGolfHole3Ball() {
@@ -78,14 +88,14 @@ function plotGolfHole3Ball() {
         chart: vis2.select('#chart'),
         chartXDist: vis2.select('#chart-xdist'),
         chartLosses: vis2.select('#chart-losses'),
-        landscapeSelector: vis2.select('.landscape-select')
+        landscapeSelector: vis2.select('.landscape-select'),
     }
 
     const eventHandler = new SimpleEventHandler(<Element>vis2.node())
     const vizs = {
         graph: new GolfHole1D(sels.chart, eventHandler, {}, UId.uid()),
         chartXDist: new GolfXDist(sels.chartXDist, eventHandler),
-        chartLosses: new GolfLosses(sels.chartLosses, eventHandler)
+        chartLosses: new GolfLosses(sels.chartLosses, eventHandler),
     }
 
     interface GolfDefaults {
@@ -95,14 +105,14 @@ function plotGolfHole3Ball() {
         etas?: number[]
     }
 
-	// Corresponds to qs = [0, 0.5, 1]
-	const defaultEta = {
-		seagull: [0.005, 0.005, 0.005],
-		hole: [0.005, 0.005, 0.005],
-		steps: [0.005, 0.005, 0.005],
-		bowl: [0.03, 0.03, 0.03],
-		deep_net: [0.01, 0.01, 0.01],
-	}
+    // Corresponds to qs = [0, 0.5, 1]
+    const defaultEta = {
+        seagull: [0.005, 0.005, 0.005],
+        hole: [0.005, 0.005, 0.005],
+        steps: [0.005, 0.005, 0.005],
+        bowl: [0.03, 0.03, 0.03],
+        deep_net: [0.01, 0.01, 0.01],
+    }
 
     const defaults: GolfDefaults = {
         landscape: "seagull",
@@ -131,7 +141,7 @@ function plotGolfHole3Ball() {
     let runningStreams = []
 
     // Assign streams
-    const assignStreams = (graph:GolfHole1D, currentStreams=[]) => {
+    const assignStreams = (graph: GolfHole1D, currentStreams = []) => {
         const streams = graph.data().map(b => b.stream)
 
         const plotter = {
@@ -218,7 +228,7 @@ function plotGolfHoleSlider() {
 
     // Assign streams
     let runningStreams = []
-    const assignStreams = (graph:GolfHole1D, currentStreams=[]) => {
+    const assignStreams = (graph: GolfHole1D, currentStreams = []) => {
         const streams = graph.data().map(b => b.stream)
 
         const plotter = {

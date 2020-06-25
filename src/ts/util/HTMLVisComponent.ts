@@ -18,6 +18,5 @@ export abstract class HTMLVisComponent<DataInterface> extends VisComponent<DataI
     initHTML(options: {} = {}) {
         this.updateOptions(options)
         this.base = this.parent.append('div')
-        this.init() // Add additional static elements
     }
 }

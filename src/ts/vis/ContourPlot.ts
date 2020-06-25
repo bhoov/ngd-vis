@@ -42,6 +42,10 @@ interface GraphSels {
     arrows?: D3Sel[]
 }
 
+const EVENTS = {
+  stepAdded: "SimpleNet_StepAdded"
+}
+
 export class ContourPlot extends SVGVisComponent<T> {
     cssname = "simple-graph"
 
@@ -76,6 +80,8 @@ export class ContourPlot extends SVGVisComponent<T> {
 
     // Specify the grid for the contours
     ideal: number = 1 // #state
+
+    static events = EVENTS
 
     constructor(d3parent: D3Sel, eventHandler?: SimpleEventHandler, options = {}) {
         super(d3parent, eventHandler, options)
@@ -209,6 +215,7 @@ export class ContourPlot extends SVGVisComponent<T> {
 
         this._curr.step += 1
 
+        this.eventHandler.trigger(EVENTS.stepAdded, v)
         return v;
     }
 

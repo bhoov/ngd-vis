@@ -35,12 +35,6 @@ export abstract class VisComponent<DataInterface> {
      * The static property that contains all class related events.
      * Should be overwritten and event strings have to be unique!!
      */
-    protected get events() {
-        const event = (eventName) => `${this.baseName}_${eventName}`
-        return {
-            noEvent: event('NoEvent')
-        }
-    }
 
     protected get baseName() {
         return `${this.cssname}_ID${this.ID}`
