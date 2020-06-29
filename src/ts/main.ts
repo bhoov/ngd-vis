@@ -12,10 +12,26 @@ import { SimpleEventHandler } from './util/SimpleEventHandler'
 import { ManualUpdater } from './vis/ManualUpdater'
 import { landscapes, Landscape } from './GolfLandscapes'
 import { Vector2D } from './util/types'
+import {QuadraticPlots} from "./vis/QuadraticPlots"
 
 const toFixed = R.curry((ndigits, x) => x.toFixed(ndigits))
 const toQ = toFixed(1)
 const toEta = toFixed(4)
+
+function plotQuadraticFuncs() {
+    const vis = d3.select("#vis-quad")
+    const eventHandler = new SimpleEventHandler(<Element>vis.node())
+
+    const sels = {
+        quadPlot: vis.select("#quad-plot")
+    }
+
+    const vizs = {
+        quadPlot: new QuadraticPlots(sels.quadPlot, eventHandler)
+    }
+
+    vizs.quadPlot.data([1/1.4, 1, 1.4])
+}
 
 
 function plotQuiverGraph() {
@@ -276,6 +292,7 @@ function plotGolfHoleSlider() {
 
 export function main() {
     console.log("RUNNING");
+    plotQuadraticFuncs();
     plotQuiverGraph();
     plotGolfHole3Ball();
     plotGolfHoleSlider();

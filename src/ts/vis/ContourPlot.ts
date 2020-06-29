@@ -205,7 +205,6 @@ export class ContourPlot extends SVGVisComponent<T> {
 
 
         if (((this._curr.step % op.circleEvery) == 0) || (prev == null)) {
-            console.log("Curr step: ", this._curr.step);
             sels.circle = this.base.append('circle')
                 .attr('cx', cx)
                 .attr('cy', cy)

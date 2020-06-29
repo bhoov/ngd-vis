@@ -1,0 +1,24 @@
+@import "colors";
+.line-path {
+    stroke: $col4;
+    stroke-width: 3px;
+    fill: none;
+}
+
+.bg-rect {
+    fill: $col5;
+    opacity: 0.3;
+}
+
+.cursor-line {
+    stroke: $col1;
+    stroke-dasharray: 4 4;
+    fill: none;
+    stroke-width: 1px;
+}
+.cursor-dot {
+    fill: none;
+    stroke: $col3;
+    // stroke-dasharray: 2 2;
+    stroke-width: 1px;
+}

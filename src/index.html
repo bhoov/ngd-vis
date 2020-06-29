@@ -16,6 +16,7 @@
         <h1>Curvature Corrected Learning</h1>
         <h2>Moving beyond gradient descent</h2>
         <dt-byline></dt-byline>
+
         <p>
             Much of Deep Learning can be summed up in one word: <b>Backpropagation</b>. New practitioners to the field
             will also be familiar with the phrases "gradient descent" or "momentum" or even "ADAM".
@@ -25,6 +26,18 @@
             This process is called optimization. We will now explore if there is a practical way to train neural
             networks on gradients higher than first derivatives.
         </p>
+
+        <h3>Motivation</h3>
+
+        <p>
+            Calculation of Higher Order Derivatives have the ability to create smoother descents into local/global optima without requiring momentum.
+            Consider the following quadratic loss functions:
+        </p>
+
+        <div id="vis-quad">
+            <div id="quad-plot"></div>
+
+        </div>
 
         <h2>A Simple Two Layer Network</h2>
 

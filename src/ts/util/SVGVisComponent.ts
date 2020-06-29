@@ -39,13 +39,20 @@ export abstract class SVGVisComponent<DataInterface> extends VisComponent<DataIn
      * - Adds layers on the base to work with if passed
      * - Runs defined static initialization defined in `init()`
      */
-    protected initSVG(options = {}, defaultLayers = []) {
+    protected initSVG(options = {}, defaultLayers = ["bg", "main", "fg"]) {
         this.updateOptions(options)
         const op = this.options;
         op.width = op.maxWidth - (op.margin.left + op.margin.right)
         op.height = op.maxHeight - (op.margin.top + op.margin.bottom)
 
-        this.svg = SVG.addSVG(this.parent, op.width, op.height, op.margin)
+        this.svg = this.parent.append('svg')
+            .attr("width", "100%")
+            .attr("height", "100%")
+            .attr("viewBox", `0 0 ${op.width + op.margin.left + op.margin.right} ${op.height + op.margin.top + op.margin.bottom}`)
+            .append('g')
+            .attr("transform", SVG.translate(op.margin.left, op.margin.top))
+
+        // this.svg = SVG.addSVG(this.parent, op.width, op.height, op.margin)
         this.base = SVG.group(this.svg, ''); // Let HTML author assign the class name and ID
         this.layers = {};
         if (defaultLayers) {

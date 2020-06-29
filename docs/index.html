@@ -16,6 +16,7 @@
         <h1>Curvature Corrected Learning</h1>
         <h2>Moving beyond gradient descent</h2>
         <dt-byline></dt-byline>
+
         <p>
             Much of Deep Learning can be summed up in one word: <b>Backpropagation</b>. New practitioners to the field
             will also be familiar with the phrases "gradient descent" or "momentum" or even "ADAM".
@@ -25,6 +26,18 @@
             This process is called optimization. We will now explore if there is a practical way to train neural
             networks on gradients higher than first derivatives.
         </p>
+
+        <h3>Motivation</h3>
+
+        <p>
+            Calculation of Higher Order Derivatives have the ability to create smoother descents into local/global optima without requiring momentum.
+            Consider the following quadratic loss functions:
+        </p>
+
+        <div id="vis-quad">
+            <div id="quad-plot"></div>
+
+        </div>
 
         <h2>A Simple Two Layer Network</h2>
 
@@ -108,6 +121,16 @@
             the distance to optimal weight value beneath the graph. The darkness of the ball indicates their
             \(\frac{1}{q}\) value. The light gray is SGD, dark gray is NGD, and our method is just gray.
         </p>
+
+
+        <h2>A 2D loss surface</h2>
+
+        Unfortunately, very few loss surfaces are as flat and predictably stable as the examples above. A more jagged loss surface can be found below:
+
+        <div id="vis-2d-loss" class="container l-page">
+
+        </div>
+
 
         <h2>Playground</h2>
 
