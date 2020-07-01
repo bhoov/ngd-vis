@@ -50,6 +50,7 @@ export class QuadraticPlots extends SVGVisComponent<DATA> {
     }
 
     sels: Partial<GraphSels> = {}
+    timer: d3.Timer
 
     constructor(d3parent: D3Sel, eventHandler?: SimpleEventHandler, options = {}, ID = 0) {
         super(d3parent, eventHandler, options, ID)
@@ -158,15 +159,14 @@ export class QuadraticPlots extends SVGVisComponent<DATA> {
 
         this.base.on('mouseout', () => {
             sels.cursorLine.classed("hidden", true)
-            sels.cursorDots.forEach(c => c.classed("hidden", true))
+            if (self.timer == null) sels.cursorDots.forEach(c => c.classed("hidden", true))
         })
 
         this.base.on('mouseover', () => {
             sels.cursorLine.classed("hidden", false)
-            sels.cursorDots.forEach(c => c.classed("hidden", false))
+            if (self.timer == null) sels.cursorDots.forEach(c => c.classed("hidden", false))
         })
 
-        let timer;
         this.base.on('click', function () {
             const mouse = d3.mouse(this)
             const val = self.toPxScales.x.invert(mouse[0])
@@ -177,8 +177,8 @@ export class QuadraticPlots extends SVGVisComponent<DATA> {
                 c.attr('cy', self.toPxScales.y(u.loss(xClick)))
             })
 
-            if (timer == null) {
-                timer = d3.interval((time) => {
+            if (self.timer == null) {
+                self.timer = d3.interval((time) => {
                     sels.cursorDots.forEach((c, i) => {
                         const u = updaters[i]
                         const xNow = self.toPxScales.x.invert(+c.attr('cx'))
@@ -189,8 +189,8 @@ export class QuadraticPlots extends SVGVisComponent<DATA> {
                 }, 10)
             }
             else {
-                timer.stop()
-                timer = null
+                self.timer.stop()
+                self.timer = null
             }
         })
     }
