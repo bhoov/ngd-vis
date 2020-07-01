@@ -4,6 +4,7 @@ import { Vector2D } from '../util/types'
 import { SVGOptions, SVGVisComponent, MarginInfo } from '../util/SVGVisComponent'
 import { SimpleEventHandler } from '../util/SimpleEventHandler';
 import { SVG } from "../util/SVGplus"
+import { ManualUpdater } from "./ManualUpdater"
 
 interface GraphOptions {
     margin: MarginInfo
@@ -45,7 +46,7 @@ export class QuadraticPlots extends SVGVisComponent<DATA> {
         maxWidth: 400,
         maxHeight: 250,
         xRange: [-3, 3],
-        yRange: [-0.05, 3],
+        yRange: [-0.05, 8.82],
     }
 
     sels: Partial<GraphSels> = {}
@@ -113,19 +114,24 @@ export class QuadraticPlots extends SVGVisComponent<DATA> {
 
         // const f = (x: number) => 0.5 * (x ** 2)
 
-        const fac = 4;
+        const fac = 1.4;
         const aa = [1 / fac, 1, fac];
-
-        const fs = aa.map(a => {
-            return (x) => 1 / 2 * (a * x ** 2)
+        // const aa = [fac];
+        const updaters = aa.map(a => {
+            return new ManualUpdater(
+                (x: number) => a * x,
+                (x: number) => a,
+                1,
+                0.01,
+            )
         })
 
-        sels.paths = fs.map(f => {
+        sels.paths = updaters.map(u => {
             return this.layers.main.append("path")
                 .datum(linspace(op.xRange[0], op.xRange[1], 100))
                 .classed("line-path", true)
                 .attr('d', d => {
-                    return this.lineMaker(f)(d)
+                    return this.lineMaker(x => u.loss(x))(d)
                 })
         })
 
@@ -134,7 +140,7 @@ export class QuadraticPlots extends SVGVisComponent<DATA> {
             .classed('cursor-line', true)
             .classed('hidden', true)
 
-        sels.cursorDots = fs.map(f => {
+        sels.cursorDots = updaters.map(u => {
             return this.base.append('circle')
                 .classed("cursor-dot", true)
                 .attr("r", "3px")
@@ -144,11 +150,10 @@ export class QuadraticPlots extends SVGVisComponent<DATA> {
             const mouse = d3.mouse(this)
             sels.cursorLine.attr('d', d3.line()([[mouse[0], 0], [mouse[0], op.height]]))
 
-            sels.cursorDots.forEach((c, i) => {
-                c
-                    .attr('cx', mouse[0])
-                    .attr('cy', () => self.toPxScales.y(fs[i](self.toPxScales.x.invert(mouse[0]))))
-            })
+            // sels.cursorDots.forEach((c, i) => {
+            //     c.attr('cx', mouse[0])
+            //         .attr('cy', () => self.toPxScales.y(updaters[i].loss(self.toPxScales.x.invert(mouse[0]))))
+            // })
         })
 
         this.base.on('mouseout', () => {
@@ -161,6 +166,33 @@ export class QuadraticPlots extends SVGVisComponent<DATA> {
             sels.cursorDots.forEach(c => c.classed("hidden", false))
         })
 
+        let timer;
+        this.base.on('click', function () {
+            const mouse = d3.mouse(this)
+            const val = self.toPxScales.x.invert(mouse[0])
+            sels.cursorDots.forEach((c, i) => {
+                const u = updaters[i]
+                const xClick = self.toPxScales.x.invert(mouse[0])
+                c.attr('cx', mouse[0])
+                c.attr('cy', self.toPxScales.y(u.loss(xClick)))
+            })
+
+            if (timer == null) {
+                timer = d3.interval((time) => {
+                    sels.cursorDots.forEach((c, i) => {
+                        const u = updaters[i]
+                        const xNow = self.toPxScales.x.invert(+c.attr('cx'))
+                        const xNext = u.next(xNow)
+                        c.attr('cx', self.toPxScales.x(xNext))
+                        c.attr('cy', self.toPxScales.y(u.loss(xNext)))
+                    })
+                }, 10)
+            }
+            else {
+                timer.stop()
+                timer = null
+            }
+        })
     }
 
     _render(data: DATA) {
@@ -173,8 +205,4 @@ export class QuadraticPlots extends SVGVisComponent<DATA> {
         if (val == null) return this._data
         return this
     }
-}
-
-function toVec([x, y]: [number, number]): Vector2D {
-    return { x: x, y: y }
 }

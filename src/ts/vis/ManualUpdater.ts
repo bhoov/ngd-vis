@@ -5,6 +5,7 @@ export class ManualUpdater {
     f: (x: number) => number
     df: (x: number) => number
 
+    // q = 1/q in the Interface (due to nice properties of this definition) is a different value than this
     q: number   // 0 -> 1, where 0 is SGD and 1 is NGD. 0.5 is sqrt NGD. [step = - eta * H ^ (-1/q) * g] (H = 0 when q=0)
     eta: number // aka 'learning rate'
 
