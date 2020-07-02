@@ -1,6 +1,8 @@
 @import "line";
 @import "ContourPlot";
 @import "GolfHole";
+@import "QuadraticPlot";
+@import "colors";
 
 .slide-container {
   max-width: 300px;
@@ -38,4 +40,14 @@
   border-radius: 50%;
   background: #4caf50;
   cursor: pointer;
+}
+
+.hidden {
+  visibility: hidden;
+  opacity: 0;
+}
+
+.visible {
+  visibility: visible;
+  opacity: 1;
 }

@@ -130,8 +130,6 @@ export class SimpleNet extends HTMLVisComponent<null> {
     const w0 = v.x
     const w1 = v.y
 
-    console.log("STEPPING: ", w0);
-
     sels.lineVals.w0.text(w0.toFixed(2))
     sels.lineVals.w1.text(w1.toFixed(2))
 

@@ -7,7 +7,7 @@ import { SVGOptions, SVGVisComponent } from '../util/SVGVisComponent'
 import { SimpleEventHandler } from '../util/SimpleEventHandler';
 import { SVG } from '../util/SVGplus'
 import { getContourValues } from '../plotting'
-import { Updater, BlockUpdater } from '../Updater'
+import { Updater, BlockUpdater } from '../ContourPlotUpdater'
 import { interval, fromEvent } from 'rxjs'
 import { map, tap, take, startWith, scan, switchMap } from 'rxjs/operators'
 
@@ -107,32 +107,6 @@ export class ContourPlot extends SVGVisComponent<T> {
         this.updateQuivers()
     }
 
-    // plotMinimum() {
-    //     const self = this;
-    //     const op = this.options;
-    //     const scales = this.scales;
-
-    //     const makeX = (nx: number) => R.range(0, nx).map(d3.scaleLinear().domain([0, nx]).range([0.00001, op.xrange[1]]))
-    //     const yFunc = x => 1 / x;
-    //     const xvals = makeX(100)
-    //     const yvals = xvals.map(yFunc)//.map(y => scales.y(y))
-
-    //     const data = R.zip(xvals.map(scales.x), yvals.map(scales.y))
-    //     const lineGen = d3.line()
-    //     const pathData = lineGen(data)
-
-    //     const minimumGroup = this.base.append('g').attr('id', 'minimum-group')
-
-    //     console.log("Path data: ", pathData);
-
-    //     minimumGroup.append('path')
-    //         .attr('d', lineGen(data))
-    //         .classed('minimum', true)
-    //         .style('stroke-width', 2.5)
-    //         .style('stroke', 'blue')
-    //         .style('fill', null)
-    // }
-
     plotContours() {
         const self = this;
         const op = this.options;
@@ -156,7 +130,7 @@ export class ContourPlot extends SVGVisComponent<T> {
         scales.color = d3.scaleLinear().domain([-1,0.1]).range([0, 1]).interpolate(() => d3.interpolateBlues);
         // scales.color = d3.scaleSequentialLog(d3.extent(thresholds), d3.interpolateMagma)
 
-        scales.contours.thresholds(thresholds)
+        scales.contours = scales.contours.thresholds(thresholds)
 
         const contourVals = scales.contours(vals)
         const contourGroup = this.base.append('g').attr('id', 'contour-group')
@@ -205,7 +179,6 @@ export class ContourPlot extends SVGVisComponent<T> {
 
 
         if (((this._curr.step % op.circleEvery) == 0) || (prev == null)) {
-            console.log("Curr step: ", this._curr.step);
             sels.circle = this.base.append('circle')
                 .attr('cx', cx)
                 .attr('cy', cy)

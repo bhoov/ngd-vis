@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/bhoov/ngd-vis#readme",
   "dependencies": {
+    "@tensorflow/tfjs": "^2.0.1",
     "@types/d3": "^5.7.2",
     "d3": "^5.11.0",
     "d3-legend": "^1.0.0",

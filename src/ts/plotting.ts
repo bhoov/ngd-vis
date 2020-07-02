@@ -18,13 +18,21 @@ export function addSVG(div: string, width: number, height: number, margin: Margi
 
 type DomainRange = number[]
 
-export function getContourValues(n: number, m: number, xrange: DomainRange, yrange: DomainRange, func: (x: number, y: number) => number) {
-    let values = new Array(n * m)
+/**
+ * 
+ * @param nx Number of gridpoints along x
+ * @param ny Number of gridpoints along y
+ * @param xrange Range along x axis
+ * @param yrange Range along y axis
+ * @param func (x,y) => number, function to plot
+ */
+export function getContourValues(nx: number, ny: number, xrange: DomainRange, yrange: DomainRange, func: (x: number, y: number) => number) {
+    let values = new Array(nx * ny)
 
-    for (var j = 0.5, k = 0; j < m; ++j) {
-        for (var i = 0.5; i < n; ++i, ++k) {
-            const xval = ((i / n) * (xrange[1] - xrange[0])) + xrange[0];
-            const yval = (1 - (j / m)) * (yrange[1] - yrange[0]) + yrange[0];
+    for (var j = 0.5, k = 0; j < ny; ++j) {
+        for (var i = 0.5; i < nx; ++i, ++k) {
+            const xval = ((i / nx) * (xrange[1] - xrange[0])) + xrange[0];
+            const yval = (1 - (j / ny)) * (yrange[1] - yrange[0]) + yrange[0];
             values[k] = func(xval, yval);
         }
     }
