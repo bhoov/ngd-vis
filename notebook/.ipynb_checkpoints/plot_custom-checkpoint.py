@@ -1,5 +1,5 @@
 import numpy as np
-import matplotlib.pyplot as plt
+from fastai.vision import plt
 from matplotlib import cm, animation, rc
 
 
@@ -66,7 +66,7 @@ def plot_3d(ax, fnc,  x0, y0 = None,  w_all = None, plot_type = None, zlim = Non
 
 def plot_trajectory(ax, w_alls):
     for w_all in w_alls:
-        ax.plot(w_all[0,:], w_all[1,:]); ax.plot(w_all[0,-1], w_all[1,-1],'k.') 
+        ax.plot(w_all[0,:], w_all[1,:],'-'); ax.plot(w_all[0,-1], w_all[1,-1],'k.') 
     
 ### DOESNT work yet!!!
 def animate_trajectory(fig, ax, w_alls):
