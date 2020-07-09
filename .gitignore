@@ -5,3 +5,4 @@ node_modules
 *-checkpoint.ipynb
 .cache-loader
 *.swp
+*.pyc
