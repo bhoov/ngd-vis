@@ -1,5 +1,6 @@
 import numpy as np
 import sympy as sym
+from pdb import set_trace
 
 def landscape(xy, freq = None, amp = None, py = np,  eps=0, seed = None):
     if freq is None:
@@ -21,61 +22,91 @@ def landscape_core(x, freq, a, py,  eps):
     array = sym.Matrix if  py == sym else py.array
     sin, cos, pi = py.sin, py.cos, py.pi
     
-    #### 3 layer architecture 
-    def layer1(xs):
-        x1,x2 = xs
-        y1, y2 = x1 + 0, x2 + 0     #  y1, y2 = x1.copy(), x2.copy()
+    def layer1(xs, eps):
+        x1, x2 = xs
         
-        dy1, dy2 = [1, 0], [0, 1]
+        y1,  y2  = x1 + 0, x2 + 0     #  y1, y2 = x1.copy(), x2.copy()        
+        dy1, dy2 = 0, 0
+        
         for i in range(len(freq)):
-            y1 += a[i]* sin(freq[i]*x2) ;                  y2 += a[i]* cos(freq[i]*x1) 
+            theta1 = freq[i]*x1 #+ 2*pi*eps*np.random.randn(1)[0]   
+            theta2 = freq[i]*x2 #+ 2*pi*eps*np.random.randn(1)[0]
             
-            # derivatives 
-            dy1[1] += a[i]*freq[i]* cos(freq[i]*x2) ;      dy2[0] += a[i]*freq[i]* -sin(freq[i]*x1) 
-        return (y1, y2), array([dy1, dy2])
+            y1  += a[i]        * sin(theta2) ;      y2  += a[i]         *  cos(theta1) 
+            dy1 += a[i]*freq[i]* cos(theta2) ;      dy2 += a[i]*freq[i] * -sin(theta1) 
+            
+        ones = np.ones(dy1.shape)
+        return array([y1, y2]), array([[ones, dy1], [dy2, ones]])
+    
+#     #### 3 layer architecture 
+#     def layer1(xs, eps):
+#         x1, x2 = xs
+        
+#         y1,  y2  = x1 + 0, x2 + 0     #  y1, y2 = x1.copy(), x2.copy()        
+#         dy1, dy2 = 1, 1
+        
+#         for i in range(len(freq)):
+#             theta1 = freq[i]*x1 + 2*pi*eps * np.random.randn(1)[0]   
+#             theta2 = freq[i]*x2 + 2*pi*eps * np.random.randn(1)[0]
+            
+#             y1  += a[i]        * sin(theta2) ;      y2  += a[i]         *  cos(theta1) 
+#             dy1 += a[i]*freq[i]* cos(theta2) ;      dy2 += a[i]*freq[i] * -sin(theta1) 
+            
+#         zeros = np.zeros(dy1.shape)
+#         return array([y1, y2]), array([[dy1, zeros], [zeros,dy2]])
 
     def layer2(ys,  eps):
         y1,y2 = ys
         
         c1,  s1,  c2,  s2  = 0, 0, 0, 0 
-        dc1, ds1, dc2, ds2 = [0, 0], [0, 0], [0, 0], [0, 0]
+        dc1, ds1, dc2, ds2 = 0, 0, 0, 0
+        
         for i in range(len(freq)):
             
             theta1 = freq[i]*y1 + 2*pi*eps * np.random.randn(1)[0]   
             theta2 = freq[i]*y2 + 2*pi*eps * np.random.randn(1)[0]
             
-            s1 += a[i]* sin(theta1) ;                 c1 += a[i]* cos(theta1) 
-            s2 += a[i]* sin(theta2) ;                 c2 += a[i]* cos(theta2) 
+            s01 = sin(theta1);                 c01 = cos(theta1)
+            s02 = sin(theta2);                 c02 = cos(theta2)
+            
+            s1 += a[i] * s01 ;                 c1 += a[i] * c01 
+            s2 += a[i] * s02 ;                 c2 += a[i] * c02
             
             # derivatives 
-            ds1[0] += a[i]*freq[i]* cos(theta1) ;        dc1[0] += a[i]*freq[i]* -sin(theta1) 
-            ds2[1] += a[i]*freq[i]* cos(theta2) ;        dc2[1] += a[i]*freq[i]* -sin(theta2) 
-        return (s1, s2, c1, c2), array([ds1, ds2, dc1, dc2])
+            ds1 += a[i]*freq[i] * c01 ;        dc1 += a[i]*freq[i] * -s01
+            ds2 += a[i]*freq[i] * c02 ;        dc2 += a[i]*freq[i] * -s02
+            
+        zeros = np.zeros(ds1.shape)
+        sc = array([s1, s2, c1, c2])
+        sc_y = array([[ds1, zeros], [zeros, ds2], [dc1, zeros], [zeros, dc2]])
+        return sc,  sc_y
     
     def layer3(ys, sc):
-        y1,y2 = ys;                s1, s2, c1, c2 = sc
+        y1,y2 = ys;                
+        s1, s2, c1, c2 = sc
         z1    = y1 * s2 + c1 * y2;   
         z2    = s1 * y2 + y1 * c2 
         
         # derivatives 
         z1_dy  = [s2, c1];            z2_dy  = [c2, s1]; 
-        z1_dsc = [ 0, y1, y2, 0];     z2_dsc = [y2, 0, 0, y1]
-        return array((z1, z2)), array([z1_dy, z2_dy]), array([z1_dsc, z2_dsc])
+        z1_dsc = [ np.zeros(y2.shape), y1, y2, np.zeros(y2.shape)];     z2_dsc = [y2, np.zeros(y2.shape), np.zeros(y2.shape), y1]
+        return array([z1, z2]), array([z1_dy, z2_dy]), array([z1_dsc, z2_dsc])
 
 
     ###### 3 layer architecture 
     
-    y,  y_x        = layer1(x)
+    y,  y_x        = layer1(x, eps = 0)
     sc, sc_y       = layer2(y, eps)
     z,  z_y, z_sc  = layer3(y, sc)
-    output = z
-
-    if len(x.shape) == 1:
-        # Backprop for Jacobian
-        out_y = z_sc @ sc_y + z_y
-        out_x = out_y @ y_x        
-        Jacobian = out_x.T
-    else:
-        Jacobian = None    
+    err = z
     
-    return output, Jacobian
+#     set_trace()
+    # Backprop for Jacobian    
+    if len(z_y.shape) == 2:
+        out_y = z_sc @ sc_y + z_y
+        Jacobian = (out_y @ y_x ).T    
+    elif len(z_y.shape) == 3:
+        out_y = z_y + np.einsum('ijk,jlk->ilk',z_sc,sc_y)
+        Jacobian = np.einsum('ijk,jlk->lik',out_y, y_x)   
+    
+    return err, Jacobian
