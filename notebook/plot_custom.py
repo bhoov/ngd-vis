@@ -9,17 +9,17 @@ def plot_all (fnc, l_alls, w_alls, w_range, legend, q = None, damping = None): #
 #     plt.figure(); 
     fig0, axes = plt.subplots(nrows=1, ncols=2, figsize=(14,6)) #, sharey=False, sharex=True)
     plt.subplot(axes[0])
-    plot_losses(l_alls, legend);                         
+    plot_loss_profile(l_alls, legend);                         
     plt.legend(legend)
     plt.subplot(axes[1]);
     x_grid, y_grid = get_plot_grid(w_range, n_grid = 101)
-    plot_3d(axes[1], fnc, x_grid, y_grid, w_alls);     #plt.legend(legend)
+    plot_background(axes[1], fnc, x_grid, y_grid);     #plt.legend(legend)
+    
+    if w_alls is not None:
+        plot_trajectory(axes[1], w_alls)
+#         animate_trajectory(fig, ax, w_all)   ## Doesn't work!  I'd like to see animation!!!
     
     if q is not None:
-#     q, damping = 0.0, 0
-#     q, damping = 0.5, 0
-#     q, damping = 1.0, 0
-#     q, damping = 1.0, 10
         x_grid, y_grid = get_plot_grid(w_range, n_grid = 21)
         plot_quiver(axes[1], fnc, x_grid, y_grid, q, damping)
         
@@ -36,12 +36,12 @@ def get_plot_grid(w_range, n_grid = 101):
     y_grid = np.linspace(cent[1]-dif,cent[1]+dif, n_grid)
     return x_grid, y_grid
 
-def plot_losses(l_alls, legend):
+def plot_loss_profile(l_alls, legend):
     for l in l_alls:
         plt.semilogy(l); 
         
 
-def plot_3d(ax, fnc,  x0, y0 = None, w_all = None, plot_type = 'imshow', q = None, zlim = None,):
+def plot_background(ax, fnc,  x0, y0 = None, plot_type = 'imshow', zlim = None,):
     if y0 is None:
         y0 = x0
         
@@ -51,27 +51,23 @@ def plot_3d(ax, fnc,  x0, y0 = None, w_all = None, plot_type = 'imshow', q = Non
     loss, err, jac = fnc(xy)
         
     z = loss.reshape([ny,nx])
-    z_ = np.log(1+z) #np.sqrt(np.log(1+z))
+    z_ = np.log(1+z) 
 #     z_ = z
     
     if plot_type == 'imshow':
         h_= plt.imshow( z_, cmap=cm.hot, interpolation='bicubic', extent=[x0[0], x0[-1], y0[0], y0[-1]], origin='lower')
         h = plt.contour(x,y,z_, 40, cmap=cm.cool, alpha=0.2) #, colors='black'
-#         plt.quiver(x,y,dv[0,:],dv[1,:])
     
     elif plot_type == 'contour':
         h = plt.contour(x,y,z_, 50, cmap=cm.hot)
+        
 #     elif plot_type == 'surface_3d':
 #         ax = plt.axes(projection='3d')
 #         h = ax.plot_surface(x,y,np.sqrt(np.log(1+z)), rstride=5, cstride=5, cmap=cm.hot,  linewidth=0, antialiased=False)
 
 #     plt.clabel(h, inline=True, fontsize=8)
 #     fig.colorbar(h, shrink=0.5, aspect=5)      # Add a colorbar
-    
-    if w_all is not None:
-        plot_trajectory(ax, w_all)
-#         animate_trajectory(fig, ax, w_all)   ## Doesn't work!  I'd like to see animation!!!
-    
+        
 
 
 def plot_quiver(ax, fnc,  x0, y0, q, damping):
@@ -85,7 +81,7 @@ def plot_quiver(ax, fnc,  x0, y0, q, damping):
     if True: #q is not None:
         
         dv = update_w_all(err, jac, q=q, damping = damping)   # for SGD:     dv = np.einsum('ijk,jk->ik', jac,err)
-#         dv = dv / np.linalg.norm(err)   # normalized update
+        dv = dv / np.sqrt((err ** 2).sum(axis=0))   # normalized update
     plt.quiver(x,y,-dv[0,:],-dv[1,:])
     
     
@@ -93,7 +89,7 @@ def plot_quiver(ax, fnc,  x0, y0, q, damping):
 
 def plot_trajectory(ax, w_alls):
     for w_all in w_alls:
-        ax.plot(w_all[0,:], w_all[1,:],'.-'); ax.plot(w_all[0,-1], w_all[1,-1],'k.') 
+        ax.plot(w_all[0,:], w_all[1,:],'-'); ax.plot(w_all[0,-1], w_all[1,-1],'k.') 
     
 ### DOESNT work yet!!!
 def animate_trajectory(fig, ax, w_alls):

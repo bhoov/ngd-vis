@@ -1,31 +1,44 @@
 import numpy as np
 from fastai.vision import plt
-
+from scipy.integrate import odeint
 from pdb import set_trace
 
-def run_exp(fnc, w0, qs, lrs, momentums = None, dampings = None, iter = 100):
-    w_alls = []; l_alls = []; w_mins = []; w_maxs = []
-    dv_prev = None
-    if momentums is None: 
-        momentums = np.zeros(len(qs))
-    if dampings is None: 
-        dampings = np.zeros(len(qs))
+def update_dyn(loss_fnc, update):
+    def f(w, t, lr, q, damp):
+        loss, err, jac = loss_fnc(w)
+        dv = update(err, jac, q=q, damping = damp)    #    dv, jac_d, V 
+        return - lr * dv 
+    return f
+
+def solver_euler(dyn, w0, t_all, args):
+    w = w0.copy();   w_all = [];
+    iter = len(t_all);    dt = t_all[1] - t_all[0]
+    
+    for t in range(iter):
+        w_all.append(w.copy())
+        w += dyn(w, t, *args) * dt
         
-    for q, lr, m, damp in zip(qs, lrs, momentums, dampings):
-        w = w0.copy();   w_all = [];
-        for _ in range(iter):
-            w_all.append(w.copy())
-            
-            loss, err, jac = fnc(w)
-            dv = update_w(err, jac, q=q, damping = damp)    #    dv, jac_d, V 
-            w -= lr * dv
-#                 v =  m * v + (1-m) * dv; w -= lr * v; # Momentum
-            
-        w_all = np.stack(w_all,axis=1)
-        l_all, _, _ = fnc(w_all)
+    return np.stack(w_all,axis=1).T
+
+def run_exp(loss_fnc, w0, qs = None, lrs = None, dampings = None, OED_solver = None, iter = 100):
+    w_alls = []; l_alls = []; w_mins = []; w_maxs = []
+    
+    if qs is None:         qs = [0.0, 1.0, 0.5]
+    if lrs is None:        lrs = np.array([0.0016, 0.01, 0.03])/4                
+    if dampings is None:   dampings = [0, 10, 0.01]
+    if OED_solver is None: 
+        OED_solver = solver_euler
+    elif OED_solver == 'odeint':
+        OED_solver = odeint
+        
+    t_all = np.linspace(0,iter,iter+1) 
+    
+    for q, lr, damp in zip(qs, lrs, dampings):
+        dyn = update_dyn(loss_fnc, update_w, )
+        w_all = OED_solver(dyn, w0, t_all, args=(lr, q, damp)).T
+        l_all, _, _ = loss_fnc(w_all)
         w_alls.append(w_all);        l_alls.append(l_all);        w_mins.append(w_all.min(axis=1));        w_maxs.append(w_all.max(axis=1))
         
-#         err *= lr*10 
 #         print('V', V, 'err', err, 'V @ err', V @ err, 'j_d', jac_d, 'j_d @  V @ err', jac_d @  V @ err)
     return l_alls, w_alls, (w_mins, w_maxs)
 
@@ -67,8 +80,7 @@ def svd_2d(M):   #   SVD of 2x2 matrix M:  U and V are orthogonal, D is diagonal
         d = np.diagonal(D, axis1=0, axis2=1).T
     
         # sign correction
-        V = np.sign(d) * V
-        V = np.einsum('ijk -> jik',V)
+        V = np.einsum('ijk -> jik', np.sign(d)*V)
         d = np.abs(d)    
     
     return U, d, V
