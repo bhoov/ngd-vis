@@ -1,11 +1,11 @@
 import numpy as np
 from fastai.vision import plt
 from matplotlib import cm, animation, rc
-from update_2d import update_w, update_w_all
+from update_2d import qNGD_update, qNGD_update_all, get_dyn
 
 from pdb import set_trace
 
-def plot_all (fnc, l_alls, w_alls, w_range, legend, q = None, damping = None): #, plot_type=None):
+def plot_all (loss_fnc, l_alls, w_alls, w_range, legend, q = None, damping = None, rotate = False): #, plot_type=None):
 #     plt.figure(); 
     fig0, axes = plt.subplots(nrows=1, ncols=2, figsize=(14,6)) #, sharey=False, sharex=True)
     plt.subplot(axes[0])
@@ -13,7 +13,7 @@ def plot_all (fnc, l_alls, w_alls, w_range, legend, q = None, damping = None): #
     plt.legend(legend)
     plt.subplot(axes[1]);
     x_grid, y_grid = get_plot_grid(w_range, n_grid = 101)
-    plot_background(axes[1], fnc, x_grid, y_grid);     #plt.legend(legend)
+    plot_background(axes[1], loss_fnc, x_grid, y_grid);     #plt.legend(legend)
     
     if w_alls is not None:
         plot_trajectory(axes[1], w_alls)
@@ -21,7 +21,7 @@ def plot_all (fnc, l_alls, w_alls, w_range, legend, q = None, damping = None): #
     
     if q is not None:
         x_grid, y_grid = get_plot_grid(w_range, n_grid = 21)
-        plot_quiver(axes[1], fnc, x_grid, y_grid, q, damping)
+        plot_quiver(axes[1], loss_fnc, x_grid, y_grid, q, damping, rotate = rotate)
         
     plt.show()
 
@@ -41,14 +41,14 @@ def plot_loss_profile(l_alls, legend):
         plt.semilogy(l); 
         
 
-def plot_background(ax, fnc,  x0, y0 = None, plot_type = 'imshow', zlim = None,):
+def plot_background(ax, loss_fnc,  x0, y0 = None, plot_type = 'imshow', zlim = None,):
     if y0 is None:
         y0 = x0
         
     x, y = np.meshgrid(x0, y0); nx = len(x0); ny = len(y0)
     xy = np.concatenate((x.reshape([1,nx*ny]),y.reshape([1,nx*ny])),axis=0)
 
-    loss, err, jac = fnc(xy)
+    loss, err, jac = loss_fnc(xy)
         
     z = loss.reshape([ny,nx])
     z_ = np.log(1+z) 
@@ -70,19 +70,19 @@ def plot_background(ax, fnc,  x0, y0 = None, plot_type = 'imshow', zlim = None,)
         
 
 
-def plot_quiver(ax, fnc,  x0, y0, q, damping):
+def plot_quiver(ax, loss_fnc,  x0, y0, q, damping, rotate = False):
     if y0 is None:
         y0 = x0
         
     x, y = np.meshgrid(x0, y0); nx = len(x0); ny = len(y0)
     xy = np.concatenate((x.reshape([1,nx*ny]),y.reshape([1,nx*ny])),axis=0)
 
-    loss, err, jac = fnc(xy)
-    if True: #q is not None:
-        
-        dv = update_w_all(err, jac, q=q, damping = damping)   # for SGD:     dv = np.einsum('ijk,jk->ik', jac,err)
-        dv = dv / np.sqrt((err ** 2).sum(axis=0))   # normalized update
-    plt.quiver(x,y,-dv[0,:],-dv[1,:])
+#     loss, err, jac = loss_fnc(xy)
+#     dv = qNGD_update_all(err, jac, q=q, damping = damping) 
+    dyn = get_dyn (loss_fnc, qNGD_update_all, rotate = rotate )
+    dv = dyn(xy, t=0, lr = 1, q=q, damp = damping, normalize = True) 
+    
+    plt.quiver(x,y, dv[0,:], dv[1,:])
     
     
 

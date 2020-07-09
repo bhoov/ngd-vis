@@ -3,12 +3,20 @@ from fastai.vision import plt
 from scipy.integrate import odeint
 from pdb import set_trace
 
-def update_dyn(loss_fnc, update):
-    def f(w, t, lr, q, damp):
+def get_dyn(loss_fnc, update, rotate = False):
+    def f(w, t, lr, q, damp, normalize = False):
         loss, err, jac = loss_fnc(w)
         dv = update(err, jac, q=q, damping = damp)    #    dv, jac_d, V 
+        if normalize:
+            dv /= np.sqrt((err ** 2).sum(axis=0))   # normalized update
+        if rotate:
+            dv = rotate_90(dv)
         return - lr * dv 
     return f
+
+def rotate_90(v):
+    R = np.array([[0, 1], [-1, 0]])
+    return R @ v
 
 def solver_euler(dyn, w0, t_all, args):
     w = w0.copy();   w_all = [];
@@ -34,7 +42,7 @@ def run_exp(loss_fnc, w0, qs = None, lrs = None, dampings = None, OED_solver = N
     t_all = np.linspace(0,iter,iter+1) 
     
     for q, lr, damp in zip(qs, lrs, dampings):
-        dyn = update_dyn(loss_fnc, update_w, )
+        dyn = get_dyn(loss_fnc, qNGD_update )
         w_all = OED_solver(dyn, w0, t_all, args=(lr, q, damp)).T
         l_all, _, _ = loss_fnc(w_all)
         w_alls.append(w_all);        l_alls.append(l_all);        w_mins.append(w_all.min(axis=1));        w_maxs.append(w_all.max(axis=1))
@@ -42,8 +50,7 @@ def run_exp(loss_fnc, w0, qs = None, lrs = None, dampings = None, OED_solver = N
 #         print('V', V, 'err', err, 'V @ err', V @ err, 'j_d', jac_d, 'j_d @  V @ err', jac_d @  V @ err)
     return l_alls, w_alls, (w_mins, w_maxs)
 
-
-def update_w(err, jac, damping, q=0):
+def qNGD_update(err, jac, damping, q=0):
 #     if w.shape[0] == 1:                # 1-d update
 #         update = (jac ) ** (1 - 2*q) * err
 #     elif w.shape[0] == 2:              # 2-d update
@@ -53,7 +60,7 @@ def update_w(err, jac, damping, q=0):
     update = U * d_ @ V @ err
     return update #, d_, V 
 
-def update_w_all(err, jac, damping, q=0):
+def qNGD_update_all(err, jac, damping, q=0):
     U, d, V = svd_2d(jac)   #  np.linalg.svd(jac)
     d_ =  d * ((1 + damping)/(d ** 2 + damping)) **q
     update = np.einsum('aik, ik,ijk,jk->ak', U, d_, V, err)
