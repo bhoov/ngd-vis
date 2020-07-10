@@ -1,6 +1,7 @@
 import * as d3 from 'd3'
 import { UId } from './util/UId'
-import { ContourPlot } from './vis/ContourPlot'
+import { ContourPlot } from './vis/GeneralContourPlot'
+import { Updater2D } from './Updater2D'
 import { D3Sel } from './util/xd3'
 import { GolfHole1D } from './vis/GolfHole1D'
 import { GolfLosses } from './vis/GolfLosses'
@@ -12,12 +13,14 @@ import { SimpleEventHandler } from './util/SimpleEventHandler'
 import { ManualUpdater } from './vis/ManualUpdater'
 import { landscapes, Landscape } from './GolfLandscapes'
 import { Vector2D } from './util/types'
-import {QuadraticPlots} from "./vis/QuadraticPlots"
-import {jaggedLoss, LossSurface2D} from "./vis/LossSurface2D"
+import { QuadraticPlots } from "./vis/QuadraticPlots"
+import { jaggedLoss, LossSurface2D } from "./vis/LossSurface2D"
+import * as nj from "numjs"
 
 const toFixed = R.curry((ndigits, x) => x.toFixed(ndigits))
 const toQ = toFixed(1)
 const toEta = toFixed(4)
+type Array = nj.NdArray<number>
 
 function plotJaggedLoss2D() {
     const vis = d3.select("#vis-2d-loss")
@@ -43,7 +46,7 @@ function plotQuadraticFuncs() {
         quadPlot: new QuadraticPlots(sels.quadPlot, eventHandler)
     }
 
-    vizs.quadPlot.data([1/1.4, 1, 1.4])
+    vizs.quadPlot.data([1 / 1.4, 1, 1.4])
 }
 
 
@@ -106,7 +109,7 @@ function plotQuiverGraph() {
     })
 
     // Catch event of step
-    eventHandler.bind(ContourPlot.events.stepAdded, (v: Vector2D) => {
+    eventHandler.bind(ContourPlot.events.stepAdded, (v: Array) => {
         vizs.simpleNet.setState(v)
     })
 }
@@ -303,11 +306,34 @@ function plotGolfHoleSlider() {
     runningStreams = assignStreams(vizs.graph, runningStreams)
 }
 
+function testing() {
+    console.log("TEST");
+    let A = nj.array([[1,2], [2,1]])
+    let v = nj.array([1,3])
+    const up = new Updater2D()
+
+    console.log("LR: ", up.lr(v));
+    console.log("Gradient: ", up.gradient(v));
+    console.log("ERR: ", up.err(v));
+
+    console.log("NJ Array Inception: ", nj.array(v))
+    // let v = nj.array([1,2])
+    // let v2 = nj.array([4,5])
+    // console.log(v);
+
+    // //@ts-ignore
+    // console.log(nj.dot(A, v));
+
+    console.log("END TEST");
+}
+
 export function main() {
-    console.log("RUNNING");
+    testing()
+
+    // console.log(nj.multiply(v, v2));
     plotQuadraticFuncs();
     plotQuiverGraph();
-    plotGolfHole3Ball();
-    plotGolfHoleSlider();
-    plotJaggedLoss2D();
+    // plotGolfHole3Ball();
+    // plotGolfHoleSlider();
+    // plotJaggedLoss2D();
 }
