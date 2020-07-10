@@ -12,7 +12,7 @@ import * as R from 'ramda'
 import { SimpleEventHandler } from './util/SimpleEventHandler'
 import { ManualUpdater } from './vis/ManualUpdater'
 import { landscapes, Landscape } from './GolfLandscapes'
-import { Vector2D } from './util/types'
+import { Array } from './types'
 import { QuadraticPlots } from "./vis/QuadraticPlots"
 import { jaggedLoss, LossSurface2D } from "./vis/LossSurface2D"
 import * as nj from "numjs"
@@ -20,7 +20,6 @@ import * as nj from "numjs"
 const toFixed = R.curry((ndigits, x) => x.toFixed(ndigits))
 const toQ = toFixed(1)
 const toEta = toFixed(4)
-type Array = nj.NdArray<number>
 
 function plotJaggedLoss2D() {
     const vis = d3.select("#vis-2d-loss")

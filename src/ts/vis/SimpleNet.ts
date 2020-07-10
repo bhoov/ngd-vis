@@ -1,13 +1,11 @@
 import { HTMLVisComponent } from '../util/HTMLVisComponent'
 import * as d3 from 'd3'
 import { D3Sel } from '../util/xd3'
-import { Vector2D } from '../util/types'
+import { Array } from '../types'
 import * as R from 'ramda'
 import { SimpleEventHandler } from '../util/SimpleEventHandler';
 import { SVG } from '../util/SVGplus'
 import * as nj from "numjs"
-
-type Array = nj.NdArray<number>
 
 interface SimpleNetSels {
   svg: D3Sel

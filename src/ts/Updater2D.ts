@@ -1,9 +1,8 @@
-import { Vector2D } from './util/types'
 import * as d3 from 'd3'
 import * as nj from "numjs"
+import { Array } from "./types"
 
 // For 2D plots only
-type Array = nj.NdArray<number>
 type Function = (x: Array) => Array
 type ErrorFunction = (x: Array) => number
 

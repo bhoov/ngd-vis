@@ -2,7 +2,7 @@ import * as d3 from 'd3'
 import { D3Sel } from '../util/xd3'
 import * as R from 'ramda'
 import { legendColor } from 'd3-svg-legend'
-import { Vector2D } from '../util/types'
+import { Vector2D, Array } from '../types'
 import { SVGOptions, SVGVisComponent } from '../util/SVGVisComponent'
 import { SimpleEventHandler } from '../util/SimpleEventHandler';
 import { SVG } from '../util/SVGplus'
@@ -15,7 +15,6 @@ import { take, startWith, scan } from 'rxjs/operators'
 import * as nj from "numjs"
 
 type T = number[]
-type Array = nj.NdArray<number>
 
 interface GraphOptions extends SVGOptions {
     xrange: [number, number]
@@ -252,9 +251,7 @@ export class ContourPlot extends SVGVisComponent<T> {
             const v = nj.array([pt.x, pt.y])
 
             const pt2 = self.updater.nextLr(v)
-            //@ts-ignore
             arrow.attr('x2', scales.x(pt2.get(0)))
-                //@ts-ignore
                 .attr('y2', scales.y(pt2.get(1)))
         })
     }
