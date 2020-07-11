@@ -14,8 +14,6 @@ export interface NetCoef {
     b1: number
 }
 
-export type Array = nj.NdArray<number>
-
 export function toVec([x, y]: [number, number]): Vector2D {
     return { x: x, y: y }
 }
@@ -24,3 +22,9 @@ export interface Vector2D {
     x: number
     y: number
 }
+
+// numjs convenience types
+export type Array = nj.NdArray<number>
+
+export type MapFunction = (x: Array) => Array
+export type ReduceFunction = (x: Array) => number

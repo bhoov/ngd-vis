@@ -2,7 +2,7 @@ import * as d3 from 'd3'
 import { UId } from './util/UId'
 import { ContourPlot } from './vis/GeneralContourPlot'
 import { Updater2D } from './Updater2D'
-import { D3Sel } from './util/xd3'
+import { D3Sel, linspace} from './util/xd3'
 import { GolfHole1D } from './vis/GolfHole1D'
 import { GolfLosses } from './vis/GolfLosses'
 import { GolfXDist } from './vis/GolfXDist'
@@ -11,10 +11,10 @@ import { SimpleNet } from "./vis/SimpleNet"
 import * as R from 'ramda'
 import { SimpleEventHandler } from './util/SimpleEventHandler'
 import { ManualUpdater } from './vis/ManualUpdater'
-import { landscapes, Landscape } from './GolfLandscapes'
+import { landscapes } from './GolfLandscapes'
 import { Array } from './types'
 import { QuadraticPlots } from "./vis/QuadraticPlots"
-import { jaggedLoss, LossSurface2D } from "./vis/LossSurface2D"
+import { LossSurface2D } from "./vis/LossSurface2D"
 import * as nj from "numjs"
 
 const toFixed = R.curry((ndigits, x) => x.toFixed(ndigits))
@@ -48,7 +48,6 @@ function plotQuadraticFuncs() {
     vizs.quadPlot.data([1 / 1.4, 1, 1.4])
 }
 
-
 function plotQuiverGraph() {
     const vis1 = d3.select('#vis1')
     const sels = {
@@ -61,9 +60,12 @@ function plotQuiverGraph() {
         simpleNet: vis1.select("#simple-net-container"),
     }
     const eventHandler = new SimpleEventHandler(<Element>vis1.node())
+    const err = (v: Array) => (v.get(0) * v.get(1)) - 1
+    const df = (v: Array) => nj.array([v.get(1), v.get(0)])
+    const updater = new Updater2D().df(df).err(err)
 
     const vizs = {
-        graph: new ContourPlot(sels.quiverPlot, eventHandler),
+        graph: new ContourPlot(sels.quiverPlot, eventHandler, updater, { xrange: [0, 1.6], yrange: [0, 1.6] }),
         simpleNet: new SimpleNet(sels.simpleNet, eventHandler)
     }
 
@@ -77,6 +79,22 @@ function plotQuiverGraph() {
         q: d3.scaleLinear().range([0, 10]).domain([0, 1]),
         eta: d3.scaleLinear().range([1, 1000]).domain([Math.pow(10, -5), 0.6])
     }
+
+    // Add center line
+    const xrange = linspace(0.6, 1.6, vizs.graph.options.m)
+    const eps = 0.0001
+    const fitLine = x => 1 / (x + eps);
+    const centerContour = d3.line()
+        .x(d => vizs.graph.scales.x.clamp(true)(d[0]))
+        .y(d => vizs.graph.scales.y.clamp(true)(fitLine(d[0])))
+
+    const mainFit = vizs.graph.base
+        .append("path")
+        .classed("main-fit", true)
+        // i doesn't matter, need filler for line to work
+        .attr("d", centerContour(xrange.map((x, i) => [x, i]))) 
+
+    console.log(mainFit);
 
     // Initialize graph parameters to match the defaults
     vizs.graph.q(defaults.q)
@@ -307,16 +325,16 @@ function plotGolfHoleSlider() {
 
 function testing() {
     console.log("TEST");
-    let A = nj.array([[1,2], [2,1]])
-    let v = nj.array([1,3])
-    const up = new Updater2D()
+    // let A = nj.array([[1,2], [2,1]])
+    // let v = nj.array([1,3])
+    // const up = new Updater2D()
 
-    console.log("LR: ", up.lr(v));
-    console.log("Gradient: ", up.gradient(v));
-    console.log("ERR: ", up.err(v));
+    // console.log("LR: ", up.lr(v));
+    // console.log("Gradient: ", up.gradient(v));
+    // console.log("ERR: ", up._f(v));
 
-    console.log("NJ Array Inception: ", nj.array(v))
-    // let v = nj.array([1,2])
+    // console.log("NJ Array Inception: ", nj.array(v))
+    // // let v = nj.array([1,2])
     // let v2 = nj.array([4,5])
     // console.log(v);
 

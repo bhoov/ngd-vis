@@ -1,5 +1,5 @@
 import * as d3 from 'd3'
-import { Vector2D } from './types'
+import { Vector2D } from '../types'
 import { SVGVisComponent, SVGOptions, MarginInfo } from "./SVGVisComponent"
 
 export interface ChartOptions extends SVGOptions {

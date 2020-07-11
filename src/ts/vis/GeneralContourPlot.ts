@@ -1,5 +1,5 @@
 import * as d3 from 'd3'
-import { D3Sel } from '../util/xd3'
+import { D3Sel, linspace } from '../util/xd3'
 import * as R from 'ramda'
 import { legendColor } from 'd3-svg-legend'
 import { Vector2D, Array } from '../types'
@@ -7,8 +7,6 @@ import { SVGOptions, SVGVisComponent } from '../util/SVGVisComponent'
 import { SimpleEventHandler } from '../util/SimpleEventHandler';
 import { SVG } from '../util/SVGplus'
 import { getContourValues } from '../plotting'
-// import { Updater, BlockUpdater } from '../ContourPlotUpdater'
-// import { Updater, BlockUpdater } from '../tfUpdater'
 import { Updater2D, BlockUpdater2D } from '../Updater2D'
 import { interval } from 'rxjs'
 import { take, startWith, scan } from 'rxjs/operators'
@@ -28,7 +26,7 @@ interface GraphOptions extends SVGOptions {
 interface GraphScales {
     x?: d3.ScaleLinear<number, number>,
     y?: d3.ScaleLinear<number, number>,
-    color?: d3.ScaleLinear<number, string>,
+    color?: (x: number) => string,
     curve?: d3.CurveCatmullRomFactory,
     contours?: d3.Contours,
     thresholds?: number[]
@@ -61,14 +59,13 @@ export class ContourPlot extends SVGVisComponent<T> {
         pad: 30,
         xrange: [0, 1.6],
         yrange: [0, 1.6],
-        n: 500,
-        m: 500,
+        n: 200,
+        m: 200,
         circleEvery: 4,
     } // #state
 
     scales: GraphScales = {}
     sels: GraphSels = {}
-
 
     // Other
     _curr = {
@@ -83,24 +80,29 @@ export class ContourPlot extends SVGVisComponent<T> {
 
     static events = EVENTS
 
-    constructor(d3parent: D3Sel, eventHandler?: SimpleEventHandler, options = {}) {
+    constructor(d3parent: D3Sel, eventHandler?: SimpleEventHandler, updater?: Updater2D, options = {}) {
         super(d3parent, eventHandler, options)
         super.initSVG(this.options)
         this.base.classed(this.cssname, true)
-        this.updater = new Updater2D()
+        this.updater = updater == null ? new Updater2D() : updater
         this.initPlot()
     }
 
-    setUpdater(name: 'block' | 'full') {
-        const args = [this.q(), this.eta()]
+    linspace(): [number, number][] {
+        const op = this.options
+        const linspaceX = linspace(op.xrange[0], op.xrange[1], op.n)
+        const linspaceY = linspace(op.yrange[0], op.yrange[1], op.m)
 
+        return <[number, number][]>d3.zip(linspaceX, linspaceY)
+    }
+
+    setUpdater(name: 'block' | 'full') {
         if (name == 'block') {
-            this.updater = new BlockUpdater2D(this.q(), this.eta())
+            this.updater = this.updater.toBlock()
         }
         else if (name == 'full') {
-            this.updater = new Updater2D(this.q(), this.eta())
+            this.updater = this.updater.toFull()
         }
-
         else {
             console.log("Please enter a valid input as updater");
         }
@@ -112,22 +114,16 @@ export class ContourPlot extends SVGVisComponent<T> {
         const op = this.options;
         const scales = this.scales;
 
-        const contourFunc = (x, y) => this.updater.absErr(nj.array([x, y]))
+        // const contourFunc = (x, y) => this.updater.absErr(nj.array([x, y]))
+        const contourFunc = (x, y) => {
+            const loss = this.updater.loss(nj.array([x, y]))
+            return loss
+        }
         const vals = getContourValues(op.n, op.m, op.xrange, op.yrange, contourFunc)
         let thresholds = d3.range(d3.min(vals), d3.max(vals), 0.08);
-        // const contourFunc = (x, y) => this.updater.Err({ x: x, y: y })
-        // const vals = getContourValues(op.n, op.m, op.xrange, op.yrange, contourFunc)
-        // let thresholds = d3.range(d3.min(vals), -d3.min(vals), 0.08);
-        // 
-        // Because the minimum value is not a contour but a value, we need to do what we can to approach the min.
-        const weighted = 0.95;
-        const newMin = (weighted * thresholds[0] + (1 - weighted) * thresholds[1]) / 2
-        // const newMin = 0;
-        thresholds = R.insert(1, newMin, thresholds)
-
 
         // scales.color = d3.scaleLinear().domain([-3,3]).range([0.4, 0.6]).interpolate(() => d3.interpolateRdYlBu);
-        scales.color = d3.scaleLinear().domain([-1, 0.1]).range([0, 1]).interpolate(() => d3.interpolateBlues);
+        scales.color = (x: number) => d3.scaleLinear().domain([-1, 0.1]).range([0, 1]).interpolate(() => d3.interpolateBlues)(x);
         // scales.color = d3.scaleSequentialLog(d3.extent(thresholds), d3.interpolateMagma)
 
         scales.contours = scales.contours.thresholds(thresholds)
@@ -141,16 +137,10 @@ export class ContourPlot extends SVGVisComponent<T> {
             .attr("class", "contour")
             .attr("d", d3.geoPath(d3.geoIdentity().scale(op.width / op.n)))
             .attr("fill", d => {
-                return scales.color(-Math.sqrt(d.value))
+                // return scales.color(-Math.sqrt(d.value))
+                return scales.color(d.value)
             })
-            .classed('main-fit', d => {
-                return d.value == newMin;
-            })
-            .classed('not-fit', d => {
-                return d.value != newMin;
-            })
-
-        // legend({color, title: "Value", tickFormat: ","})
+            .classed("not-fit", true)
     }
 
     addStep(v: Array, prev: Array = null) {
@@ -331,11 +321,11 @@ export class ContourPlot extends SVGVisComponent<T> {
             self.curr([scales.x.invert(coords[0]), scales.y.invert(coords[1])])
 
             // if (self.curr().x > 0 && self.curr().y > 0 && self.curr().x < (op.xrange[1] - 0.1) && self.curr().y < (op.yrange[1] - 0.1)) {
-            if (self.curr().get(0) > 0 && self.curr().get(1) > 0) {
-                self.addStep(self.curr())
-                self.clearCircles();
-                self.plotDescent();
-            }
+            // if (self.curr().get(0) > 0 && self.curr().get(1) > 0) {
+            self.addStep(self.curr())
+            self.clearCircles();
+            self.plotDescent();
+            // }
         })
     }
 
@@ -362,10 +352,10 @@ export class ContourPlot extends SVGVisComponent<T> {
     q(val: number): this
     q(val?) {
         if (val == null) {
-            return this.updater.q;
+            return this.updater._q;
         }
 
-        this.updater.q = val
+        this.updater._q = val
         this.updateQuivers()
         return this;
     }
@@ -374,10 +364,10 @@ export class ContourPlot extends SVGVisComponent<T> {
     eta(val: number): this
     eta(val?) {
         if (val == null) {
-            return this.updater.eta;
+            return this.updater._eta;
         }
 
-        this.updater.eta = val
+        this.updater._eta = val
         this.updateQuivers()
         return this;
     }

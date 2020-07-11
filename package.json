@@ -33,7 +33,7 @@
     "jquery": "^3.4.1",
     "mathjax": "^3.0.0",
     "ramda": "^0.26.1",
-    "rxjs": "^6.5.2",
+    "rxjs": "^6.5.2"
   },
   "devDependencies": {
     "@types/jquery": "^3.3.31",
