@@ -2,7 +2,7 @@ import * as d3 from 'd3'
 import { UId } from './util/UId'
 import { ContourPlot } from './vis/GeneralContourPlot'
 import { Updater2D } from './Updater2D'
-import { D3Sel, linspace} from './util/xd3'
+import { D3Sel, linspace } from './util/xd3'
 import { GolfHole1D } from './vis/GolfHole1D'
 import { GolfLosses } from './vis/GolfLosses'
 import { GolfXDist } from './vis/GolfXDist'
@@ -64,8 +64,14 @@ function plotQuiverGraph() {
     const df = (v: Array) => nj.array([v.get(1), v.get(0)])
     const updater = new Updater2D().df(df).err(err)
 
+    const graphOptions = {
+        xrange: [0, 1.6], 
+        yrange: [0, 1.6], 
+        updater,
+    }
     const vizs = {
-        graph: new ContourPlot(sels.quiverPlot, eventHandler, updater, { xrange: [0, 1.6], yrange: [0, 1.6] }),
+        //@ts-ignore
+        graph: new ContourPlot(sels.quiverPlot, eventHandler, graphOptions),
         simpleNet: new SimpleNet(sels.simpleNet, eventHandler)
     }
 
@@ -92,9 +98,7 @@ function plotQuiverGraph() {
         .append("path")
         .classed("main-fit", true)
         // i doesn't matter, need filler for line to work
-        .attr("d", centerContour(xrange.map((x, i) => [x, i]))) 
-
-    console.log(mainFit);
+        .attr("d", centerContour(xrange.map((x, i) => [x, i])))
 
     // Initialize graph parameters to match the defaults
     vizs.graph.q(defaults.q)

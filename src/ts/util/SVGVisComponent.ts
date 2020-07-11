@@ -19,8 +19,8 @@ export interface SVGOptions {
 }
 
 export abstract class SVGVisComponent<DataInterface> extends VisComponent<DataInterface> {
-    protected layers: { main?: D3Sel, fg?: D3Sel, bg?: D3Sel, [key: string]: D3Sel };
     protected svg: D3Sel
+    layers: { main?: D3Sel, fg?: D3Sel, bg?: D3Sel, [key: string]: D3Sel };
     protected options: SVGOptions = {
         margin: { top: 0, right: 0, bottom: 0, left: 0 },
         maxWidth: 450,

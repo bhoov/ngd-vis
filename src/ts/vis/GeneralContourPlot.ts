@@ -21,6 +21,13 @@ interface GraphOptions extends SVGOptions {
     m: number                   // Number of meshgrid points along the y axis
     pad: number                 // Annotations that happen in the margin must take place `pad` distance from the main graph
     circleEvery: number
+    updater: Updater2D
+    xlabel: string
+    ylabel: string
+    title: string
+    colorScale: (x: number) => string
+    maxTick: number // max number of descent updates to take
+    interval: number // time between descent updates
 }
 
 interface GraphScales {
@@ -41,6 +48,7 @@ interface GraphSels {
     ylabel?: D3Sel
     circle?: D3Sel
     arrows?: D3Sel[]
+    title?: D3Sel
 }
 
 const EVENTS = {
@@ -62,29 +70,37 @@ export class ContourPlot extends SVGVisComponent<T> {
         n: 200,
         m: 200,
         circleEvery: 4,
-    } // #state
+        updater: null,
+        xlabel: "w0",
+        ylabel: "w1",
+        title: null,
+        //@ts-ignore
+        colorScale: d3.scaleLinear()
+            .domain([-1, -0.1, 1.56])
+            //@ts-ignore
+            .range(["white", "steelblue", "crimson"])
+            //@ts-ignore
+            .interpolate(d3.interpolateRgb.gamma(2.2)),
+        maxTick: 1000,
+        interval: 10,
+    } 
 
-    scales: GraphScales = {}
     sels: GraphSels = {}
 
     // Other
     _curr = {
         currLoc: nj.array([0.1, 0.2]),
-        step: 0
+        step: 0,
+        ticker: null,
     }
-    ticker
-    updater: Updater2D
-
-    // Specify the grid for the contours
-    ideal: number = 1 // #state
 
     static events = EVENTS
 
-    constructor(d3parent: D3Sel, eventHandler?: SimpleEventHandler, updater?: Updater2D, options = {}) {
+    constructor(d3parent: D3Sel, eventHandler?: SimpleEventHandler, options:Partial<GraphOptions> = {}) {
         super(d3parent, eventHandler, options)
-        super.initSVG(this.options)
+        super.initSVG(options)
         this.base.classed(this.cssname, true)
-        this.updater = updater == null ? new Updater2D() : updater
+        this.options.updater = options.updater == null ? new Updater2D() : options.updater
         this.initPlot()
     }
 
@@ -97,16 +113,28 @@ export class ContourPlot extends SVGVisComponent<T> {
     }
 
     setUpdater(name: 'block' | 'full') {
+        const op = this.options
         if (name == 'block') {
-            this.updater = this.updater.toBlock()
+            op.updater = op.updater.toBlock()
         }
         else if (name == 'full') {
-            this.updater = this.updater.toFull()
+            op.updater = op.updater.toFull()
         }
         else {
             console.log("Please enter a valid input as updater");
         }
         this.updateQuivers()
+    }
+
+    get scales(): GraphScales {
+        const op = this.options
+        return {
+            x: d3.scaleLinear().domain(op.xrange).range([0, op.width]),
+            y: d3.scaleLinear().domain(op.yrange).range([op.height, 0]),
+            contours: d3.contours().size([op.n, op.m]),
+            curve: d3.curveCatmullRom.alpha(0.5),
+            color: op.colorScale
+        }
     }
 
     plotContours() {
@@ -116,19 +144,13 @@ export class ContourPlot extends SVGVisComponent<T> {
 
         // const contourFunc = (x, y) => this.updater.absErr(nj.array([x, y]))
         const contourFunc = (x, y) => {
-            const loss = this.updater.loss(nj.array([x, y]))
+            const loss = op.updater.loss(nj.array([x, y]))
             return loss
         }
         const vals = getContourValues(op.n, op.m, op.xrange, op.yrange, contourFunc)
-        let thresholds = d3.range(d3.min(vals), d3.max(vals), 0.08);
+        let thresholds = linspace(d3.min(vals), d3.max(vals), 20)
 
-        // scales.color = d3.scaleLinear().domain([-3,3]).range([0.4, 0.6]).interpolate(() => d3.interpolateRdYlBu);
-        scales.color = (x: number) => d3.scaleLinear().domain([-1, 0.1]).range([0, 1]).interpolate(() => d3.interpolateBlues)(x);
-        // scales.color = d3.scaleSequentialLog(d3.extent(thresholds), d3.interpolateMagma)
-
-        scales.contours = scales.contours.thresholds(thresholds)
-
-        const contourVals = scales.contours(vals)
+        const contourVals = scales.contours.thresholds(thresholds)(vals)
         const contourGroup = this.base.append('g').attr('id', 'contour-group')
         const contours = contourGroup.selectAll("path.contour")
             .data(contourVals)
@@ -137,7 +159,6 @@ export class ContourPlot extends SVGVisComponent<T> {
             .attr("class", "contour")
             .attr("d", d3.geoPath(d3.geoIdentity().scale(op.width / op.n)))
             .attr("fill", d => {
-                // return scales.color(-Math.sqrt(d.value))
                 return scales.color(d.value)
             })
             .classed("not-fit", true)
@@ -163,7 +184,7 @@ export class ContourPlot extends SVGVisComponent<T> {
 
         // Check border conditions
         if (v.get(0) >= op.xrange[1] || v.get(1) >= op.yrange[1]) {
-            this.ticker.unsubscribe()
+            this._curr.ticker.unsubscribe()
             return v
         }
 
@@ -194,6 +215,7 @@ export class ContourPlot extends SVGVisComponent<T> {
 
     plotDescent() {
         const self = this;
+        const op = this.options;
         let prevVal = null;
 
         const subObj = {
@@ -210,11 +232,11 @@ export class ContourPlot extends SVGVisComponent<T> {
             prevVal = this.curr()
         }
 
-        this.ticker = interval(10).pipe(
+        this._curr.ticker = interval(op.interval).pipe(
             startWith(prep()),
             //@ts-ignore
-            scan(v => self.updater.next(v), self.curr()),
-            take(1000)
+            scan(v => op.updater.next(v), self.curr()),
+            take(op.maxTick)
         ).subscribe(subObj)
     }
 
@@ -228,6 +250,7 @@ export class ContourPlot extends SVGVisComponent<T> {
 
     updateQuivers() {
         const self = this;
+        const op = this.options;
         const sels = this.sels;
         const scales = this.scales;
 
@@ -240,7 +263,7 @@ export class ContourPlot extends SVGVisComponent<T> {
 
             const v = nj.array([pt.x, pt.y])
 
-            const pt2 = self.updater.nextLr(v)
+            const pt2 = op.updater.nextLr(v)
             arrow.attr('x2', scales.x(pt2.get(0)))
                 .attr('y2', scales.y(pt2.get(1)))
         })
@@ -261,7 +284,7 @@ export class ContourPlot extends SVGVisComponent<T> {
         this.clearQuivers()
 
         sels.arrows = points.map(pt => {
-            const pt2 = self.updater.nextLr(nj.array([pt.x, pt.y]))
+            const pt2 = op.updater.nextLr(nj.array([pt.x, pt.y]))
             //@ts-ignore
             const arrow = SVG.insertArrow(quiverGroup, scales.x(pt.x), scales.y(pt.y), scales.x(pt2.get(0)), scales.y(pt2.get(1)), color, width)
             arrow.classed('quiver', true)
@@ -285,11 +308,6 @@ export class ContourPlot extends SVGVisComponent<T> {
         SVG.addArrows(this.svg)
 
         // Create scales
-        scales.contours = d3.contours().size([op.n, op.m])
-        scales.curve = d3.curveCatmullRom.alpha(0.5)
-        scales.x = d3.scaleLinear().domain(op.xrange).range([0, op.width])
-        scales.y = d3.scaleLinear().domain(op.yrange).range([op.height, 0])
-
         // Add Axes and labels
         sels.xaxis = this.base.append("g")
             .attr("class", "axis axis--x")
@@ -302,19 +320,30 @@ export class ContourPlot extends SVGVisComponent<T> {
             .call(d3.axisLeft(scales.y).ticks(3, "s"));
 
         sels.xlabel = this.base.append("text")
-            .text("w0")
+            .classed("axis-label", true)
+            .attr("text-anchor", "middle")
             .attr("class", "titles")
             .attr("transform", SVG.translate(op.width / 2, op.height + op.pad))
+            .text(op.xlabel)
 
         sels.ylabel = this.base.append("text")
-            .text("w1")
+            .classed("axis-label", true)
+            .attr("text-anchor", "middle")
             .attr("class", "titles")
             .attr("transform", SVG.translate(-op.pad, op.height / 2) + SVG.rotate(-90))
+            .text(op.ylabel)
+
+        sels.title = this.base.append("text")
+            .classed("axis-label", true)
+            .attr("text-anchor", "middle")
+            .attr("class", "titles")
+            .attr("transform", SVG.translate(op.width / 2, -op.pad / 2))
+            .text(op.title)
 
         // Create click behavior
         this.base.on('click', function () {
-            if (self.ticker != undefined) {
-                self.ticker.unsubscribe()
+            if (self._curr.ticker != undefined) {
+                self._curr.ticker.unsubscribe()
             }
             const coords = d3.mouse(this);
             self._curr.step = 0
@@ -351,11 +380,12 @@ export class ContourPlot extends SVGVisComponent<T> {
     q(): number
     q(val: number): this
     q(val?) {
+        const op = this.options
         if (val == null) {
-            return this.updater._q;
+            return op.updater._q;
         }
 
-        this.updater._q = val
+        op.updater._q = val
         this.updateQuivers()
         return this;
     }
@@ -363,11 +393,12 @@ export class ContourPlot extends SVGVisComponent<T> {
     eta(): number
     eta(val: number): this
     eta(val?) {
+        const op = this.options
         if (val == null) {
-            return this.updater._eta;
+            return op.updater._eta;
         }
 
-        this.updater._eta = val
+        op.updater._eta = val
         this.updateQuivers()
         return this;
     }

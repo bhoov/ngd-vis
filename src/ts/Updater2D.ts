@@ -106,7 +106,6 @@ export class Updater2D {
         if (this._err != null) {
             return this._err(v)
         }
-        console.log("Returning custom loss!!");
         // @ts-ignore
         return nj.sum(nj.divide(nj.power(this._f(v), 2), 2))
     }
