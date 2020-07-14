@@ -63,7 +63,8 @@ function plotQuiverGraph() {
     const eventHandler = new SimpleEventHandler(<Element>vis1.node())
 
     const vizs = {
-        graph: ContourPlot.fromLandscape(sels.quiverPlot, eventHandler, landscapes2d.Elliptical),
+        graph: ContourPlot.fromLandscape(sels.quiverPlot, eventHandler, landscapes2d.SimpleNet2D),
+        // graph: ContourPlot.fromLandscape(sels.quiverPlot, eventHandler, landscapes2d.Elliptical), // BROKEN Why?
         simpleNet: new SimpleNet(sels.simpleNet, eventHandler)
     }
 

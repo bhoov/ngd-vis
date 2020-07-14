@@ -107,7 +107,6 @@ export class Updater2D {
     }
 
     eigenvalues(v: Array): Array {
-        //@ts-ignore
         const ex = nj.power(v, 2).sum()
         const ey = nj.power(v, 2).sum()
         return nj.array([ex, ey])
@@ -130,7 +129,8 @@ export class Updater2D {
         const g = this.gradient(v)
         const ev = this.eigenvalues(v)
 
-        const dv: Array = nj.divide(nj.multiply(g, -1), nj.abs(nj.power(ev, this.op.q)))
+        const modEvs = nj.abs(nj.power(ev, this.op.q))
+        const dv: Array = nj.divide(nj.multiply(g, -1), modEvs)
         return dv
     }
 

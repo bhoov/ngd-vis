@@ -12,6 +12,8 @@ export interface Landscape2D {
     colorScale: d3.ScaleLinear<number, number | string>
 }
 
+const A = nj.array([[1,2], [2,1]])
+
 
 export const landscapes2d: { [k: string]: Landscape2D } = {
     SimpleNet2D: {
@@ -34,18 +36,20 @@ export const landscapes2d: { [k: string]: Landscape2D } = {
     Elliptical: {
         name: "Elliptical",
         //@ts-ignore
-        f: (v: tp.Array) => nj.dot(nj.array([[1, 2], [2, 1]]), v),
+        f: (v: tp.Array) => nj.divide(nj.power(nj.dot(A, v), 2), 2),
         //@ts-ignore
-        df: (v: tp.Array) => nj.array([[1, 2], [2, 1]]),
+        // df: (v: tp.Array) => nj.array([[1, 2], [2, 1]]),
+        // df: (v: tp.Array) => nj.array([1, 1]),
+        df: (v: tp.Array) => nj.dot(A, nj.dot(A, v)),
         colorScale: d3.scaleLinear()
             .domain([-1, 0, 1.6])
             //@ts-ignore
             .range(["white", "steelblue", "red"])
             //@ts-ignore
             .interpolate(d3.interpolateRgb.gamma(2.2)),
-        xrange: [-1, 1],
-        yrange: [-1, 1],
-        loss: (fv: tp.Array) => nj.sum(nj.divide(nj.power(fv, 2), 2))
+        xrange: [-2, 2],
+        yrange: [-2, 2],
+        loss: (fv: tp.Array) => nj.sum(fv)
     },
 
 }
