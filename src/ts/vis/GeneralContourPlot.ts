@@ -25,6 +25,7 @@ interface GraphOptions extends SVGOptions {
     ylabel: string
     title: string
     colorScale: (x: number) => string | number
+    threshSpacer: (start: number, end:number, n: number) => number[] // How to stagger thresholds. Default is identity function processing linearly spaced values
     maxTick: number // max number of descent updates to take
     interval: number // time between descent updates
 }
@@ -82,6 +83,7 @@ export class ContourPlot extends SVGVisComponent<T> {
             .interpolate(d3.interpolateRgb.gamma(2.2)),
         maxTick: 1000,
         interval: 10,
+        threshSpacer: linspace
     }
 
     sels: GraphSels = {}
@@ -112,8 +114,8 @@ export class ContourPlot extends SVGVisComponent<T> {
 
     linspace(): [number, number][] {
         const op = this.options
-        const linspaceX = linspace(op.xrange[0], op.xrange[1], op.n)
-        const linspaceY = linspace(op.yrange[0], op.yrange[1], op.m)
+        const linspaceX = op.threshSpacer(op.xrange[0], op.xrange[1], op.n)
+        const linspaceY = op.threshSpacer(op.yrange[0], op.yrange[1], op.m)
 
         return <[number, number][]>d3.zip(linspaceX, linspaceY)
     }
@@ -154,7 +156,7 @@ export class ContourPlot extends SVGVisComponent<T> {
             return loss
         }
         const vals = getContourValues(op.n, op.m, op.xrange, op.yrange, contourFunc)
-        let thresholds = linspace(d3.min(vals), d3.max(vals), 20)
+        let thresholds = op.threshSpacer(d3.min(vals), d3.max(vals), 20)
 
         const contourVals = scales.contours.thresholds(thresholds)(vals)
         const contourGroup = this.base.append('g').attr('id', 'contour-group')
