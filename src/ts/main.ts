@@ -344,10 +344,9 @@ function testing() {
 export function main() {
     testing()
 
-    // console.log(nj.multiply(v, v2));
     plotQuadraticFuncs();
     plotQuiverGraph();
-    // plotGolfHole3Ball();
-    // plotGolfHoleSlider();
+    plotGolfHole3Ball();
+    plotGolfHoleSlider();
     // plotJaggedLoss2D();
 }
