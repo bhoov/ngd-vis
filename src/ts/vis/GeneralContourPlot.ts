@@ -1,13 +1,12 @@
 import * as d3 from 'd3'
+import { Landscape2D } from "../Landscapes2D"
 import { D3Sel, linspace } from '../util/xd3'
-import * as R from 'ramda'
-import { legendColor } from 'd3-svg-legend'
 import { Vector2D, Array } from '../types'
 import { SVGOptions, SVGVisComponent } from '../util/SVGVisComponent'
 import { SimpleEventHandler } from '../util/SimpleEventHandler';
 import { SVG } from '../util/SVGplus'
 import { getContourValues } from '../plotting'
-import { Updater2D, BlockUpdater2D } from '../Updater2D'
+import { Updater2D } from '../Updater2D'
 import { interval } from 'rxjs'
 import { take, startWith, scan } from 'rxjs/operators'
 import * as nj from "numjs"
@@ -25,7 +24,7 @@ interface GraphOptions extends SVGOptions {
     xlabel: string
     ylabel: string
     title: string
-    colorScale: (x: number) => string
+    colorScale: (x: number) => string | number
     maxTick: number // max number of descent updates to take
     interval: number // time between descent updates
 }
@@ -33,7 +32,7 @@ interface GraphOptions extends SVGOptions {
 interface GraphScales {
     x?: d3.ScaleLinear<number, number>,
     y?: d3.ScaleLinear<number, number>,
-    color?: (x: number) => string,
+    color?: (x: number) => string | number,
     curve?: d3.CurveCatmullRomFactory,
     contours?: d3.Contours,
     thresholds?: number[]
@@ -76,14 +75,14 @@ export class ContourPlot extends SVGVisComponent<T> {
         title: null,
         //@ts-ignore
         colorScale: d3.scaleLinear()
-            .domain([-1, -0.1, 1.56])
+            .domain([0, 1.4])
             //@ts-ignore
-            .range(["white", "steelblue", "crimson"])
+            .range(["steelblue", "white"])
             //@ts-ignore
             .interpolate(d3.interpolateRgb.gamma(2.2)),
         maxTick: 1000,
         interval: 10,
-    } 
+    }
 
     sels: GraphSels = {}
 
@@ -96,12 +95,19 @@ export class ContourPlot extends SVGVisComponent<T> {
 
     static events = EVENTS
 
-    constructor(d3parent: D3Sel, eventHandler?: SimpleEventHandler, options:Partial<GraphOptions> = {}) {
+    constructor(d3parent: D3Sel, eventHandler?: SimpleEventHandler, options: Partial<GraphOptions> = {}) {
         super(d3parent, eventHandler, options)
         super.initSVG(options)
         this.base.classed(this.cssname, true)
         this.options.updater = options.updater == null ? new Updater2D() : options.updater
         this.initPlot()
+    }
+
+    static fromLandscape(d3parent: D3Sel, eventHandler: SimpleEventHandler, t: Landscape2D): ContourPlot {
+        console.log("From Landscape");
+        const updater = new Updater2D(t)
+        const newOptions = { ...t, updater }
+        return new ContourPlot(d3parent, eventHandler, newOptions)
     }
 
     linspace(): [number, number][] {
@@ -382,10 +388,10 @@ export class ContourPlot extends SVGVisComponent<T> {
     q(val?) {
         const op = this.options
         if (val == null) {
-            return op.updater._q;
+            return op.updater.q();
         }
 
-        op.updater._q = val
+        op.updater.q(val)
         this.updateQuivers()
         return this;
     }
@@ -395,10 +401,10 @@ export class ContourPlot extends SVGVisComponent<T> {
     eta(val?) {
         const op = this.options
         if (val == null) {
-            return op.updater._eta;
+            return op.updater.eta();
         }
 
-        op.updater._eta = val
+        op.updater.eta(val)
         this.updateQuivers()
         return this;
     }

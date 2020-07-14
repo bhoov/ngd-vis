@@ -12,6 +12,7 @@ import * as R from 'ramda'
 import { SimpleEventHandler } from './util/SimpleEventHandler'
 import { ManualUpdater } from './vis/ManualUpdater'
 import { landscapes } from './GolfLandscapes'
+import { landscapes2d } from './Landscapes2D'
 import { Array } from './types'
 import { QuadraticPlots } from "./vis/QuadraticPlots"
 import { LossSurface2D } from "./vis/LossSurface2D"
@@ -60,18 +61,9 @@ function plotQuiverGraph() {
         simpleNet: vis1.select("#simple-net-container"),
     }
     const eventHandler = new SimpleEventHandler(<Element>vis1.node())
-    const err = (v: Array) => (v.get(0) * v.get(1)) - 1
-    const df = (v: Array) => nj.array([v.get(1), v.get(0)])
-    const updater = new Updater2D().df(df).err(err)
 
-    const graphOptions = {
-        xrange: [0, 1.6], 
-        yrange: [0, 1.6], 
-        updater,
-    }
     const vizs = {
-        //@ts-ignore
-        graph: new ContourPlot(sels.quiverPlot, eventHandler, graphOptions),
+        graph: ContourPlot.fromLandscape(sels.quiverPlot, eventHandler, landscapes2d.Elliptical),
         simpleNet: new SimpleNet(sels.simpleNet, eventHandler)
     }
 
