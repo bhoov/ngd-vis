@@ -1,9 +1,20 @@
 import * as d3 from 'd3'
 import { BaseType } from 'd3'
 
+/**
+ * Create n linearly spaced values between start and end
+ */
 export const linspace = (start, end, n) => {
     const delta = (end - start) / (n - 1)
     return d3.range(start, end + delta, delta).slice(0, n)
+}
+
+/** 
+ * Create n logarithmically spaced values between start and end
+ */
+export const logspace = (start:number, end:number, n:number, base:number=10) => {
+    const scale = d3.scaleLog().base(base).domain([start, end]).range([start, end])
+    return linspace(start, end, n).map(scale)
 }
 
 /**
@@ -11,7 +22,7 @@ export const linspace = (start, end, n) => {
  */
 export const powspace = (start, end, n, exp=1) => {
     const scale = d3.scalePow().exponent(exp).domain([start, end]).range([start, end])
-    return linspace(start,end,n).map(x => scale(x))
+    return linspace(start,end,n).map(scale)
 }
 
 export type D3Sel = d3.Selection<any, any, any, any>
