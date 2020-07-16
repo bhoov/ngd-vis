@@ -54,7 +54,7 @@
             each technique we include.
         </p>
 
-        <div id="vis1" class="row l-page contour-vis">
+        <div id="vis1" class="row l-page">
             <div class="col-md-4">
                 <div class="slide-container">
                     <p>
@@ -123,38 +123,6 @@
             \(\frac{1}{q}\) value. The light gray is SGD, dark gray is NGD, and our method is just gray.
         </p>
 
-        <h2>Descent in multiple dimensions</h2>
-
-        <p>
-            The impact of curvature corrected learning is more pronounced in higher dimensions.
-        </p>
-
-        <div id="vis-2d-ellipse" class="container l-page contour-vis">
-            <div class="col-md-4">
-                <div class="slide-container">
-                    <p>
-                        1/q: <span id=q-val></span>
-                    </p>
-                    <!-- <input type="range" min="0" max="2" value="0" class="slider" id="q-slider"> -->
-                    <input type="range" min="0" max="10" value="0" class="slider" id="q-slider">
-
-                    <p>
-                        learning rate: <span id=eta-val></span>
-                    </p>
-                    <input type="range" min="1" max="1000" value="550" class="slider" id="eta-slider">
-
-                </div>
-                <div id="hess-input">
-                    <select name="HessType" id="hess-type">
-                        <option value="full">Full</option>
-                        <option value="block">Block</option>
-                    </select>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div id="chart" class="img-fluid"></div>
-            </div>
-        </div>
 
         <h2>A 2D loss surface</h2>
 

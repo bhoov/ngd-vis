@@ -1,7 +1,6 @@
 import * as tp from "./types"
 import * as nj from "numjs"
 import * as d3 from "d3"
-import { logspace, powspace } from "./util/xd3"
 
 export interface Landscape2D {
     name: string
@@ -11,10 +10,10 @@ export interface Landscape2D {
     xrange: [number, number]
     yrange: [number, number]
     colorScale: d3.ScaleLinear<number, number | string>
-    threshSpacer: (start: number, end: number, n: number) => number[]
 }
 
-const A = nj.array([[1, 2], [2, 1]])
+const A = nj.array([[1,2], [2,1]])
+
 
 export const landscapes2d: { [k: string]: Landscape2D } = {
     SimpleNet2D: {
@@ -43,14 +42,13 @@ export const landscapes2d: { [k: string]: Landscape2D } = {
         // df: (v: tp.Array) => nj.array([1, 1]),
         df: (v: tp.Array) => nj.dot(A, nj.dot(A, v)),
         colorScale: d3.scaleLinear()
-            .domain([0, 36])
+            .domain([-1, 0, 1.6])
             //@ts-ignore
-            .range(["steelblue", "red"])
+            .range(["white", "steelblue", "red"])
             //@ts-ignore
             .interpolate(d3.interpolateRgb.gamma(2.2)),
-        xrange: [-1, 1],
-        yrange: [-1, 1],
-        threshSpacer: (start, end, n) => powspace(start, end, n, 1.5),
+        xrange: [-2, 2],
+        yrange: [-2, 2],
         loss: (fv: tp.Array) => nj.sum(fv)
     },
 
