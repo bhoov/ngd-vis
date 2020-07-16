@@ -1,11 +1,11 @@
 import numpy as np
 from fastai.vision import plt
 from matplotlib import cm, animation, rc
-from update_2d import qNGD_update, qNGD_update_all, get_dyn
+from update_2d import qNGD_update_all, get_dyn #, qNGD_update
 
 from pdb import set_trace
 
-def plot_all (loss_fnc, l_alls, w_alls, w_range, legend, q = None, damping = None, rotate = False): #, plot_type=None):
+def plot_all (loss_fnc, l_alls, w_alls, w_range, legend, q = None, damping = None, eps = None, rotate = False, Block_diag = False): #, plot_type=None):
 #     plt.figure(); 
     fig0, axes = plt.subplots(nrows=1, ncols=2, figsize=(14,6)) #, sharey=False, sharex=True)
     plt.subplot(axes[0])
@@ -21,7 +21,7 @@ def plot_all (loss_fnc, l_alls, w_alls, w_range, legend, q = None, damping = Non
     
     if q is not None:
         x_grid, y_grid = get_plot_grid(w_range, n_grid = 21)
-        plot_quiver(axes[1], loss_fnc, x_grid, y_grid, q, damping, rotate = rotate)
+        plot_quiver(axes[1], loss_fnc, x_grid, y_grid, q, damping, eps, rotate = rotate, Block_diag = Block_diag)
         
     plt.show()
 
@@ -52,7 +52,8 @@ def plot_background(ax, loss_fnc,  x0, y0 = None, plot_type = 'imshow', zlim = N
         
     z = loss.reshape([ny,nx])
     z_ = np.log(1+z) 
-#     z_ = z
+#     z_ = z ** 0.2
+#     z_ = z 
     
     if plot_type == 'imshow':
         h_= plt.imshow( z_, cmap=cm.hot, interpolation='bicubic', extent=[x0[0], x0[-1], y0[0], y0[-1]], origin='lower')
@@ -70,7 +71,7 @@ def plot_background(ax, loss_fnc,  x0, y0 = None, plot_type = 'imshow', zlim = N
         
 
 
-def plot_quiver(ax, loss_fnc,  x0, y0, q, damping, rotate = False):
+def plot_quiver(ax, loss_fnc,  x0, y0, q, damping, eps, rotate = False, Block_diag = False):
     if y0 is None:
         y0 = x0
         
@@ -79,8 +80,8 @@ def plot_quiver(ax, loss_fnc,  x0, y0, q, damping, rotate = False):
 
 #     loss, err, jac = loss_fnc(xy)
 #     dv = qNGD_update_all(err, jac, q=q, damping = damping) 
-    dyn = get_dyn (loss_fnc, qNGD_update_all, rotate = rotate )
-    dv = dyn(xy, t=0, lr = 1, q=q, damp = damping, normalize = True) 
+    dyn = get_dyn (loss_fnc, qNGD_update_all, rotate = rotate , Block_diag = Block_diag)
+    dv = dyn(xy, t=0, lr = 1, q=q, damp = damping, eps = eps, normalize = True) 
     
     plt.quiver(x,y, dv[0,:], dv[1,:])
     

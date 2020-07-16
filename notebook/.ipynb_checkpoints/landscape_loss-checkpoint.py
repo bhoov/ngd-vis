@@ -2,35 +2,35 @@ import numpy as np
 import sympy as sym
 from pdb import set_trace
 
-def landscape(xy, freq = None, amp = None, py = np,  eps=0, seed = None):
+def landscape(xy, freq = None, amp = None, py = np,  noise=0, seed = None):
     if freq is None:
         n = 4
         freq = np.exp(np.linspace(-1,0,n))    #    freq = np.exp(np.linspace(-2,1,n))  
         amp = 1/freq 
     if seed is None:
         if len(xy.shape)>1:
-            eps = 0
+            noise = 0
     else:
         np.random.seed(seed)
         
-    err, Jacobian = landscape_core(xy, freq, amp, py, eps)  #xy[0,:], xy[1,:]
+    err, Jacobian = landscape_core(xy, freq, amp, py, noise)  #xy[0,:], xy[1,:]
     err = sym.Array(err) if py == sym else py.array(err)  
     loss = (err ** 2).sum(axis=0)/2
     return loss, err, Jacobian
 
-def landscape_core(x, freq, a, py,  eps):
+def landscape_core(x, freq, a, py,  noise):
     array = sym.Matrix if  py == sym else py.array
     sin, cos, pi = py.sin, py.cos, py.pi
-    
-    def layer1(xs, eps):
+
+    def layer1(xs, noise):
         x1, x2 = xs
         
-        y1,  y2  = x1 + 0, x2 + 0     #  y1, y2 = x1.copy(), x2.copy()        
+        y1,  y2  = x1 + 0, x2 + 0  #  x1.copy(), x2.copy()        
         dy1, dy2 = 0, 0
         
         for i in range(len(freq)):
-            theta1 = freq[i]*x1 #+ 2*pi*eps*np.random.randn(1)[0]   
-            theta2 = freq[i]*x2 #+ 2*pi*eps*np.random.randn(1)[0]
+            theta1 = freq[i]*x1 #+ 2*pi*noise * (np.random.rand(1)[0]-0.5) 
+            theta2 = freq[i]*x2 #+ 2*pi*noise * (np.random.rand(1)[0]-0.5) 
             
             y1  += a[i]        * sin(theta2) ;      y2  += a[i]         *  cos(theta1) 
             dy1 += a[i]*freq[i]* cos(theta2) ;      dy2 += a[i]*freq[i] * -sin(theta1) 
@@ -38,24 +38,8 @@ def landscape_core(x, freq, a, py,  eps):
         ones = np.ones(dy1.shape)
         return array([y1, y2]), array([[ones, dy1], [dy2, ones]])
     
-#     #### 3 layer architecture 
-#     def layer1(xs, eps):
-#         x1, x2 = xs
-        
-#         y1,  y2  = x1 + 0, x2 + 0     #  y1, y2 = x1.copy(), x2.copy()        
-#         dy1, dy2 = 1, 1
-        
-#         for i in range(len(freq)):
-#             theta1 = freq[i]*x1 + 2*pi*eps * np.random.randn(1)[0]   
-#             theta2 = freq[i]*x2 + 2*pi*eps * np.random.randn(1)[0]
-            
-#             y1  += a[i]        * sin(theta2) ;      y2  += a[i]         *  cos(theta1) 
-#             dy1 += a[i]*freq[i]* cos(theta2) ;      dy2 += a[i]*freq[i] * -sin(theta1) 
-            
-#         zeros = np.zeros(dy1.shape)
-#         return array([y1, y2]), array([[dy1, zeros], [zeros,dy2]])
 
-    def layer2(ys,  eps):
+    def layer2(ys,  noise):
         y1,y2 = ys
         
         c1,  s1,  c2,  s2  = 0, 0, 0, 0 
@@ -63,8 +47,8 @@ def landscape_core(x, freq, a, py,  eps):
         
         for i in range(len(freq)):
             
-            theta1 = freq[i]*y1 + 2*pi*eps * np.random.randn(1)[0]   
-            theta2 = freq[i]*y2 + 2*pi*eps * np.random.randn(1)[0]
+            theta1 = freq[i]*y1 + 2*pi*noise * np.random.randn(1)[0]   
+            theta2 = freq[i]*y2 + 2*pi*noise * np.random.randn(1)[0]
             
             s01 = sin(theta1);                 c01 = cos(theta1)
             s02 = sin(theta2);                 c02 = cos(theta2)
@@ -95,12 +79,11 @@ def landscape_core(x, freq, a, py,  eps):
 
     ###### 3 layer architecture 
     
-    y,  y_x        = layer1(x, eps = 0)
-    sc, sc_y       = layer2(y, eps)
+    y,  y_x        = layer1(x, noise = 0)
+    sc, sc_y       = layer2(y, noise)
     z,  z_y, z_sc  = layer3(y, sc)
     err = z
     
-#     set_trace()
     # Backprop for Jacobian    
     if len(z_y.shape) == 2:
         out_y = z_sc @ sc_y + z_y
