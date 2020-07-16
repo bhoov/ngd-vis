@@ -1,12 +1,12 @@
 import * as d3 from 'd3'
 import { Landscape2D } from "../Landscapes2D"
-import { D3Sel, linspace } from '../util/xd3'
+import { D3Sel, linspace, powspace} from '../util/xd3'
 import { Vector2D, Array } from '../types'
 import { SVGOptions, SVGVisComponent } from '../util/SVGVisComponent'
 import { SimpleEventHandler } from '../util/SimpleEventHandler';
 import { SVG } from '../util/SVGplus'
 import { getContourValues } from '../plotting'
-import { SimpleNetUpdater } from '../SimpleNetUpdater'
+import { Updater2D } from '../Updater2D'
 import { interval } from 'rxjs'
 import { take, startWith, scan } from 'rxjs/operators'
 import * as nj from "numjs"
@@ -19,8 +19,9 @@ interface GraphOptions extends SVGOptions {
     n: number                   // Number of meshgrid points along the x axis
     m: number                   // Number of meshgrid points along the y axis
     pad: number                 // Annotations that happen in the margin must take place `pad` distance from the main graph
+    nContours: number
     circleEvery: number
-    updater: SimpleNetUpdater
+    updater: Updater2D
     xlabel: string
     ylabel: string
     title: string
@@ -66,12 +67,13 @@ export class ContourPlot extends SVGVisComponent<T> {
         pad: 30,
         xrange: [0, 1.6],
         yrange: [0, 1.6],
-        n: 200,
-        m: 200,
+        n: 201,
+        m: 201,
+        nContours: 20,
         circleEvery: 4,
         updater: null,
-        xlabel: "w0",
-        ylabel: "w1",
+        xlabel: "x",
+        ylabel: "y",
         title: null,
         //@ts-ignore
         colorScale: d3.scaleLinear()
@@ -99,23 +101,15 @@ export class ContourPlot extends SVGVisComponent<T> {
         super(d3parent, eventHandler, options)
         super.initSVG(options)
         this.base.classed(this.cssname, true)
-        this.options.updater = options.updater == null ? new SimpleNetUpdater() : options.updater
+        this.options.updater = options.updater == null ? new Updater2D() : options.updater
         this.initPlot()
     }
 
     static fromLandscape(d3parent: D3Sel, eventHandler: SimpleEventHandler, t: Landscape2D): ContourPlot {
         console.log("From Landscape");
-        const updater = new SimpleNetUpdater(t)
+        const updater = new t.updaterClass(t)
         const newOptions = { ...t, updater }
         return new ContourPlot(d3parent, eventHandler, newOptions)
-    }
-
-    linspace(): [number, number][] {
-        const op = this.options
-        const linspaceX = linspace(op.xrange[0], op.xrange[1], op.n)
-        const linspaceY = linspace(op.yrange[0], op.yrange[1], op.m)
-
-        return <[number, number][]>d3.zip(linspaceX, linspaceY)
     }
 
     setUpdater(name: 'block' | 'full') {
@@ -154,7 +148,8 @@ export class ContourPlot extends SVGVisComponent<T> {
             return loss
         }
         const vals = getContourValues(op.n, op.m, op.xrange, op.yrange, contourFunc)
-        let thresholds = linspace(d3.min(vals), d3.max(vals), 20)
+        // let thresholds = linspace(d3.min(vals), d3.max(vals), 20)
+        let thresholds = powspace(d3.min(vals), d3.max(vals), op.nContours, 1)
 
         const contourVals = scales.contours.thresholds(thresholds)(vals)
         const contourGroup = this.base.append('g').attr('id', 'contour-group')
@@ -204,7 +199,6 @@ export class ContourPlot extends SVGVisComponent<T> {
         }
 
         this._curr.step += 1
-
         this.eventHandler.trigger(EVENTS.stepAdded, v)
         return v;
     }

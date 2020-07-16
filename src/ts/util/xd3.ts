@@ -6,6 +6,14 @@ export const linspace = (start, end, n) => {
     return d3.range(start, end + delta, delta).slice(0, n)
 }
 
+/**
+ * Convert values spaced evenly on a power scale. When exp=1, same as linspace
+ */
+export const powspace = (start, end, n, exp=1) => {
+    const scale = d3.scalePow().exponent(exp).domain([start, end]).range([start, end])
+    return linspace(start,end,n).map(x => scale(x))
+}
+
 export type D3Sel = d3.Selection<any, any, any, any>
 export type d3S<T extends BaseType, U = any> = d3.Selection<T, U, any, any>
 
