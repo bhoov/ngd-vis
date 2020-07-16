@@ -2,7 +2,7 @@ import * as d3 from 'd3'
 import { D3Sel, linspace } from '../util/xd3'
 import * as R from 'ramda'
 import { legendColor } from 'd3-svg-legend'
-import { Vector2D } from '../util/types'
+import { Vector2D } from '../types'
 import { SVGOptions, SVGVisComponent } from '../util/SVGVisComponent'
 import { SimpleEventHandler } from '../util/SimpleEventHandler';
 import { SVG } from '../util/SVGplus'

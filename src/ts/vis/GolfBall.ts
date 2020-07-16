@@ -1,6 +1,6 @@
 import * as d3 from 'd3'
 import { ManualUpdater } from "./ManualUpdater"
-import { Vector2D } from "../util/types"
+import { Vector2D } from "../types"
 import * as R from 'ramda'
 import { Subject, BehaviorSubject } from "rxjs"
 

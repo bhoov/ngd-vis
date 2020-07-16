@@ -1,10 +1,11 @@
 import { HTMLVisComponent } from '../util/HTMLVisComponent'
 import * as d3 from 'd3'
 import { D3Sel } from '../util/xd3'
-import { Vector2D } from '../util/types'
+import { Array } from '../types'
 import * as R from 'ramda'
 import { SimpleEventHandler } from '../util/SimpleEventHandler';
 import { SVG } from '../util/SVGplus'
+import * as nj from "numjs"
 
 interface SimpleNetSels {
   svg: D3Sel
@@ -124,11 +125,11 @@ export class SimpleNet extends HTMLVisComponent<null> {
 
   }
 
-  setState(v: Vector2D) {
+  setState(v: Array) {
     const sels = this.sels
 
-    const w0 = v.x
-    const w1 = v.y
+    const w0 = v.get(0)
+    const w1 = v.get(1)
 
     sels.lineVals.w0.text(w0.toFixed(2))
     sels.lineVals.w1.text(w1.toFixed(2))

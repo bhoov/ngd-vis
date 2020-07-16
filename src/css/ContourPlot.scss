@@ -1,12 +1,9 @@
+@import "./colors.scss";
+
 .simple-graph {
     .contour {
         stroke-width: 0.1px;
         stroke: rgba(0, 0, 0, 0.171);
-    }
-
-    .main-fit {
-        stroke-width: 2px;
-        stroke: black;
     }
 
     .not-fit {
@@ -20,6 +17,13 @@
 
     .descending-line {
         stroke-width: 1px;
-        stroke:rgb(255, 0, 200);
+        stroke: rgb(255, 0, 200);
     }
+
+}
+
+.main-fit {
+    stroke-width: 2px;
+    stroke: $col7;
+    fill: none;
 }
