@@ -103,7 +103,6 @@ export class QuadraticPlots extends SVGVisComponent<DATA> {
             .attr('height', op.maxHeight)
 
         Object.keys(this.layers).forEach(k => {
-            console.log("Running on layer: ", k);
             const g = this.layers[k]
                 .attr("transform", `${SVG.translate(op.margin.left, op.margin.top)}`)
         })

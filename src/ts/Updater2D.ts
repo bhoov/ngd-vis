@@ -62,7 +62,15 @@ export class Updater2D extends BaseUpdater2D {
         loss: defaultLoss,
     }
 
+    constructor(options: Partial<UpdaterOptions>={}) {
+        super()
+        this.updateOptions(options)
+    }
+
     error(v: Array): nj.NdArray<number> {
+        if (this.op.target == null) {
+            return this.op.f(v)
+        }
         return nj.subtract(this.op.f(v), this.op.target)
     }
 

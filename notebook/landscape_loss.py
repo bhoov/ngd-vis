@@ -2,10 +2,10 @@ import numpy as np
 import sympy as sym
 from pdb import set_trace
 
-def landscape(xy, freq = None, amp = None, py = np,  noise=0, seed = None):
+def landscape(xy, freq = None, amp = None, py = np,  noise=0, seed = None, eps=0):
     if freq is None:
         n = 4
-        freq = np.exp(np.linspace(-1,0,n))    #    freq = np.exp(np.linspace(-2,1,n))  
+        freq = np.exp(np.linspace(-1,0,n))    #    freq = np.exp(np.linspace(-2,1,n))
         amp = 1/freq 
     if seed is None:
         if len(xy.shape)>1:
@@ -47,8 +47,8 @@ def landscape_core(x, freq, a, py,  noise):
         
         for i in range(len(freq)):
             
-            theta1 = freq[i]*y1 + 2*pi*noise * np.random.randn(1)[0]   
-            theta2 = freq[i]*y2 + 2*pi*noise * np.random.randn(1)[0]
+            theta1 = freq[i]*y1# + 2*pi*noise * np.random.randn(1)[0]   
+            theta2 = freq[i]*y2# + 2*pi*noise * np.random.randn(1)[0]
             
             s01 = sin(theta1);                 c01 = cos(theta1)
             s02 = sin(theta2);                 c02 = cos(theta2)
@@ -79,9 +79,20 @@ def landscape_core(x, freq, a, py,  noise):
 
     ###### 3 layer architecture 
     
+#     print("x: ", x)
     y,  y_x        = layer1(x, noise = 0)
+#     print("\n\nLayer1 Results:\n")
+#     print("y: ", y)
+#     print("yx: ", y_x)    
     sc, sc_y       = layer2(y, noise)
+#     print("\n\nLayer2 Results:\n")
+#     print("sc: ", sc)
+#     print("sc_y: ", sc_y)
     z,  z_y, z_sc  = layer3(y, sc)
+#     print("\n\nLayer3 Results:\n")
+#     print("z: ", z)
+#     print("z_y: ", z_y)
+#     print("sc_y: ", sc_y)
     err = z
     
     # Backprop for Jacobian    

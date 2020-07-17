@@ -14,7 +14,7 @@ import { landscapes } from './GolfLandscapes'
 import { landscapes2d } from './Landscapes2D'
 import { Array } from './types'
 import { QuadraticPlots } from "./vis/QuadraticPlots"
-import { LossSurface2D } from "./vis/LossSurface2D"
+import { LandscapeLoss } from "./LandscapeLoss"
 import * as nj from "numjs"
 
 const toFixed = R.curry((ndigits, x) => x.toFixed(ndigits))
@@ -78,16 +78,61 @@ function plotElliptical() {
     })
 }
 
-function plotJaggedLoss2D() {
+function plotBumpyLoss2D() {
     const vis = d3.select("#vis-2d-loss")
     const eventHandler = new SimpleEventHandler(<Element>vis.node())
     const sels = {
-        plot: vis.select("#loss-2d")
+        plot: vis.select("#loss-2d"),
+        qId: vis.select('#q-val'),
+        etaId: vis.select('#eta-val'),
+        qSlider: vis.select('#q-slider'),
+        etaSlider: vis.select('#eta-slider'),
+        hessType: vis.select('#hess-type'),
     }
 
     const vizs = {
-        plot: new LossSurface2D(sels.plot, eventHandler)
+        plot: ContourPlot.fromLandscape(sels.plot, eventHandler, landscapes2d.Landscape1),
     }
+
+    const defaults = {
+        // Note to also change the default value in the html file!
+        q: 0,
+        eta: 0.05
+    }
+
+    const scales = {
+        q: d3.scaleLinear().range([0, 10]).domain([0, 1]),
+        eta: d3.scaleLinear().range([1, 1000]).domain([Math.pow(10, -8), 0.004])
+    }
+
+    // Initialize graph parameters to match the defaults
+    vizs.plot.q(defaults.q)
+    vizs.plot.eta(defaults.eta)
+    sels.qSlider.property('value', scales.q(defaults.q))
+    sels.etaSlider.property('value', scales.eta(defaults.eta))
+
+    sels.qId.text(toQ(defaults.q))
+    sels.etaId.text(toEta(defaults.eta))
+
+    sels.qSlider.on('input', function () {
+        const me = d3.select(this)
+        const v = scales.q.invert(+me.property('value'));
+        vizs.plot.q(v);
+        sels.qId.text(`${toQ(v)}`)
+    })
+
+    sels.etaSlider.on('input', function () {
+        const me = d3.select(this)
+        const v = scales.eta.invert(me.property('value'));
+        vizs.plot.eta(v)
+        sels.etaId.text(`${toEta(v)}`)
+    })
+
+    sels.hessType.on('input', function () {
+        const self = d3.select(this)
+        const v = self.property('value')
+        vizs.plot.setUpdater(v)
+    })
 }
 
 function plotQuadraticFuncs() {
@@ -394,6 +439,12 @@ function testing() {
     // //@ts-ignore
     // console.log(nj.dot(A, v));
 
+    // const bumpy = LandscapeLoss([1,2,3], [1,1,1])
+
+    // const v = nj.array([1,1])
+
+    // console.log("Forward Results: ", bumpy.forward(v))
+    // console.log("Jac Results: ", bumpy.jacobian(v))
     console.log("END TEST");
 }
 
@@ -406,4 +457,5 @@ export function main() {
     // plotGolfHole3Ball();
     // plotGolfHoleSlider();
     // plotJaggedLoss2D();
+    plotBumpyLoss2D();
 }

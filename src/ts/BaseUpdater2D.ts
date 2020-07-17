@@ -28,6 +28,7 @@ export abstract class BaseUpdater2D {
         f: defaultErrorFunction,
         //@ts-ignore
         df: defaultDfFunction,
+        target: null,
         q: 0,
         eta: 0.1,
         step2lr: defaultStep2Lr,
@@ -35,7 +36,6 @@ export abstract class BaseUpdater2D {
     }
 
     constructor(options: Partial<UpdaterOptions>={}) {
-        console.log("Running base updater constructor");
         this.updateOptions(options)
     }
 

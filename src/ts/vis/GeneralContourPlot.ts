@@ -110,7 +110,6 @@ export class ContourPlot extends SVGVisComponent<T> {
     }
 
     static fromLandscape(d3parent: D3Sel, eventHandler: SimpleEventHandler, t: Landscape2D): ContourPlot {
-        console.log("From Landscape");
         const updater = new t.updaterClass(t)
         const newOptions = { ...t, updater }
         return new ContourPlot(d3parent, eventHandler, newOptions)
@@ -352,6 +351,7 @@ export class ContourPlot extends SVGVisComponent<T> {
             const coords = d3.mouse(this);
             self._curr.step = 0
             self.curr([scales.x.invert(coords[0]), scales.y.invert(coords[1])])
+            console.log("Clicked: ", self.curr());
 
             // if (self.curr().x > 0 && self.curr().y > 0 && self.curr().x < (op.xrange[1] - 0.1) && self.curr().y < (op.yrange[1] - 0.1)) {
             // if (self.curr().get(0) > 0 && self.curr().get(1) > 0) {

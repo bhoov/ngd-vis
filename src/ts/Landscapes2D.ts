@@ -1,9 +1,10 @@
 import * as tp from "./types"
 import * as nj from "numjs"
 import * as d3 from "d3"
-import {BaseUpdater2D} from "./BaseUpdater2D"
 import {SimpleNetUpdater} from "./SimpleNetUpdater"
 import {Updater2D} from "./Updater2D"
+import {LandscapeLoss} from "./LandscapeLoss"
+import {linspace} from "./util/xd3"
 
 export interface Landscape2D {
     name: string
@@ -19,9 +20,18 @@ export interface Landscape2D {
     nx?: number
     ny?: number
     step2lr?
+    eta?
 }
 
+
+// Parameters defining elliptical
 const A = nj.array([[1,2], [2,1]])
+
+// Parameters defining bumpy landscape
+const freqs = linspace(-1, 0, 4).map(x => Math.exp(x))
+// const freqs = [1,2]
+const amps = freqs.map(x => 1/x)
+const bumpy = LandscapeLoss(freqs, amps)
 
 export const landscapes2d: { [k: string]: Landscape2D } = {
     SimpleNet2D: {
@@ -64,4 +74,29 @@ export const landscapes2d: { [k: string]: Landscape2D } = {
         loss: (fv: tp.Array) => nj.sum(nj.divide(nj.power(fv, 2), 2)),
         step2lr: d3.scaleLinear().domain([0, 1]).range([0.1, 1.5])
     },
+
+    Landscape1: {
+        name: "Landscape1",
+        f: bumpy.forward,
+        df: bumpy.jacobian,
+        updaterClass: Updater2D,
+        target: null,
+        colorScale: d3.scalePow()
+            .exponent(0.5)
+            .domain([0, 100])
+            //@ts-ignore
+            .range(["steelblue", "white"])
+            //@ts-ignore
+            .interpolate(d3.interpolateRgb.gamma(2.2)),
+        xrange: [2.4, 8.4],
+        yrange: [2.2, 8.83],
+        nContours: 20,
+        nx: 12,
+        ny: 12,
+        eta: 0.001,
+        loss: (fv: tp.Array) => nj.sum(nj.power(fv, 2)) / 2,
+        // loss: (fv: tp.Array) => fv,
+        step2lr: d3.scaleLinear().domain([0, 1]).range([0.2, 1])
+    },
+
 }
