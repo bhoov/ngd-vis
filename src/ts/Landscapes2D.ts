@@ -11,11 +11,14 @@ export interface Landscape2D {
     df
     loss
     updaterClass
-    target?
+    colorScale: d3.ScaleLinear<number, number | string>
     xrange: [number, number]
     yrange: [number, number]
+    target?
     nContours?: number
-    colorScale: d3.ScaleLinear<number, number | string>
+    nx?: number
+    ny?: number
+    step2lr?
 }
 
 const A = nj.array([[1,2], [2,1]])
@@ -56,6 +59,9 @@ export const landscapes2d: { [k: string]: Landscape2D } = {
         xrange: [-2, 2],
         yrange: [-2, 2],
         nContours: 30,
-        loss: (fv: tp.Array) => nj.sum(nj.divide(nj.power(fv, 2), 2))
+        nx: 7,
+        ny: 7,
+        loss: (fv: tp.Array) => nj.sum(nj.divide(nj.power(fv, 2), 2)),
+        step2lr: d3.scaleLinear().domain([0, 1]).range([0.1, 1.5])
     },
 }

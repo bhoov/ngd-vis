@@ -1,7 +1,6 @@
 import * as d3 from 'd3'
 import { UId } from './util/UId'
-// import { ContourPlot } from './vis/GeneralContourPlot'
-import { ContourPlot } from './vis/NewGeneralContourPlot'
+import { ContourPlot } from './vis/GeneralContourPlot'
 import { D3Sel, linspace } from './util/xd3'
 import { GolfHole1D } from './vis/GolfHole1D'
 import { GolfLosses } from './vis/GolfLosses'

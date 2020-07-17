@@ -82,6 +82,15 @@ export class Updater2D extends BaseUpdater2D {
         return out
     }
 
+    lr(v: Array) {
+        const dv = this.dv(v)
+        const absLoss = Math.abs(this.loss(v))
+        const eps = 1e-10;
+        //@ts-ignore
+        const lr: Array = nj.multiply(dv, this.lrScale).divide(Math.sqrt(this.loss(v) + eps)) //.divide(absLoss + eps)
+        return lr
+    }
+
     // Convert to block diagonal updater // Nothing different rn
     toBlock(): BlockUpdater2D {
         const blockUpdater = new BlockUpdater2D(this.op)

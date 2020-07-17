@@ -9,7 +9,7 @@ const defaultErrorFunction = (v: Array) => {
     return nj.dot(nj.array([[1, 2], [2, 1]]), v)
 }
 const defaultDfFunction = (v: Array) => nj.array([[1, 2], [2, 1]])
-const defaultStep2Lr: d3.ScaleLinear<number, number> = d3.scaleLinear().domain([0, 0.8]).range([0.001, 0.25])
+const defaultStep2Lr: d3.ScaleLinear<number, number> = d3.scaleLinear().domain([0, 0.8]).range([0.001, 0.5])
 const defaultLoss = (fv: Array) => nj.sum(nj.divide(nj.power(fv, 2), 2))
 
 interface UpdaterOptions {
@@ -87,11 +87,11 @@ export abstract class BaseUpdater2D {
         return g
     }
 
-    lr(v: Array): Array {
+    lr(v: Array) {
         const dv = this.dv(v)
         const absLoss = Math.abs(this.loss(v))
-        const lrScale = this.op.step2lr(this.op.eta)
-        const lr: Array = nj.multiply(dv, lrScale).divide(absLoss)
+        const eps = 1e-10;
+        const lr: Array = nj.multiply(dv, this.lrScale).divide(absLoss + eps)
         return lr
     }
 
@@ -106,7 +106,7 @@ export abstract class BaseUpdater2D {
 
     nextLr(v: Array): Array {
         const g = this.lr(v);
-        const z: Array = nj.add(v, nj.multiply(g, -3))
+        const z: Array = nj.add(v, nj.multiply(g, -1))
         return z
     }
 
