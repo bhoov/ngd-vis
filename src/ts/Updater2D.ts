@@ -9,7 +9,7 @@ const defaultErrorFunction = v => {
 }
 const defaultDfFunction = v => nj.array([[1, 2], [2, 1]])
 const defaultStep2Lr: d3.ScaleLinear<number, number> = d3.scaleLinear().domain([0, 0.8]).range([0.001, 0.25])
-const defaultError = fv => nj.subtract(fv, nj.array([0,0]))
+const defaultError = fv => fv
 const defaultLoss = err => nj.sum(nj.divide(nj.power(err, 2), 2))
 
 interface UpdaterOptions {
@@ -34,7 +34,6 @@ interface SVDResults { U, d, V }
 function SVD2d(M): SVDResults {
     const U = getOrthMatrix(nj.dot(M, M.T))
     let V = getOrthMatrix(nj.dot(M.T, M))
-    const prePreDiag = nj.dot(M, V)
     const preDiag = nj.dot(U.T, nj.dot(M, V))
     let d = nj.array([preDiag.get(0,0), preDiag.get(1,1)])
     //@ts-ignore
@@ -69,14 +68,14 @@ export class Updater2D extends BaseUpdater2D {
 
     dv(v: Array) {
         const jac = this.op.df(v)
-        const err = this.op.error(v)
-        console.log(`Found error: ${err}`);
+        const err = this.error(v)
         const {U, d, V} = SVD2d(jac)
 
         const dDamp = nj.multiply(d, nj.power(d, -2 * this.op.q))
 
         const D = nj.array([[dDamp.get(0), 0], [0, dDamp.get(1)]])
         const preFac = nj.dot(U, D)
+        // const postFac = err.shape == undefined ? nj.dot(V, nj.array([err, err])): nj.dot(V, err) // Not accurate math
         const postFac = nj.dot(V, err)
         //@ts-ignore
         const out = nj.dot(preFac, postFac)

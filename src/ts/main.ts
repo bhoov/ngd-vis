@@ -21,6 +21,65 @@ const toFixed = R.curry((ndigits, x) => x.toFixed(ndigits))
 const toQ = toFixed(1)
 const toEta = toFixed(4)
 
+// Won't work because jacobian is 2D
+function plotChainDebug() {
+    const vis0 = d3.select('#visChain')
+    const sels = {
+        quiverPlot: vis0.select('#chart'),
+        qId: vis0.select('#q-val'),
+        etaId: vis0.select('#eta-val'),
+        qSlider: vis0.select('#q-slider'),
+        etaSlider: vis0.select('#eta-slider'),
+        hessType: vis0.select('#hess-type'),
+    }
+    const eventHandler = new SimpleEventHandler(<Element>vis0.node())
+
+    const vizs = {
+        graph: ContourPlot.fromLandscape(sels.quiverPlot, eventHandler, landscapes2d.ChainNet),
+    }
+
+    const defaults = {
+        // Note to also change the default value in the html file!
+        q: 0,
+        eta: 0.05
+    }
+
+    const scales = {
+        q: d3.scaleLinear().range([0, 10]).domain([0, 1]),
+        eta: d3.scaleLinear().range([1, 1000]).domain([Math.pow(10, -5), 0.6])
+    }
+
+    // Initialize graph parameters to match the defaults
+    vizs.graph.q(defaults.q)
+    vizs.graph.eta(defaults.eta)
+    sels.qSlider.property('value', scales.q(defaults.q))
+    sels.etaSlider.property('value', scales.eta(defaults.eta))
+
+    sels.qId.text(toQ(defaults.q))
+    sels.etaId.text(toEta(defaults.eta))
+
+    sels.qSlider.on('input', function () {
+        const me = d3.select(this)
+        const v = scales.q.invert(+me.property('value'));
+        vizs.graph.q(v);
+        sels.qId.text(`${toQ(v)}`)
+    })
+
+    sels.etaSlider.on('input', function () {
+        const me = d3.select(this)
+        const v = scales.eta.invert(me.property('value'));
+        vizs.graph.eta(v)
+        sels.etaId.text(`${toEta(v)}`)
+    })
+
+    sels.hessType.on('input', function () {
+        const self = d3.select(this)
+        const v = self.property('value')
+        vizs.graph.setUpdater(v)
+    })
+
+}
+
 function plotElliptical() {
     const vis0 = d3.select('#vis0')
     const sels = {
@@ -454,8 +513,8 @@ export function main() {
     plotQuadraticFuncs();
     plotElliptical();
     plotQuiverGraph();
-    // plotGolfHole3Ball();
-    // plotGolfHoleSlider();
-    // plotJaggedLoss2D();
+    plotGolfHole3Ball();
+    plotGolfHoleSlider();
     plotBumpyLoss2D();
+    // plotChainDebug();
 }

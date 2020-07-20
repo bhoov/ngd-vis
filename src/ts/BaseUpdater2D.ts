@@ -9,7 +9,7 @@ const defaultF = (v: Array) => {
     return nj.dot(nj.array([[1, 2], [2, 1]]), v)
 }
 const defaultDf = (v: Array) => nj.array([[1, 2], [2, 1]])
-const defaultErr = v => nj.subtract(v, nj.array([0,0]))
+const defaultErr = fv => fv
 const defaultLoss = (err: Array) => nj.sum(nj.divide(nj.power(err, 2), 2))
 const defaultStep2Lr: d3.ScaleLinear<number, number> = d3.scaleLinear().domain([0, 0.8]).range([0.001, 0.5])
 
@@ -87,11 +87,9 @@ export abstract class BaseUpdater2D {
     }
 
     gradient(v: Array): Array {
-        // const loss = this.loss(v)
-        const err = this.error(v)
+        const loss = this.loss(v)
         const df = this.op.df(v)
-        // const g: Array = nj.multiply(df, loss)
-        const g: Array = nj.multiply(df, err)
+        const g: Array = nj.multiply(df, loss)
         return g
     }
 
