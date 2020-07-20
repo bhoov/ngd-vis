@@ -4,22 +4,22 @@ import * as tp from "./types"
 import { Array } from "./types"
 import { BaseUpdater2D } from "./BaseUpdater2D"
 
-// const defaultErrorFunction = (v: Array) => v.get(0) * v.get(1) - 1
 const defaultErrorFunction = v => {
     return nj.dot(nj.array([[1, 2], [2, 1]]), v)
 }
 const defaultDfFunction = v => nj.array([[1, 2], [2, 1]])
 const defaultStep2Lr: d3.ScaleLinear<number, number> = d3.scaleLinear().domain([0, 0.8]).range([0.001, 0.25])
-const defaultLoss = fv => nj.sum(nj.divide(nj.power(fv, 2), 2))
+const defaultError = fv => nj.subtract(fv, nj.array([0,0]))
+const defaultLoss = err => nj.sum(nj.divide(nj.power(err, 2), 2))
 
 interface UpdaterOptions {
-    df
-    target
     f
+    df
+    error
+    loss
     q: number                               // 0 -> 1, where 0 is SGD and 1 is NGD. 0.5 is sqrt NGD. [step = - eta * H ^ (-1/q) * g] (H = 0 when q=0)
     eta: number                             // aka 'learning rate'
     step2lr: d3.ScaleLinear<number, number>
-    loss
 }
 
 function getOrthMatrix(S) {
@@ -55,11 +55,11 @@ export class Updater2D extends BaseUpdater2D {
         f: defaultErrorFunction,
         //@ts-ignore
         df: defaultDfFunction,
-        target: nj.array([0,0]),
+        error: defaultError,
+        loss: defaultLoss,
         q: 0,
         eta: 0.1,
         step2lr: defaultStep2Lr,
-        loss: defaultLoss,
     }
 
     constructor(options: Partial<UpdaterOptions>={}) {
@@ -67,16 +67,10 @@ export class Updater2D extends BaseUpdater2D {
         this.updateOptions(options)
     }
 
-    error(v: Array): nj.NdArray<number> {
-        if (this.op.target == null) {
-            return this.op.f(v)
-        }
-        return nj.subtract(this.op.f(v), this.op.target)
-    }
-
     dv(v: Array) {
         const jac = this.op.df(v)
-        const err = this.error(v)
+        const err = this.op.error(v)
+        console.log(`Found error: ${err}`);
         const {U, d, V} = SVD2d(jac)
 
         const dDamp = nj.multiply(d, nj.power(d, -2 * this.op.q))
@@ -92,7 +86,6 @@ export class Updater2D extends BaseUpdater2D {
 
     lr(v: Array) {
         const dv = this.dv(v)
-        const absLoss = Math.abs(this.loss(v))
         const eps = 1e-10;
         //@ts-ignore
         const lr: Array = nj.multiply(dv, this.lrScale).divide(Math.sqrt(this.loss(v) + eps)) //.divide(absLoss + eps)

@@ -4,18 +4,19 @@ import * as tp from "./types"
 import { Array } from "./types"
 
 // const defaultErrorFunction = (v: Array) => v.get(0) * v.get(1) - 1
-const defaultErrorFunction = (v: Array) => {
+const defaultF = (v: Array) => {
     //@ts-ignore
     return nj.dot(nj.array([[1, 2], [2, 1]]), v)
 }
-const defaultDfFunction = (v: Array) => nj.array([[1, 2], [2, 1]])
+const defaultDf = (v: Array) => nj.array([[1, 2], [2, 1]])
+const defaultErr = v => nj.subtract(v, nj.array([0,0]))
+const defaultLoss = (err: Array) => nj.sum(nj.divide(nj.power(err, 2), 2))
 const defaultStep2Lr: d3.ScaleLinear<number, number> = d3.scaleLinear().domain([0, 0.8]).range([0.001, 0.5])
-const defaultLoss = (fv: Array) => nj.sum(nj.divide(nj.power(fv, 2), 2))
 
 interface UpdaterOptions {
     df: tp.MapFunction
     f: tp.MapFunction
-    target?
+    error
     q: number                               // 0 -> 1, where 0 is SGD and 1 is NGD. 0.5 is sqrt NGD. [step = - eta * H ^ (-1/q) * g] (H = 0 when q=0)
     eta: number                             // aka 'learning rate'
     step2lr: d3.ScaleLinear<number, number>
@@ -25,10 +26,10 @@ interface UpdaterOptions {
 export abstract class BaseUpdater2D {
     op: UpdaterOptions = {
         //@ts-ignore
-        f: defaultErrorFunction,
+        f: defaultF,
         //@ts-ignore
-        df: defaultDfFunction,
-        target: null,
+        df: defaultDf,
+        error: defaultErr,
         q: 0,
         eta: 0.1,
         step2lr: defaultStep2Lr,
@@ -76,13 +77,20 @@ export abstract class BaseUpdater2D {
         return this.op.step2lr(this.op.eta)
     }
 
+    error(v: Array) {
+        return this.op.error(this.op.f(v))
+    }
+
     loss(v: Array): number {
-        return this.op.loss(this.op.f(v))
+        const loss = this.op.loss(this.error(v))
+        return loss
     }
 
     gradient(v: Array): Array {
-        const err = this.loss(v)
+        // const loss = this.loss(v)
+        const err = this.error(v)
         const df = this.op.df(v)
+        // const g: Array = nj.multiply(df, loss)
         const g: Array = nj.multiply(df, err)
         return g
     }

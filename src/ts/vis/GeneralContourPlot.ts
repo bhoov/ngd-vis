@@ -235,10 +235,22 @@ export class ContourPlot extends SVGVisComponent<T> {
             prevVal = this.curr()
         }
 
+        let prevLoss = -Infinity;
         this._curr.ticker = interval(op.interval).pipe(
             startWith(prep()),
             //@ts-ignore
-            scan(v => op.updater.next(v), self.curr()),
+            scan(v => {
+                const loss = self.options.updater.loss(v)
+                // if (loss >= prevLoss) {
+                //     console.log(`Found Higher Loss :'(. Increased by ${loss - prevLoss}`);
+                //     prevLoss = loss;
+                // }
+                // else {
+                //     // console.log(`Yep new loss is lower than prev loss: ${loss - prevLoss}`);
+                //     console.log(`Loss is lower :)`);
+                // }
+                return op.updater.next(v)
+            }, self.curr()),
             take(op.maxTick)
         ).subscribe(subObj)
     }

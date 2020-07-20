@@ -10,6 +10,7 @@ export interface Landscape2D {
     name: string
     f
     df
+    error
     loss
     updaterClass
     colorScale: d3.ScaleLinear<number, number | string>
@@ -38,6 +39,8 @@ export const landscapes2d: { [k: string]: Landscape2D } = {
         name: "SimpleNet2D",
         f: (v: tp.Array) => (v.get(0) * v.get(1) - 1),
         df: (v: tp.Array) => nj.array([v.get(1), v.get(0)]),
+        error: fv => fv - 1,
+        loss: x => x,
         updaterClass: SimpleNetUpdater,
         colorScale: d3.scaleLinear()
             .domain([-1, 0, 1.6])
@@ -48,17 +51,33 @@ export const landscapes2d: { [k: string]: Landscape2D } = {
         xrange: [0, 1.6],
         yrange: [0, 1.6],
         nContours: 20,
-        loss: x => x,
+    },
+
+    ChainNet: {
+        name: "ChainNet",
+        f: (v: tp.Array) => Math.pow(v.get(0), 2) * v.get(1),
+        df: (v: tp.Array) => nj.array([[v.get(0)], [v.get(1)]]),
+        error: fv => fv - 1,
+        loss: x => x, // Loss should always be a function of error!
+        updaterClass: Updater2D,
+        colorScale: d3.scaleLinear()
+            .domain([-1, 0, 1.6])
+            //@ts-ignore
+            .range(["white", "steelblue", "red"])
+            //@ts-ignore
+            .interpolate(d3.interpolateRgb.gamma(2.2)),
+        xrange: [0, 1.6],
+        yrange: [0, 1.6],
+        nContours: 20,
     },
 
     Elliptical: {
         name: "Elliptical",
-        //@ts-ignore
-        f: (v: tp.Array) => nj.dot(A, v),
-        //@ts-ignore
-        df: (v: tp.Array) => A,
+        f: v => nj.dot(A, v),
+        df: v => A,
+        error: fv => nj.subtract(fv, nj.array([0,0])),
+        loss: (err: tp.Array) => nj.sum(nj.divide(nj.power(err, 2), 2)),
         updaterClass: Updater2D,
-        target: nj.array([0,0]),
         colorScale: d3.scalePow()
             .exponent(0.5)
             .domain([0, 36])
@@ -71,7 +90,6 @@ export const landscapes2d: { [k: string]: Landscape2D } = {
         nContours: 30,
         nx: 7,
         ny: 7,
-        loss: (fv: tp.Array) => nj.sum(nj.divide(nj.power(fv, 2), 2)),
         step2lr: d3.scaleLinear().domain([0, 1]).range([0.1, 1.5])
     },
 
@@ -79,8 +97,11 @@ export const landscapes2d: { [k: string]: Landscape2D } = {
         name: "Landscape1",
         f: bumpy.forward,
         df: bumpy.jacobian,
+        error: fv => fv, // The function value is the error itself
+        loss: (err: tp.Array) => nj.sum(nj.power(err, 2)) / 2,
+        // loss: (fv: tp.Array) => Math.log(1 + nj.sum(nj.power(fv, 2)) / 2),
+        // loss: (fv: tp.Array) => fv,
         updaterClass: Updater2D,
-        target: null,
         colorScale: d3.scalePow()
             .exponent(0.5)
             .domain([0, 100])
@@ -88,14 +109,14 @@ export const landscapes2d: { [k: string]: Landscape2D } = {
             .range(["steelblue", "white"])
             //@ts-ignore
             .interpolate(d3.interpolateRgb.gamma(2.2)),
-        xrange: [2.4, 8.4],
-        yrange: [2.2, 8.83],
+        // xrange: [2.4, 8.4], // OG
+        // yrange: [2.2, 8.83], // OG
+        xrange: [-2, 2], // Works?
+        yrange: [-2, 2], // Works?
         nContours: 20,
         nx: 12,
         ny: 12,
         eta: 0.001,
-        loss: (fv: tp.Array) => nj.sum(nj.power(fv, 2)) / 2,
-        // loss: (fv: tp.Array) => fv,
         step2lr: d3.scaleLinear().domain([0, 1]).range([0.2, 1])
     },
 
