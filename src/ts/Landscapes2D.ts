@@ -100,8 +100,8 @@ export const landscapes2d: { [k: string]: Landscape2D } = {
         f: bumpy.forward,
         df: bumpy.jacobian,
         error: fv => fv, // The function value is the error itself
-        loss: (err: tp.Array) => nj.sum(nj.power(err, 2)) / 2,
-        // loss: (fv: tp.Array) => Math.log(1 + nj.sum(nj.power(fv, 2)) / 2),
+        // loss: (err: tp.Array) => nj.sum(nj.power(err, 2)) / 2,
+        loss: (fv: tp.Array) => Math.log(1 + nj.sum(nj.power(fv, 2)) / 2),
         // loss: (fv: tp.Array) => fv,
         updaterClass: Updater2D,
         colorScale: d3.scalePow()
