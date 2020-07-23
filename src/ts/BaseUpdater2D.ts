@@ -11,16 +11,18 @@ const defaultF = (v: Array) => {
 const defaultDf = (v: Array) => nj.array([[1, 2], [2, 1]])
 const defaultErr = fv => fv
 const defaultLoss = (err: Array) => nj.sum(nj.divide(nj.power(err, 2), 2))
+const defaultPlotting = loss => loss
 const defaultStep2Lr: d3.ScaleLinear<number, number> = d3.scaleLinear().domain([0, 0.8]).range([0.001, 0.5])
 
 interface UpdaterOptions {
-    df: tp.MapFunction
     f: tp.MapFunction
+    df: tp.MapFunction
     error
+    loss: tp.ReduceFunction
+    forPlotting
     q: number                               // 0 -> 1, where 0 is SGD and 1 is NGD. 0.5 is sqrt NGD. [step = - eta * H ^ (-1/q) * g] (H = 0 when q=0)
     eta: number                             // aka 'learning rate'
     step2lr: d3.ScaleLinear<number, number>
-    loss: tp.ReduceFunction
 }
 
 export abstract class BaseUpdater2D {
@@ -30,6 +32,7 @@ export abstract class BaseUpdater2D {
         //@ts-ignore
         df: defaultDf,
         error: defaultErr,
+        forPlotting: defaultPlotting,
         q: 0,
         eta: 0.1,
         step2lr: defaultStep2Lr,
@@ -84,6 +87,10 @@ export abstract class BaseUpdater2D {
     loss(v: Array): number {
         const loss = this.op.loss(this.error(v))
         return loss
+    }
+
+    plotF(v: Array): number {
+        return this.op.forPlotting(this.loss(v))
     }
 
     gradient(v: Array): Array {

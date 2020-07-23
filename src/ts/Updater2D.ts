@@ -11,12 +11,14 @@ const defaultDfFunction = v => nj.array([[1, 2], [2, 1]])
 const defaultStep2Lr: d3.ScaleLinear<number, number> = d3.scaleLinear().domain([0, 0.8]).range([0.001, 0.25])
 const defaultError = fv => fv
 const defaultLoss = err => nj.sum(nj.divide(nj.power(err, 2), 2))
+const defaultPlotting = loss => loss
 
 interface UpdaterOptions {
     f
     df
     error
     loss
+    forPlotting
     q: number                               // 0 -> 1, where 0 is SGD and 1 is NGD. 0.5 is sqrt NGD. [step = - eta * H ^ (-1/q) * g] (H = 0 when q=0)
     eta: number                             // aka 'learning rate'
     step2lr: d3.ScaleLinear<number, number>
@@ -31,6 +33,16 @@ function getOrthMatrix(S) {
 
 interface SVDResults { U, d, V }
 
+// Reconstruct from SVD using vector 'd' representing diagonals of D
+function reconstructJac(U, d, V) {
+    const D = nj.array([[d.get(0), 0], [0, d.get(1)]])
+    const preFac = nj.dot(U, D)
+    const out = nj.dot(preFac, V.T)
+
+    return out
+}
+
+// Compute SVD of a 2D matrix M
 function SVD2d(M): SVDResults {
     const U = getOrthMatrix(nj.dot(M, M.T))
     let V = getOrthMatrix(nj.dot(M.T, M))
@@ -56,6 +68,7 @@ export class Updater2D extends BaseUpdater2D {
         df: defaultDfFunction,
         error: defaultError,
         loss: defaultLoss,
+        forPlotting: defaultPlotting,
         q: 0,
         eta: 0.1,
         step2lr: defaultStep2Lr,
@@ -71,14 +84,9 @@ export class Updater2D extends BaseUpdater2D {
         const err = this.error(v)
         const {U, d, V} = SVD2d(jac)
 
-        const dDamp = nj.multiply(d, nj.power(d, -2 * this.op.q))
-
-        const D = nj.array([[dDamp.get(0), 0], [0, dDamp.get(1)]])
-        const preFac = nj.dot(U, D)
-        // const postFac = err.shape == undefined ? nj.dot(V, nj.array([err, err])): nj.dot(V, err) // Not accurate math
-        const postFac = nj.dot(V, err)
-        //@ts-ignore
-        const out = nj.dot(preFac, postFac)
+        const dq = nj.multiply(d, nj.power(d, -2 * this.op.q))
+        const jac2 = reconstructJac(U, dq, V)
+        const out = nj.dot(jac2, err)
 
         return out
     }
@@ -87,7 +95,7 @@ export class Updater2D extends BaseUpdater2D {
         const dv = this.dv(v)
         const eps = 1e-10;
         //@ts-ignore
-        const lr: Array = nj.multiply(dv, this.lrScale).divide(Math.sqrt(this.loss(v) + eps)) //.divide(absLoss + eps)
+        const lr: Array = nj.multiply(dv, this.lrScale).divide(Math.sqrt(Math.abs(this.loss(v)) + eps)) //.divide(absLoss + eps)
         return lr
     }
 

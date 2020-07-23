@@ -147,7 +147,7 @@ export class ContourPlot extends SVGVisComponent<T> {
 
         // const contourFunc = (x, y) => this.updater.absErr(nj.array([x, y]))
         const contourFunc = (x, y) => {
-            const loss = op.updater.loss(nj.array([x, y]))
+            const loss = op.updater.plotF(nj.array([x, y]))
             return loss
         }
         const vals = getContourValues(op.n, op.m, op.xrange, op.yrange, contourFunc)
@@ -240,7 +240,6 @@ export class ContourPlot extends SVGVisComponent<T> {
             startWith(prep()),
             //@ts-ignore
             scan(v => {
-                const loss = self.options.updater.loss(v)
                 // if (loss >= prevLoss) {
                 //     console.log(`Found Higher Loss :'(. Increased by ${loss - prevLoss}`);
                 //     prevLoss = loss;

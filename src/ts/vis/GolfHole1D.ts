@@ -11,7 +11,6 @@ import { ManualUpdater } from './ManualUpdater'
 import { GolfBall } from './GolfBall'
 import { landscapes, Landscape, baseLoss, getPlotFunc } from "../GolfLandscapes";
 
-
 type T = GolfBall[]
 
 interface GraphOptions extends SVGOptions {
